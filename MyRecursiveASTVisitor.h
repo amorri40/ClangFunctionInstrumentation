@@ -22,13 +22,13 @@ class MyRecursiveASTVisitor
 {
     
 public:
-    MyRecursiveASTVisitor(Rewriter &R) : Rewrite(R) { }
+    MyRecursiveASTVisitor(Rewriter &R) : rewriter(R) { }
     //void InstrumentStmt(Stmt *s);
     //bool VisitStmt(Stmt *s);
     bool VisitFunctionDecl(FunctionDecl *f);
     //Expr *VisitBinaryOperator(BinaryOperator *op);
     
-    Rewriter &Rewrite;
+    Rewriter &rewriter;
 };
 
 #endif /* defined(__ClangInstrumentationPlugin__MyRecursiveASTVisitor__) */

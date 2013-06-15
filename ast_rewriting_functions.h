@@ -11,5 +11,8 @@
 
 int get_length_of_token_at_location(clang::SourceLocation Loc, Rewriter &rewriter);
 
-bool replace_text_at_location(Rewriter &rewriter, clang::SourceLocation start, int end, char* new_text);
+bool replace_text_at_location(Rewriter &rewriter, clang::SourceLocation start, int end, const char* new_text);
+
+std::string convert_decl_to_str(Rewriter &rewriter, clang::FunctionDecl *d, clang::SourceManager* sm);
+std::string get_location_to_string(Rewriter &rewriter, clang::SourceManager* sm, clang::SourceLocation start, clang::SourceLocation end);
 #endif

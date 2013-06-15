@@ -6,6 +6,11 @@ int i = 4;
 extern int j;
 typedef int footype;
 
+void SISetSystemPath(const char* path)
+{
+    strcpy(SI_DocumentsPath, path);
+}
+
 int main()
 {
 	typedef unsigned long bartype;

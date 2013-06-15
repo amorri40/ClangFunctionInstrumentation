@@ -38,6 +38,7 @@
 		9C775759176C7E02005E57CC /* MyRecursiveASTVisitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MyRecursiveASTVisitor.h; path = ../MyRecursiveASTVisitor.h; sourceTree = "<group>"; };
 		9C77575B176C7F2B005E57CC /* ast_rewriting_functions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ast_rewriting_functions.cpp; path = ../ast_rewriting_functions.cpp; sourceTree = "<group>"; };
 		9C77575D176C7FF6005E57CC /* ast_rewriting_functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ast_rewriting_functions.h; path = ../ast_rewriting_functions.h; sourceTree = "<group>"; };
+		9C77575E176C9A37005E57CC /* test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = test.c; path = ../test.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +55,7 @@
 		9C775735176B6E9D005E57CC = {
 			isa = PBXGroup;
 			children = (
+				9C77575E176C9A37005E57CC /* test.c */,
 				9C775754176C7C3D005E57CC /* MainRewriter */,
 				9C77574A176B6EDD005E57CC /* test_out.c */,
 				9C775740176B6E9D005E57CC /* ClangInstrumentationPlugin */,

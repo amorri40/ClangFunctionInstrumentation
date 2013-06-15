@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include "clang/Lex/Lexer.h"
+#include "clang/Basic/SourceManager.h"
 
 #include "MyRecursiveASTVisitor.h"
 
@@ -17,8 +18,29 @@ int get_length_of_token_at_location(clang::SourceLocation Loc, Rewriter &rewrite
                                             Loc, rewriter.getSourceMgr(), rewriter.getLangOpts());
 }
 
-bool replace_text_at_location(Rewriter &rewriter, clang::SourceLocation start, int end, char* new_text) {
+bool replace_text_at_location(Rewriter &rewriter, clang::SourceLocation start, int end, const char* new_text) {
     return rewriter.ReplaceText(start, end, new_text);
+}
+
+/*std::string get_location_to_string(Rewriter &rewriter, clang::SourceManager* sm, clang::SourceLocation start, clang::SourceLocation end) {
+    clang::SourceLocation b(start), _e(end);
+    clang::SourceLocation e(clang::Lexer::getLocForEndOfToken(_e, 0, *sm, rewriter.getLangOpts()));
+    return std::string(sm->getCharacterData(b),
+                       sm->getCharacterData(e)-sm->getCharacterData(b));
+}*/
+
+std::string get_location_to_string(Rewriter &rewriter, clang::SourceManager* sm, clang::SourceLocation start, clang::SourceLocation end) {
+    start.dump(*sm);
+    //clang::SourceLocation _begin(start.), _end(end.getLocEnd());
+    return std::string(sm->getCharacterData(start),
+                       sm->getCharacterData(end));//-sm->getCharacterData(start));
+}
+
+std::string convert_decl_to_str(Rewriter &rewriter, clang::FunctionDecl *d, clang::SourceManager* sm) {
+    clang::SourceLocation b(d->getLocStart()), _e(d->getLocEnd());
+    clang::SourceLocation e(clang::Lexer::getLocForEndOfToken(_e, 0, *sm, rewriter.getLangOpts()));
+    return std::string(sm->getCharacterData(b),
+                       sm->getCharacterData(e)-sm->getCharacterData(b));
 }
 
 std::string get_return_type_from_function_declaration(FunctionDecl *f) {
