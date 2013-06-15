@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		9C775744176B6E9D005E57CC /* ClangInstrumentationPlugin.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9C775743176B6E9D005E57CC /* ClangInstrumentationPlugin.1 */; };
 		9C77574D176B6EDD005E57CC /* CIrewriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77574B176B6EDD005E57CC /* CIrewriter.cpp */; };
+		9C775757176C7C84005E57CC /* MyASTConsumer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C775755176C7C84005E57CC /* MyASTConsumer.cpp */; };
+		9C77575A176C7E02005E57CC /* MyRecursiveASTVisitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C775758176C7E02005E57CC /* MyRecursiveASTVisitor.cpp */; };
+		9C77575C176C7F2B005E57CC /* ast_rewriting_functions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77575B176C7F2B005E57CC /* ast_rewriting_functions.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,9 +32,12 @@
 		9C775743176B6E9D005E57CC /* ClangInstrumentationPlugin.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ClangInstrumentationPlugin.1; sourceTree = "<group>"; };
 		9C77574A176B6EDD005E57CC /* test_out.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = test_out.c; path = ../test_out.c; sourceTree = "<group>"; };
 		9C77574B176B6EDD005E57CC /* CIrewriter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CIrewriter.cpp; path = ../CIrewriter.cpp; sourceTree = "<group>"; };
-		9C77574E176B867E005E57CC /* libLLVMSupport.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMSupport.a; path = "../../build/Debug+Asserts/lib/libLLVMSupport.a"; sourceTree = "<group>"; };
-		9C775750176B86DF005E57CC /* libLLVMCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCore.a; path = "../../build/Debug+Asserts/lib/libLLVMCore.a"; sourceTree = "<group>"; };
-		9C775752176B8842005E57CC /* libLLVMMC.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMC.a; path = "../../build/Debug+Asserts/lib/libLLVMMC.a"; sourceTree = "<group>"; };
+		9C775755176C7C84005E57CC /* MyASTConsumer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MyASTConsumer.cpp; path = ../MyASTConsumer.cpp; sourceTree = "<group>"; };
+		9C775756176C7C84005E57CC /* MyASTConsumer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MyASTConsumer.h; path = ../MyASTConsumer.h; sourceTree = "<group>"; };
+		9C775758176C7E02005E57CC /* MyRecursiveASTVisitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MyRecursiveASTVisitor.cpp; path = ../MyRecursiveASTVisitor.cpp; sourceTree = "<group>"; };
+		9C775759176C7E02005E57CC /* MyRecursiveASTVisitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MyRecursiveASTVisitor.h; path = ../MyRecursiveASTVisitor.h; sourceTree = "<group>"; };
+		9C77575B176C7F2B005E57CC /* ast_rewriting_functions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ast_rewriting_functions.cpp; path = ../ast_rewriting_functions.cpp; sourceTree = "<group>"; };
+		9C77575D176C7FF6005E57CC /* ast_rewriting_functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ast_rewriting_functions.h; path = ../ast_rewriting_functions.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,11 +54,8 @@
 		9C775735176B6E9D005E57CC = {
 			isa = PBXGroup;
 			children = (
-				9C775752176B8842005E57CC /* libLLVMMC.a */,
-				9C775750176B86DF005E57CC /* libLLVMCore.a */,
-				9C77574E176B867E005E57CC /* libLLVMSupport.a */,
+				9C775754176C7C3D005E57CC /* MainRewriter */,
 				9C77574A176B6EDD005E57CC /* test_out.c */,
-				9C77574B176B6EDD005E57CC /* CIrewriter.cpp */,
 				9C775740176B6E9D005E57CC /* ClangInstrumentationPlugin */,
 				9C77573F176B6E9D005E57CC /* Products */,
 			);
@@ -72,6 +75,20 @@
 				9C775743176B6E9D005E57CC /* ClangInstrumentationPlugin.1 */,
 			);
 			path = ClangInstrumentationPlugin;
+			sourceTree = "<group>";
+		};
+		9C775754176C7C3D005E57CC /* MainRewriter */ = {
+			isa = PBXGroup;
+			children = (
+				9C77574B176B6EDD005E57CC /* CIrewriter.cpp */,
+				9C775755176C7C84005E57CC /* MyASTConsumer.cpp */,
+				9C775756176C7C84005E57CC /* MyASTConsumer.h */,
+				9C775758176C7E02005E57CC /* MyRecursiveASTVisitor.cpp */,
+				9C775759176C7E02005E57CC /* MyRecursiveASTVisitor.h */,
+				9C77575B176C7F2B005E57CC /* ast_rewriting_functions.cpp */,
+				9C77575D176C7FF6005E57CC /* ast_rewriting_functions.h */,
+			);
+			name = MainRewriter;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -126,6 +143,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				9C77574D176B6EDD005E57CC /* CIrewriter.cpp in Sources */,
+				9C775757176C7C84005E57CC /* MyASTConsumer.cpp in Sources */,
+				9C77575A176C7E02005E57CC /* MyRecursiveASTVisitor.cpp in Sources */,
+				9C77575C176C7F2B005E57CC /* ast_rewriting_functions.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
