@@ -1,4 +1,4 @@
-//#include <stdio.h>
+#include <stdio.h>
 // This code is licensed under the New BSD license.
 // See LICENSE.txt for more details.
 
@@ -8,7 +8,7 @@ typedef int footype;
 
 void SISetSystemPath(const char* path)
 {
-    strcpy(SI_DocumentsPath, path);
+    //strcpy(SI_DocumentsPath, path);
 }
 
 int main()

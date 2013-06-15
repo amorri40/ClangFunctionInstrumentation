@@ -33,10 +33,6 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         llvm::errs() << "Function name:" << fname << "\n";
         
         
-        /*FunctionDecl* debug_function = FunctionDecl::Create (f->getASTContext(), f->getDeclContext(), sr.getBegin().getLocWithOffset(10), dni, f->getResultType(), f->getTypeSourceInfo(), f->getStorageClass(), false, false);
-        debug_function->setBody(s);
-        f->getDeclContext()->addDecl(debug_function);*/
-        
         std::string statements = rewriter.ConvertToString(s);
         QualType return_type = f->getResultType();
         std::string return_type_str = return_type.getAsString();
@@ -45,13 +41,13 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         SourceLocation start_of_stmts =clang::Lexer::GetBeginningOfToken(s->getLocStart(), rewriter.getSourceMgr(), rewriter.getLangOpts());
         
         std::string func_args_string = get_location_to_string(rewriter, &rewriter.getSourceMgr(), end_of_func_name, start_of_stmts);
-        //std::string func_decl_string = convert_decl_to_str(rewriter, f, &rewriter.getSourceMgr());
+        
         llvm::errs() << func_args_string << "\n";
         
         rewriter.setSourceMgr(rewriter.getSourceMgr(), rewriter.getLangOpts());
         
         // Point to start of function name
-        SourceLocation start_of_function_name_token = dni.getLoc();//sr.getBegin();
+        SourceLocation start_of_function_name_token = dni.getLoc();
         std::string new_function_name = "orig_"+fname;
         int length_of_function_name = get_length_of_token_at_location(start_of_function_name_token, this->rewriter);
         replace_text_at_location(rewriter, start_of_function_name_token, length_of_function_name, new_function_name.c_str());

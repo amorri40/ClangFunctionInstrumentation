@@ -9,10 +9,30 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>ClangPlugin.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
+		<key>TestOutput.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>9C77573D176B6E9D005E57CC</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>9C775763176CB3AB005E57CC</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>9C775774176CB61E005E57CC</key>
 		<dict>
 			<key>primary</key>
 			<true/>
