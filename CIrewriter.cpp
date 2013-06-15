@@ -94,6 +94,14 @@ class MyRecursiveASTVisitor
   Rewriter &Rewrite;
 };
 
+int get_length_of_token_at_location(clang::SourceLocation Loc, Rewriter &rewriter) {
+  return clang::Lexer::MeasureTokenLength(
+      Loc, rewriter.getSourceMgr(), rewriter.getLangOpts());
+}
+
+bool replace_text_at_location(Rewriter &rewriter, clang::SourceLocation start, int end, char* new_text) {
+  return rewriter.ReplaceText(start, end, new_text);
+}
 
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
 {
@@ -101,6 +109,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
   f->dumpColor();
   //DeclarationName new_name = 
   //f->setDeclName (DeclarationName N)
+  //f->getLocation();
 
   if (f->hasBody())
   {
@@ -191,12 +200,12 @@ void make_sure_file_exists(std::string fileName) {
 }
 
 void setup_diagostics(CompilerInstance& compiler) {
-  DiagnosticOptions diagnosticOptions;
+  DiagnosticOptions* diagnosticOptions = new DiagnosticOptions();
     TextDiagnosticPrinter *pTextDiagnosticPrinter =
         new TextDiagnosticPrinter(
             llvm::outs(),
-            &diagnosticOptions,
-            true);
+            diagnosticOptions,
+            false);
     compiler.createDiagnostics(pTextDiagnosticPrinter);
 }
 
@@ -285,8 +294,10 @@ void setup_language_options_cxx(CompilerInvocation* Invocation) {
 void load_cxx_file(CompilerInstance& compiler, std::string fileName) {
   const FileEntry *pFile = compiler.getFileManager().getFile(fileName);
   compiler.getSourceManager().createMainFileID(pFile);
+  Preprocessor& preprocessor = compiler.getPreprocessor();
+  printf("%s\n", "before begin source file ");
   compiler.getDiagnosticClient().BeginSourceFile(compiler.getLangOpts(),
-                                               &compiler.getPreprocessor());
+                                               &preprocessor);
 }
 
 /*

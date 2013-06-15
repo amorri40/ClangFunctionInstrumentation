@@ -1,2 +1,6 @@
 /CIrewriter
 *.o
+*.out
+/ClangInstrumentationPlugin/build/
+/ClangInstrumentationPlugin/DerivedData/
+/test_out.c

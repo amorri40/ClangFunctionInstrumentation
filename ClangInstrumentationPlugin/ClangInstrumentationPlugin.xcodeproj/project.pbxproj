@@ -1,0 +1,388 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		9C775744176B6E9D005E57CC /* ClangInstrumentationPlugin.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9C775743176B6E9D005E57CC /* ClangInstrumentationPlugin.1 */; };
+		9C77574D176B6EDD005E57CC /* CIrewriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77574B176B6EDD005E57CC /* CIrewriter.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9C77573C176B6E9D005E57CC /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				9C775744176B6E9D005E57CC /* ClangInstrumentationPlugin.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		9C77573E176B6E9D005E57CC /* ClangInstrumentationPlugin */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ClangInstrumentationPlugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C775743176B6E9D005E57CC /* ClangInstrumentationPlugin.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ClangInstrumentationPlugin.1; sourceTree = "<group>"; };
+		9C77574A176B6EDD005E57CC /* test_out.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = test_out.c; path = ../test_out.c; sourceTree = "<group>"; };
+		9C77574B176B6EDD005E57CC /* CIrewriter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CIrewriter.cpp; path = ../CIrewriter.cpp; sourceTree = "<group>"; };
+		9C77574E176B867E005E57CC /* libLLVMSupport.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMSupport.a; path = "../../build/Debug+Asserts/lib/libLLVMSupport.a"; sourceTree = "<group>"; };
+		9C775750176B86DF005E57CC /* libLLVMCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCore.a; path = "../../build/Debug+Asserts/lib/libLLVMCore.a"; sourceTree = "<group>"; };
+		9C775752176B8842005E57CC /* libLLVMMC.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMC.a; path = "../../build/Debug+Asserts/lib/libLLVMMC.a"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9C77573B176B6E9D005E57CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		9C775735176B6E9D005E57CC = {
+			isa = PBXGroup;
+			children = (
+				9C775752176B8842005E57CC /* libLLVMMC.a */,
+				9C775750176B86DF005E57CC /* libLLVMCore.a */,
+				9C77574E176B867E005E57CC /* libLLVMSupport.a */,
+				9C77574A176B6EDD005E57CC /* test_out.c */,
+				9C77574B176B6EDD005E57CC /* CIrewriter.cpp */,
+				9C775740176B6E9D005E57CC /* ClangInstrumentationPlugin */,
+				9C77573F176B6E9D005E57CC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9C77573F176B6E9D005E57CC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9C77573E176B6E9D005E57CC /* ClangInstrumentationPlugin */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9C775740176B6E9D005E57CC /* ClangInstrumentationPlugin */ = {
+			isa = PBXGroup;
+			children = (
+				9C775743176B6E9D005E57CC /* ClangInstrumentationPlugin.1 */,
+			);
+			path = ClangInstrumentationPlugin;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9C77573D176B6E9D005E57CC /* ClangInstrumentationPlugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9C775747176B6E9D005E57CC /* Build configuration list for PBXNativeTarget "ClangInstrumentationPlugin" */;
+			buildPhases = (
+				9C77573A176B6E9D005E57CC /* Sources */,
+				9C77573B176B6E9D005E57CC /* Frameworks */,
+				9C77573C176B6E9D005E57CC /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ClangInstrumentationPlugin;
+			productName = ClangInstrumentationPlugin;
+			productReference = 9C77573E176B6E9D005E57CC /* ClangInstrumentationPlugin */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9C775736176B6E9D005E57CC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+				ORGANIZATIONNAME = "Alasdair Morrison";
+			};
+			buildConfigurationList = 9C775739176B6E9D005E57CC /* Build configuration list for PBXProject "ClangInstrumentationPlugin" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 9C775735176B6E9D005E57CC;
+			productRefGroup = 9C77573F176B6E9D005E57CC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9C77573D176B6E9D005E57CC /* ClangInstrumentationPlugin */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9C77573A176B6E9D005E57CC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9C77574D176B6EDD005E57CC /* CIrewriter.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		9C775745176B6E9D005E57CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		9C775746176B6E9D005E57CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		9C775748176B6E9D005E57CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_ENABLE_CPP_RTTI = NO;
+				GENERATE_PROFILING_CODE = YES;
+				HEADER_SEARCH_PATHS = (
+					$SRCROOT/../../llvm/include,
+					$SRCROOT/../../build/tools/clang/include/,
+					$SRCROOT/../../build/include,
+					$SRCROOT/../../llvm/tools/clang/include/,
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				MACH_O_TYPE = mh_execute;
+				OTHER_CPLUSPLUSFLAGS = (
+					"-fno-rtti",
+					"-D__STDC_LIMIT_MACROS=1",
+					"-D__STDC_CONSTANT_MACROS=1",
+				);
+				OTHER_LDFLAGS = (
+					"-L\"../../build/Debug+Asserts/lib/\"",
+					"-lclangTooling",
+					"-lclangFrontendTool",
+					"-lclangFrontend",
+					"-lclangDriver",
+					"-lclangSerialization",
+					"-lclangCodeGen",
+					"-lclangParse",
+					"-lclangSema",
+					"-lclangStaticAnalyzerFrontend",
+					"-lclangStaticAnalyzerCheckers",
+					"-lclangStaticAnalyzerCore",
+					"-lclangAnalysis",
+					"-lclangARCMigrate",
+					"-lclangRewriteFrontend",
+					"-lclangRewriteCore",
+					"-lclangEdit",
+					"-lclangAST",
+					"-lclangLex",
+					"-lclangBasic",
+					"-lLLVMTableGen",
+					"-lLLVMMCJIT",
+					"-lLLVMRuntimeDyld",
+					"-lLLVMObject",
+					"-lLLVMMCDisassembler",
+					"-lLLVMLinker",
+					"-lLLVMipo",
+					"-lLLVMInterpreter",
+					"-lLLVMInstrumentation",
+					"-lLLVMJIT",
+					"-lLLVMExecutionEngine",
+					"-lLLVMDebugInfo",
+					"-lLLVMBitWriter",
+					"-lLLVMX86Disassembler",
+					"-lLLVMX86AsmParser",
+					"-lLLVMX86CodeGen",
+					"-lLLVMX86Desc",
+					"-lLLVMSelectionDAG",
+					"-lLLVMX86AsmPrinter",
+					"-lLLVMX86Utils",
+					"-lLLVMX86Info",
+					"-lLLVMAsmPrinter",
+					"-lLLVMMCParser",
+					"-lLLVMCodeGen",
+					"-lLLVMScalarOpts",
+					"-lLLVMInstCombine",
+					"-lLLVMTransformUtils",
+					"-lLLVMipa",
+					"-lLLVMAsmParser",
+					"-lLLVMArchive",
+					"-lLLVMBitReader",
+					"-lLLVMAnalysis",
+					"-lLLVMTarget",
+					"-lLLVMMC",
+					"-lLLVMCore",
+					"-lLLVMSupport",
+					"-lstdc++",
+				);
+				PRELINK_LIBS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		9C775749176B6E9D005E57CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_ENABLE_CPP_RTTI = NO;
+				GENERATE_PROFILING_CODE = YES;
+				HEADER_SEARCH_PATHS = (
+					$SRCROOT/../../llvm/include,
+					$SRCROOT/../../build/tools/clang/include/,
+					$SRCROOT/../../build/include,
+					$SRCROOT/../../llvm/tools/clang/include/,
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				MACH_O_TYPE = mh_execute;
+				OTHER_CPLUSPLUSFLAGS = (
+					"-fno-rtti",
+					"-D__STDC_LIMIT_MACROS=1",
+					"-D__STDC_CONSTANT_MACROS=1",
+				);
+				OTHER_LDFLAGS = (
+					"-L\"../../build/Debug+Asserts/lib/\"",
+					"-lclangTooling",
+					"-lclangFrontendTool",
+					"-lclangFrontend",
+					"-lclangDriver",
+					"-lclangSerialization",
+					"-lclangCodeGen",
+					"-lclangParse",
+					"-lclangSema",
+					"-lclangStaticAnalyzerFrontend",
+					"-lclangStaticAnalyzerCheckers",
+					"-lclangStaticAnalyzerCore",
+					"-lclangAnalysis",
+					"-lclangARCMigrate",
+					"-lclangRewriteFrontend",
+					"-lclangRewriteCore",
+					"-lclangEdit",
+					"-lclangAST",
+					"-lclangLex",
+					"-lclangBasic",
+					"-lLLVMTableGen",
+					"-lLLVMMCJIT",
+					"-lLLVMRuntimeDyld",
+					"-lLLVMObject",
+					"-lLLVMMCDisassembler",
+					"-lLLVMLinker",
+					"-lLLVMipo",
+					"-lLLVMInterpreter",
+					"-lLLVMInstrumentation",
+					"-lLLVMJIT",
+					"-lLLVMExecutionEngine",
+					"-lLLVMDebugInfo",
+					"-lLLVMBitWriter",
+					"-lLLVMX86Disassembler",
+					"-lLLVMX86AsmParser",
+					"-lLLVMX86CodeGen",
+					"-lLLVMX86Desc",
+					"-lLLVMSelectionDAG",
+					"-lLLVMX86AsmPrinter",
+					"-lLLVMX86Utils",
+					"-lLLVMX86Info",
+					"-lLLVMAsmPrinter",
+					"-lLLVMMCParser",
+					"-lLLVMCodeGen",
+					"-lLLVMScalarOpts",
+					"-lLLVMInstCombine",
+					"-lLLVMTransformUtils",
+					"-lLLVMipa",
+					"-lLLVMAsmParser",
+					"-lLLVMArchive",
+					"-lLLVMBitReader",
+					"-lLLVMAnalysis",
+					"-lLLVMTarget",
+					"-lLLVMMC",
+					"-lLLVMCore",
+					"-lLLVMSupport",
+					"-lstdc++",
+				);
+				PRELINK_LIBS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9C775739176B6E9D005E57CC /* Build configuration list for PBXProject "ClangInstrumentationPlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9C775745176B6E9D005E57CC /* Debug */,
+				9C775746176B6E9D005E57CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9C775747176B6E9D005E57CC /* Build configuration list for PBXNativeTarget "ClangInstrumentationPlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9C775748176B6E9D005E57CC /* Debug */,
+				9C775749176B6E9D005E57CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 9C775736176B6E9D005E57CC /* Project object */;
+}
