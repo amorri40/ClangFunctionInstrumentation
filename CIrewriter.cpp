@@ -77,7 +77,7 @@
 #include "clang/Rewrite/Core/Rewriter.h"
 
 using namespace clang;
-
+#include "clang_setup_functions.h"
 #include "MyASTConsumer.h"
 
 /*
@@ -92,16 +92,6 @@ void make_sure_file_exists(std::string fileName) {
     perror(fileName.c_str());
     exit(EXIT_FAILURE);
   }
-}
-
-void setup_diagostics(CompilerInstance& compiler) {
-  DiagnosticOptions* diagnosticOptions = new DiagnosticOptions();
-    TextDiagnosticPrinter *pTextDiagnosticPrinter =
-        new TextDiagnosticPrinter(
-            llvm::outs(),
-            diagnosticOptions,
-            false);
-    compiler.createDiagnostics(pTextDiagnosticPrinter);
 }
 
 CompilerInvocation* pass_flags_to_preprocessor(CompilerInstance& compiler, int argc, char **argv) {
@@ -207,7 +197,7 @@ std::string get_outputfilename_for_filename(std::string fileName) {
     outName.insert(ext, "_out");
     return outName;
 }
-
+//
 
 int main(int argc, char **argv)
 {
@@ -282,10 +272,12 @@ int main(int argc, char **argv)
       Rewrite.getRewriteBufferFor(compiler.getSourceManager().getMainFileID());
       printf("%s\n", "After getRewriteBufferFor");
     outFile << std::string(RewriteBuf->begin(), RewriteBuf->end());
-  
+    
 
   outFile.close();
-  printf("%s\n", "End of program");
+  
+    int compile_status = execv("clang", argv);
+    printf("%s %d\n", "End of program", compile_status);
 
   return 0;
 }

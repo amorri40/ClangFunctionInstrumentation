@@ -4,3 +4,5 @@
 /ClangInstrumentationPlugin/build/
 /ClangInstrumentationPlugin/DerivedData/
 /test_out.c
+*.cpp_debug
+.DS_Store

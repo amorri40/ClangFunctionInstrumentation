@@ -16,6 +16,7 @@
 #include "clang/Rewrite/Core/Rewriter.h"
 
 #include "MyASTConsumer.h"
+#include "clang_setup_functions.h"
 
 using namespace clang;
 
@@ -23,18 +24,26 @@ namespace {
 
 class PrintFunctionNamesAction : public PluginASTAction {
 protected:
-    ASTConsumer *CreateASTConsumer(CompilerInstance &CI, llvm::StringRef) {
+    ASTConsumer *CreateASTConsumer(CompilerInstance &compiler, llvm::StringRef) {
+        //setup_diagostics(compiler);
+        //compiler.createFileManager();
+        //compiler.createSourceManager(compiler.getFileManager());
         printf("%s\n", "run");
-        Rewriter rewriter;
-        rewriter.setSourceMgr(CI.getSourceManager(), CI.getLangOpts());
-        printf("%s\n", "created rewriter");
-        
-        return new MyASTConsumer(rewriter);
+        Rewriter* rewriter = new Rewriter();
+        rewriter->setSourceMgr(compiler.getSourceManager(), compiler.getLangOpts());
+        //printf("%s\n", "created rewriter");
+        llvm::errs() << "Hello world" << "\n";
+        return new MyASTConsumer(*rewriter);
     }
+    
+    bool shouldEraseOutputFiles () {
+        printf("don't erase");
+        return false; }
     
     bool ParseArgs(const CompilerInstance &CI,
                    const std::vector<std::string>& args) {
-        printf("%s\n", "prse args");
+        return true;
+        //printf("%s\n", "prse args");
         for (unsigned i = 0, e = args.size(); i != e; ++i) {
             llvm::errs() << "PrintFunctionNames arg = " << args[i] << "\n";
             

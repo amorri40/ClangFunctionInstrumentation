@@ -12,7 +12,7 @@
 
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
 {
-    fprintf(stderr, "visiting Function: %s %p\n", std::string(f->getName()).c_str(), (void*)f);
+    
     //f->dump();
     //DeclarationName new_name =
     //f->setDeclName (DeclarationName N)
@@ -20,7 +20,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
     
     if (f->hasBody())
     {
-        printf("%s\n", "Function has a body!");
+        fprintf(stderr, "visiting Function: %s %p\n", std::string(f->getName()).c_str(), (void*)f);
         SourceRange sr = f->getSourceRange();
         Stmt *s = f->getBody();
         
@@ -64,7 +64,8 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         sprintf(fc, " %s debug_%s %s %s %s (* %s) %s = &orig_%s; \n", return_type_str.c_str(), fname.data(), func_args_string.c_str(),statements.c_str(),
                 return_type_str.c_str(), fname.data(), func_args_string.c_str(),fname.data());
         rewriter.InsertText(END, fc, true, true);
+        printf("End of: %s\n", "VisitFunctionDecl");
     }
-    printf("End of: %s\n", "VisitFunctionDecl");
+    
     return true; // returning false aborts the traversal
 }
