@@ -9,6 +9,8 @@
 #include "MyRecursiveASTVisitor.h"
 #include "clang/Lex/Lexer.h"
 #include "ast_rewriting_functions.h"
+#include "clang/Basic/SourceManager.h"
+
 
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
 {
@@ -17,13 +19,30 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
     //DeclarationName new_name =
     //f->setDeclName (DeclarationName N)
     //f->getLocation();
-    
+    //if (f->isFromASTFile()) return true;
     if (f->hasBody())
     {
-        fprintf(stderr, "visiting Function: %s %p\n", std::string(f->getName()).c_str(), (void*)f);
+        if (f->isMain()) return true;
+        
+        SourceLocation sl = f->getLocation();
+        
+        
+        //fprintf(stderr, "filename: %s \n",rewriter.getSourceMgr().getFilename(sl).str().c_str());
+        if (rewriter.getSourceMgr().getFileID(sl) !=
+            rewriter.getSourceMgr().getMainFileID()) {
+            return true;
+        }
+        
+        fprintf(stderr, "Visiting Function: %s %p\n", std::string(f->getName()).c_str(), (void*)f);
         SourceRange sr = f->getSourceRange();
         Stmt *s = f->getBody();
         
+        //SourceManager* sm = rewriter.getSourceMgr();
+        //rewriter.
+        //SourceManager smm = *sourceManager;
+        
+        
+        //sl.isFileID()
         
         
         // Get name of function

@@ -13,12 +13,46 @@
 		9C77575A176C7E02005E57CC /* MyRecursiveASTVisitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C775758176C7E02005E57CC /* MyRecursiveASTVisitor.cpp */; };
 		9C77575C176C7F2B005E57CC /* ast_rewriting_functions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77575B176C7F2B005E57CC /* ast_rewriting_functions.cpp */; };
 		9C775769176CB3AB005E57CC /* TestOutput.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9C775768176CB3AB005E57CC /* TestOutput.1 */; };
-		9C77576E176CB3D1005E57CC /* test_out.c in Sources */ = {isa = PBXBuildFile; fileRef = 9C77574A176B6EDD005E57CC /* test_out.c */; };
 		9C775779176CB625005E57CC /* clang_plugin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C775770176CB5D4005E57CC /* clang_plugin.cpp */; };
 		9C77577A176CB63C005E57CC /* MyASTConsumer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C775755176C7C84005E57CC /* MyASTConsumer.cpp */; };
 		9C77577B176CB63C005E57CC /* MyRecursiveASTVisitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C775758176C7E02005E57CC /* MyRecursiveASTVisitor.cpp */; };
 		9C77577C176CB63C005E57CC /* ast_rewriting_functions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77575B176C7F2B005E57CC /* ast_rewriting_functions.cpp */; };
+		9C77577F176CD12C005E57CC /* clang_setup_functions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77577D176CD12C005E57CC /* clang_setup_functions.cpp */; };
+		9C775780176CD12C005E57CC /* clang_setup_functions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77577D176CD12C005E57CC /* clang_setup_functions.cpp */; };
+		9C775781176CD12C005E57CC /* clang_setup_functions.h in Headers */ = {isa = PBXBuildFile; fileRef = 9C77577E176CD12C005E57CC /* clang_setup_functions.h */; };
+		9C77579A176DD176005E57CC /* CIrewriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77574B176B6EDD005E57CC /* CIrewriter.cpp */; };
+		9C77579B176DD176005E57CC /* MyASTConsumer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C775755176C7C84005E57CC /* MyASTConsumer.cpp */; };
+		9C77579C176DD176005E57CC /* MyRecursiveASTVisitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C775758176C7E02005E57CC /* MyRecursiveASTVisitor.cpp */; };
+		9C77579D176DD176005E57CC /* ast_rewriting_functions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77575B176C7F2B005E57CC /* ast_rewriting_functions.cpp */; };
+		9C77579E176DD176005E57CC /* clang_setup_functions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77577D176CD12C005E57CC /* clang_setup_functions.cpp */; };
+		9C7757A1176DD176005E57CC /* ClangInstrumentationPlugin.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9C775743176B6E9D005E57CC /* ClangInstrumentationPlugin.1 */; };
+		9C7757B4176F6C64005E57CC /* clang_setup_functions.h in Headers */ = {isa = PBXBuildFile; fileRef = 9C77577E176CD12C005E57CC /* clang_setup_functions.h */; };
+		9C7757B9176F6C92005E57CC /* PrintFunctionNames.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C7757AA176F6C5D005E57CC /* PrintFunctionNames.cpp */; };
+		9CB3D8DE179DC60200B1EFCA /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C77575E176C9A37005E57CC /* test.cpp */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		9C7757A7176DD726005E57CC /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = .cpp;
+			fileType = sourcecode.cpp;
+			isEditable = 1;
+			outputFiles = (
+				"${INPUT_FILE_BASE}.cpp_debug",
+			);
+			script = "cd \"$INPUT_FILE_DIR\"\ncat \"$INPUT_FILE_NAME\" >\"${INPUT_FILE_BASE}.cpp_debug\"\necho \"Done\" >\"${INPUT_FILE_BASE}.cpp_debug\"\necho \"Hello\"";
+		};
+		9C7757A9176DE1E8005E57CC /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.llvm.clang.1_0;
+			filePatterns = .cpp_debug;
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+			);
+		};
+/* End PBXBuildRule section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		9C77573C176B6E9D005E57CC /* CopyFiles */ = {
@@ -41,10 +75,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		9C7757A0176DD176005E57CC /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				9C7757A1176DD176005E57CC /* ClangInstrumentationPlugin.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		9C77573E176B6E9D005E57CC /* ClangInstrumentationPlugin */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ClangInstrumentationPlugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C77573E176B6E9D005E57CC /* aliclang */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = aliclang; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C775743176B6E9D005E57CC /* ClangInstrumentationPlugin.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ClangInstrumentationPlugin.1; sourceTree = "<group>"; };
 		9C77574A176B6EDD005E57CC /* test_out.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = test_out.c; path = ../test_out.c; sourceTree = "<group>"; };
 		9C77574B176B6EDD005E57CC /* CIrewriter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CIrewriter.cpp; path = ../CIrewriter.cpp; sourceTree = "<group>"; };
@@ -54,12 +98,17 @@
 		9C775759176C7E02005E57CC /* MyRecursiveASTVisitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MyRecursiveASTVisitor.h; path = ../MyRecursiveASTVisitor.h; sourceTree = "<group>"; };
 		9C77575B176C7F2B005E57CC /* ast_rewriting_functions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ast_rewriting_functions.cpp; path = ../ast_rewriting_functions.cpp; sourceTree = "<group>"; };
 		9C77575D176C7FF6005E57CC /* ast_rewriting_functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ast_rewriting_functions.h; path = ../ast_rewriting_functions.h; sourceTree = "<group>"; };
-		9C77575E176C9A37005E57CC /* test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = test.c; path = ../test.c; sourceTree = "<group>"; };
+		9C77575E176C9A37005E57CC /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = test.cpp; path = ../test.cpp; sourceTree = "<group>"; };
 		9C775764176CB3AB005E57CC /* TestOutput */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TestOutput; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C775766176CB3AB005E57CC /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		9C775768176CB3AB005E57CC /* TestOutput.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = TestOutput.1; sourceTree = "<group>"; };
 		9C775770176CB5D4005E57CC /* clang_plugin.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = clang_plugin.cpp; path = ../clang_plugin.cpp; sourceTree = "<group>"; };
 		9C775775176CB61E005E57CC /* libClangPlugin.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libClangPlugin.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C77577D176CD12C005E57CC /* clang_setup_functions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = clang_setup_functions.cpp; path = ../clang_setup_functions.cpp; sourceTree = "<group>"; };
+		9C77577E176CD12C005E57CC /* clang_setup_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = clang_setup_functions.h; path = ../clang_setup_functions.h; sourceTree = "<group>"; };
+		9C7757A5176DD176005E57CC /* clangInstrument_aliclang */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = clangInstrument_aliclang; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C7757AA176F6C5D005E57CC /* PrintFunctionNames.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PrintFunctionNames.cpp; sourceTree = "<group>"; };
+		9C7757B8176F6C64005E57CC /* libPrintFuncNames.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libPrintFuncNames.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,14 +133,29 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9C77579F176DD176005E57CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9C7757B2176F6C64005E57CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		9C775735176B6E9D005E57CC = {
 			isa = PBXGroup;
 			children = (
+				9C7757AA176F6C5D005E57CC /* PrintFunctionNames.cpp */,
 				9C77576F176CB5AA005E57CC /* ClangPlugin */,
-				9C77575E176C9A37005E57CC /* test.c */,
+				9C77575E176C9A37005E57CC /* test.cpp */,
 				9C775754176C7C3D005E57CC /* MainRewriter */,
 				9C77574A176B6EDD005E57CC /* test_out.c */,
 				9C775740176B6E9D005E57CC /* ClangInstrumentationPlugin */,
@@ -103,9 +167,11 @@
 		9C77573F176B6E9D005E57CC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9C77573E176B6E9D005E57CC /* ClangInstrumentationPlugin */,
+				9C77573E176B6E9D005E57CC /* aliclang */,
 				9C775764176CB3AB005E57CC /* TestOutput */,
 				9C775775176CB61E005E57CC /* libClangPlugin.dylib */,
+				9C7757A5176DD176005E57CC /* clangInstrument_aliclang */,
+				9C7757B8176F6C64005E57CC /* libPrintFuncNames.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -128,6 +194,8 @@
 				9C775759176C7E02005E57CC /* MyRecursiveASTVisitor.h */,
 				9C77575B176C7F2B005E57CC /* ast_rewriting_functions.cpp */,
 				9C77575D176C7FF6005E57CC /* ast_rewriting_functions.h */,
+				9C77577D176CD12C005E57CC /* clang_setup_functions.cpp */,
+				9C77577E176CD12C005E57CC /* clang_setup_functions.h */,
 			);
 			name = MainRewriter;
 			sourceTree = "<group>";
@@ -156,15 +224,24 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9C775781176CD12C005E57CC /* clang_setup_functions.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9C7757B3176F6C64005E57CC /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9C7757B4176F6C64005E57CC /* clang_setup_functions.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		9C77573D176B6E9D005E57CC /* ClangInstrumentationPlugin */ = {
+		9C77573D176B6E9D005E57CC /* aliclang */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9C775747176B6E9D005E57CC /* Build configuration list for PBXNativeTarget "ClangInstrumentationPlugin" */;
+			buildConfigurationList = 9C775747176B6E9D005E57CC /* Build configuration list for PBXNativeTarget "aliclang" */;
 			buildPhases = (
 				9C77573A176B6E9D005E57CC /* Sources */,
 				9C77573B176B6E9D005E57CC /* Frameworks */,
@@ -174,9 +251,9 @@
 			);
 			dependencies = (
 			);
-			name = ClangInstrumentationPlugin;
+			name = aliclang;
 			productName = ClangInstrumentationPlugin;
-			productReference = 9C77573E176B6E9D005E57CC /* ClangInstrumentationPlugin */;
+			productReference = 9C77573E176B6E9D005E57CC /* aliclang */;
 			productType = "com.apple.product-type.tool";
 		};
 		9C775763176CB3AB005E57CC /* TestOutput */ = {
@@ -213,6 +290,42 @@
 			productReference = 9C775775176CB61E005E57CC /* libClangPlugin.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
+		9C775798176DD176005E57CC /* compileWITHAliClang */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9C7757A2176DD176005E57CC /* Build configuration list for PBXNativeTarget "compileWITHAliClang" */;
+			buildPhases = (
+				9C775799176DD176005E57CC /* Sources */,
+				9C77579F176DD176005E57CC /* Frameworks */,
+				9C7757A0176DD176005E57CC /* CopyFiles */,
+			);
+			buildRules = (
+				9C7757A7176DD726005E57CC /* PBXBuildRule */,
+				9C7757A9176DE1E8005E57CC /* PBXBuildRule */,
+			);
+			dependencies = (
+			);
+			name = compileWITHAliClang;
+			productName = ClangInstrumentationPlugin;
+			productReference = 9C7757A5176DD176005E57CC /* clangInstrument_aliclang */;
+			productType = "com.apple.product-type.tool";
+		};
+		9C7757AB176F6C64005E57CC /* PrintFunctionNames */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9C7757B5176F6C64005E57CC /* Build configuration list for PBXNativeTarget "PrintFunctionNames" */;
+			buildPhases = (
+				9C7757AC176F6C64005E57CC /* Sources */,
+				9C7757B2176F6C64005E57CC /* Frameworks */,
+				9C7757B3176F6C64005E57CC /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PrintFunctionNames;
+			productName = ClangPlugin;
+			productReference = 9C7757B8176F6C64005E57CC /* libPrintFuncNames.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -234,9 +347,11 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9C77573D176B6E9D005E57CC /* ClangInstrumentationPlugin */,
+				9C77573D176B6E9D005E57CC /* aliclang */,
 				9C775763176CB3AB005E57CC /* TestOutput */,
 				9C775774176CB61E005E57CC /* ClangPlugin */,
+				9C775798176DD176005E57CC /* compileWITHAliClang */,
+				9C7757AB176F6C64005E57CC /* PrintFunctionNames */,
 			);
 		};
 /* End PBXProject section */
@@ -250,6 +365,7 @@
 				9C775757176C7C84005E57CC /* MyASTConsumer.cpp in Sources */,
 				9C77575A176C7E02005E57CC /* MyRecursiveASTVisitor.cpp in Sources */,
 				9C77575C176C7F2B005E57CC /* ast_rewriting_functions.cpp in Sources */,
+				9C77577F176CD12C005E57CC /* clang_setup_functions.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,7 +373,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9C77576E176CB3D1005E57CC /* test_out.c in Sources */,
+				9CB3D8DE179DC60200B1EFCA /* test.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -269,6 +385,27 @@
 				9C77577B176CB63C005E57CC /* MyRecursiveASTVisitor.cpp in Sources */,
 				9C77577C176CB63C005E57CC /* ast_rewriting_functions.cpp in Sources */,
 				9C775779176CB625005E57CC /* clang_plugin.cpp in Sources */,
+				9C775780176CD12C005E57CC /* clang_setup_functions.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9C775799176DD176005E57CC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9C77579A176DD176005E57CC /* CIrewriter.cpp in Sources */,
+				9C77579B176DD176005E57CC /* MyASTConsumer.cpp in Sources */,
+				9C77579C176DD176005E57CC /* MyRecursiveASTVisitor.cpp in Sources */,
+				9C77579D176DD176005E57CC /* ast_rewriting_functions.cpp in Sources */,
+				9C77579E176DD176005E57CC /* clang_setup_functions.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9C7757AC176F6C64005E57CC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9C7757B9176F6C92005E57CC /* PrintFunctionNames.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -588,6 +725,250 @@
 			};
 			name = Release;
 		};
+		9C7757A3176DD176005E57CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_VERSION = "";
+				GENERATE_PROFILING_CODE = YES;
+				HEADER_SEARCH_PATHS = (
+					$SRCROOT/../../llvm/include,
+					$SRCROOT/../../build/tools/clang/include/,
+					$SRCROOT/../../build/include,
+					$SRCROOT/../../llvm/tools/clang/include/,
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				MACH_O_TYPE = mh_execute;
+				OTHER_CPLUSPLUSFLAGS = (
+					"-fno-rtti",
+					"-D__STDC_LIMIT_MACROS=1",
+					"-D__STDC_CONSTANT_MACROS=1",
+				);
+				OTHER_LDFLAGS = (
+					"-L\"../../build/Debug+Asserts/lib/\"",
+					"-lclangTooling",
+					"-lclangFrontendTool",
+					"-lclangFrontend",
+					"-lclangDriver",
+					"-lclangSerialization",
+					"-lclangCodeGen",
+					"-lclangParse",
+					"-lclangSema",
+					"-lclangStaticAnalyzerFrontend",
+					"-lclangStaticAnalyzerCheckers",
+					"-lclangStaticAnalyzerCore",
+					"-lclangAnalysis",
+					"-lclangARCMigrate",
+					"-lclangRewriteFrontend",
+					"-lclangRewriteCore",
+					"-lclangEdit",
+					"-lclangAST",
+					"-lclangLex",
+					"-lclangBasic",
+					"-lLLVMTableGen",
+					"-lLLVMMCJIT",
+					"-lLLVMRuntimeDyld",
+					"-lLLVMObject",
+					"-lLLVMMCDisassembler",
+					"-lLLVMLinker",
+					"-lLLVMipo",
+					"-lLLVMInterpreter",
+					"-lLLVMInstrumentation",
+					"-lLLVMJIT",
+					"-lLLVMExecutionEngine",
+					"-lLLVMDebugInfo",
+					"-lLLVMBitWriter",
+					"-lLLVMX86Disassembler",
+					"-lLLVMX86AsmParser",
+					"-lLLVMX86CodeGen",
+					"-lLLVMX86Desc",
+					"-lLLVMSelectionDAG",
+					"-lLLVMX86AsmPrinter",
+					"-lLLVMX86Utils",
+					"-lLLVMX86Info",
+					"-lLLVMAsmPrinter",
+					"-lLLVMMCParser",
+					"-lLLVMCodeGen",
+					"-lLLVMScalarOpts",
+					"-lLLVMInstCombine",
+					"-lLLVMTransformUtils",
+					"-lLLVMipa",
+					"-lLLVMAsmParser",
+					"-lLLVMArchive",
+					"-lLLVMBitReader",
+					"-lLLVMAnalysis",
+					"-lLLVMTarget",
+					"-lLLVMMC",
+					"-lLLVMCore",
+					"-lLLVMSupport",
+					"-lstdc++",
+				);
+				PRELINK_LIBS = "";
+				PRODUCT_NAME = clangInstrument_aliclang;
+			};
+			name = Debug;
+		};
+		9C7757A4176DD176005E57CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_VERSION = "";
+				GENERATE_PROFILING_CODE = YES;
+				HEADER_SEARCH_PATHS = (
+					$SRCROOT/../../llvm/include,
+					$SRCROOT/../../build/tools/clang/include/,
+					$SRCROOT/../../build/include,
+					$SRCROOT/../../llvm/tools/clang/include/,
+				);
+				LIBRARY_SEARCH_PATHS = "";
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				MACH_O_TYPE = mh_execute;
+				OTHER_CPLUSPLUSFLAGS = (
+					"-fno-rtti",
+					"-D__STDC_LIMIT_MACROS=1",
+					"-D__STDC_CONSTANT_MACROS=1",
+				);
+				OTHER_LDFLAGS = (
+					"-L\"../../build/Debug+Asserts/lib/\"",
+					"-lclangTooling",
+					"-lclangFrontendTool",
+					"-lclangFrontend",
+					"-lclangDriver",
+					"-lclangSerialization",
+					"-lclangCodeGen",
+					"-lclangParse",
+					"-lclangSema",
+					"-lclangStaticAnalyzerFrontend",
+					"-lclangStaticAnalyzerCheckers",
+					"-lclangStaticAnalyzerCore",
+					"-lclangAnalysis",
+					"-lclangARCMigrate",
+					"-lclangRewriteFrontend",
+					"-lclangRewriteCore",
+					"-lclangEdit",
+					"-lclangAST",
+					"-lclangLex",
+					"-lclangBasic",
+					"-lLLVMTableGen",
+					"-lLLVMMCJIT",
+					"-lLLVMRuntimeDyld",
+					"-lLLVMObject",
+					"-lLLVMMCDisassembler",
+					"-lLLVMLinker",
+					"-lLLVMipo",
+					"-lLLVMInterpreter",
+					"-lLLVMInstrumentation",
+					"-lLLVMJIT",
+					"-lLLVMExecutionEngine",
+					"-lLLVMDebugInfo",
+					"-lLLVMBitWriter",
+					"-lLLVMX86Disassembler",
+					"-lLLVMX86AsmParser",
+					"-lLLVMX86CodeGen",
+					"-lLLVMX86Desc",
+					"-lLLVMSelectionDAG",
+					"-lLLVMX86AsmPrinter",
+					"-lLLVMX86Utils",
+					"-lLLVMX86Info",
+					"-lLLVMAsmPrinter",
+					"-lLLVMMCParser",
+					"-lLLVMCodeGen",
+					"-lLLVMScalarOpts",
+					"-lLLVMInstCombine",
+					"-lLLVMTransformUtils",
+					"-lLLVMipa",
+					"-lLLVMAsmParser",
+					"-lLLVMArchive",
+					"-lLLVMBitReader",
+					"-lLLVMAnalysis",
+					"-lLLVMTarget",
+					"-lLLVMMC",
+					"-lLLVMCore",
+					"-lLLVMSupport",
+					"-lstdc++",
+				);
+				PRELINK_LIBS = "";
+				PRODUCT_NAME = clangInstrument_aliclang;
+			};
+			name = Release;
+		};
+		9C7757B6176F6C64005E57CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_ENABLE_CPP_RTTI = NO;
+				HEADER_SEARCH_PATHS = (
+					$SRCROOT/../../build/include,
+					$SRCROOT/../../llvm/include,
+					$SRCROOT/../../build/tools/clang/include/,
+					$SRCROOT/../../llvm/tools/clang/include/,
+				);
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = (
+					"-D__STDC_LIMIT_MACROS=1",
+					"-D__STDC_CONSTANT_MACROS=1",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-fno-rtti",
+					"-D__STDC_LIMIT_MACROS=1",
+					"-D__STDC_CONSTANT_MACROS=1",
+				);
+				OTHER_LDFLAGS = (
+					"-L\"../../build/Debug+Asserts/lib/\"",
+					"-undefined",
+					dynamic_lookup,
+				);
+				PRODUCT_NAME = PrintFuncNames;
+			};
+			name = Debug;
+		};
+		9C7757B7176F6C64005E57CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_ENABLE_CPP_RTTI = NO;
+				HEADER_SEARCH_PATHS = (
+					$SRCROOT/../../build/include,
+					$SRCROOT/../../llvm/include,
+					$SRCROOT/../../build/tools/clang/include/,
+					$SRCROOT/../../llvm/tools/clang/include/,
+				);
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = (
+					"-D__STDC_LIMIT_MACROS=1",
+					"-D__STDC_CONSTANT_MACROS=1",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-fno-rtti",
+					"-D__STDC_LIMIT_MACROS=1",
+					"-D__STDC_CONSTANT_MACROS=1",
+				);
+				OTHER_LDFLAGS = (
+					"-L\"../../build/Debug+Asserts/lib/\"",
+					"-undefined",
+					dynamic_lookup,
+				);
+				PRODUCT_NAME = PrintFuncNames;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -600,7 +981,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9C775747176B6E9D005E57CC /* Build configuration list for PBXNativeTarget "ClangInstrumentationPlugin" */ = {
+		9C775747176B6E9D005E57CC /* Build configuration list for PBXNativeTarget "aliclang" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9C775748176B6E9D005E57CC /* Debug */,
@@ -616,6 +997,7 @@
 				9C77576C176CB3AB005E57CC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		9C775776176CB61E005E57CC /* Build configuration list for PBXNativeTarget "ClangPlugin" */ = {
 			isa = XCConfigurationList;
@@ -624,6 +1006,25 @@
 				9C775778176CB61E005E57CC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9C7757A2176DD176005E57CC /* Build configuration list for PBXNativeTarget "compileWITHAliClang" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9C7757A3176DD176005E57CC /* Debug */,
+				9C7757A4176DD176005E57CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9C7757B5176F6C64005E57CC /* Build configuration list for PBXNativeTarget "PrintFunctionNames" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9C7757B6176F6C64005E57CC /* Debug */,
+				9C7757B7176F6C64005E57CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -4,20 +4,50 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>ClangInstrumentationPlugin.xcscheme</key>
+		<key>ClangInstrumentationStandAlone.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
 		<key>ClangPlugin.xcscheme</key>
 		<dict>
+			<key>isShown</key>
+			<false/>
 			<key>orderHint</key>
 			<integer>2</integer>
 		</dict>
+		<key>PrintFuncNamesPlugin.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>5</integer>
+		</dict>
 		<key>TestOutput.xcscheme</key>
 		<dict>
+			<key>isShown</key>
+			<false/>
 			<key>orderHint</key>
 			<integer>1</integer>
+		</dict>
+		<key>aliclang copy.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>4</integer>
+		</dict>
+		<key>clang_test_dot_cpp.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>6</integer>
+		</dict>
+		<key>compileWITHAliClang.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>3</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
@@ -33,6 +63,21 @@
 			<true/>
 		</dict>
 		<key>9C775774176CB61E005E57CC</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>9C775785176DD0E5005E57CC</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>9C775798176DD176005E57CC</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>9C7757AB176F6C64005E57CC</key>
 		<dict>
 			<key>primary</key>
 			<true/>

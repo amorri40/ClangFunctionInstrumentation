@@ -22,7 +22,7 @@ class MyASTConsumer : public clang::ASTConsumer
 {
 public:
     
-    MyASTConsumer(clang::Rewriter &Rewrite) : rv(Rewrite) { }
+    MyASTConsumer(clang::Rewriter &Rewrite, clang::SourceManager* sm) : rv(Rewrite,sm) { }
     virtual bool HandleTopLevelDecl(clang::DeclGroupRef d);
     
     MyRecursiveASTVisitor rv;

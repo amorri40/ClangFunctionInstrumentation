@@ -129,14 +129,19 @@ void setup_header_info(CompilerInstance& compiler) {
   // To see what include paths need to be here, try
   // clang -v -c test.c
   // or clang++ for C++ paths as used below:
-  headerSearchOptions.AddPath("/usr/include/c++/4.6",
+    headerSearchOptions.AddPath("/Users/alasdairmorrison/Dropbox/projects/clangparsing/build/debug+asserts/lib/clang/3.4/include", //was 4.6
+                                clang::frontend::Angled,
+                                false,
+                                false);
+  headerSearchOptions.AddPath("/usr/include/c++/4.2.1", //was 4.6
           clang::frontend::Angled,
           false,
           false);
-  headerSearchOptions.AddPath("/usr/include/c++/4.6/i686-linux-gnu",
+    
+  /*headerSearchOptions.AddPath("/usr/include/c++/4.6/i686-linux-gnu",
           clang::frontend::Angled,
           false,
-          false);
+          false);*/
   headerSearchOptions.AddPath("/usr/include/c++/4.6/backward",
           clang::frontend::Angled,
           false,
@@ -148,11 +153,11 @@ void setup_header_info(CompilerInstance& compiler) {
   headerSearchOptions.AddPath("/usr/local/lib/clang/3.3/include",
           clang::frontend::Angled,
           false,
-          false);
+          false);/*
   headerSearchOptions.AddPath("/usr/include/i386-linux-gnu",
           clang::frontend::Angled,
           false,
-          false);
+          false);*/
   headerSearchOptions.AddPath("/usr/include",
           clang::frontend::Angled,
           false,
@@ -180,6 +185,9 @@ void load_cxx_file(CompilerInstance& compiler, std::string fileName) {
   const FileEntry *pFile = compiler.getFileManager().getFile(fileName);
   compiler.getSourceManager().createMainFileID(pFile);
   Preprocessor& preprocessor = compiler.getPreprocessor();
+    
+    preprocessor.getBuiltinInfo().InitializeBuiltins(preprocessor.getIdentifierTable(),
+                                           preprocessor.getLangOpts());
   printf("%s\n", "before begin source file ");
   compiler.getDiagnosticClient().BeginSourceFile(compiler.getLangOpts(),
                                                &preprocessor);
@@ -256,7 +264,8 @@ int main(int argc, char **argv)
   }
   printf("%s\n", "Opened output file");
 
-    MyASTConsumer astConsumer(Rewrite); // create the ast consumer
+    MyASTConsumer astConsumer(Rewrite,&compiler.getSourceManager()); // create the ast consumer
+    
     // Parse the AST wtith out astConsumer
     ParseAST(compiler.getPreprocessor(), &astConsumer, compiler.getASTContext());
     printf("%s\n", "After parseAST");
@@ -264,14 +273,21 @@ int main(int argc, char **argv)
 
     printf("%s\n", "before write to start of file");
     // Output some #ifdefs
-    outFile << "#define L_AND(a, b) a && b\n";
-    outFile << "#define L_OR(a, b) a || b\n\n";
+    outFile << "//Debug file auto generated from clanginstrumentation";
 
     // Now output rewritten source code
     const RewriteBuffer *RewriteBuf =
       Rewrite.getRewriteBufferFor(compiler.getSourceManager().getMainFileID());
+    if (RewriteBuf == NULL) {
+        printf("No changes to the file required %s","\n");
+        std::string normal_file = compiler.getSourceManager().getMemoryBufferForFile(compiler.getSourceManager().getFileEntryForID(compiler.getSourceManager().getMainFileID()))->getBuffer();
+        outFile << normal_file;
+    }
+    else outFile << std::string(RewriteBuf->begin(), RewriteBuf->end());
       printf("%s\n", "After getRewriteBufferFor");
-    outFile << std::string(RewriteBuf->begin(), RewriteBuf->end());
+    
+    
+    
     
 
   outFile.close();
