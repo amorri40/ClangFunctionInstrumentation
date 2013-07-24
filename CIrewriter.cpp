@@ -273,7 +273,8 @@ int main(int argc, char **argv)
 
     printf("%s\n", "before write to start of file");
     // Output some #ifdefs
-    outFile << "//Debug file auto generated from clanginstrumentation";
+    outFile << "//Debug file auto generated from clanginstrumentation \n";
+    outFile << "extern void start_log_function(); extern void end_log_function(); \n#include <log_functions.h> \n";
 
     // Now output rewritten source code
     const RewriteBuffer *RewriteBuf =

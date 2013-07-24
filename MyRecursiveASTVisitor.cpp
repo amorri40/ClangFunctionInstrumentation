@@ -79,8 +79,17 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         if (f->isMain())
             llvm::errs() << "Found main()\n";
         
+        //size_t position_of_return_statement = statements.find_first_of("ret");
+        //statements.replace(position_of_return_statement, 1, "end_log_function(), return}");
+        
+        
+        size_t position_of_first_curly_bracket = statements.find_first_of('{');
+        statements.replace(position_of_first_curly_bracket, 1, "{const char* fname = __PRETTY_FUNCTION__;  InstrumentFunctionDB inst_func_db(fname);");
+        
+        
+        
         SourceLocation END = s->getLocEnd().getLocWithOffset(1);
-        sprintf(fc, " %s debug_%s %s %s %s (* %s) %s = &orig_%s; \n", return_type_str.c_str(), fname.data(), func_args_string.c_str(),statements.c_str(),
+        sprintf(fc, " %s debug_%s %s %s %s (* %s) %s = &debug_%s; \n", return_type_str.c_str(), fname.data(), func_args_string.c_str(),statements.c_str(),
                 return_type_str.c_str(), fname.data(), func_args_string.c_str(),fname.data());
         rewriter.InsertText(END, fc, true, true);
         printf("End of: %s\n", "VisitFunctionDecl");
