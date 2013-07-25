@@ -10,6 +10,8 @@
 #include "clang/Lex/Lexer.h"
 #include "ast_rewriting_functions.h"
 #include "clang/Basic/SourceManager.h"
+#include <iostream>
+#include <sstream>
 
 
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
@@ -33,23 +35,28 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
             return true;
         }
         
-        fprintf(stderr, "Visiting Function: %s %p\n", std::string(f->getName()).c_str(), (void*)f);
-        SourceRange sr = f->getSourceRange();
-        Stmt *s = f->getBody();
+        if (f->isOverloadedOperator()) return true;
+        if ( f->getKind() == f->ClassScopeFunctionSpecialization) return true;
         
-        //SourceManager* sm = rewriter.getSourceMgr();
-        //rewriter.
-        //SourceManager smm = *sourceManager;
-        
-        
-        //sl.isFileID()
+        if (f->isVirtualAsWritten()) return true;
+        if (f->isCXXClassMember() || f->isCXXInstanceMember()) return true;
         
         
         // Get name of function
         DeclarationNameInfo dni = f->getNameInfo();
-        DeclarationName dn = dni.getName();
-        std::string fname = dn.getAsString();
+        
+        //llvm::errs() << dni.getAsString() << "\n";
+        // llvm::errs() << f->getQualifiedNameAsString()<< "\n";
+       // DeclarationName dn = dni.getName();
+       // std::string fname = dn.getAsString();
+        std::string fname = f->getNameAsString();
         llvm::errs() << "Function name:" << fname << "\n";
+        
+        
+        fprintf(stderr, "Visiting Function: %s %p\n", fname.c_str(), (void*)f);
+        SourceRange sr = f->getSourceRange();
+        Stmt *s = f->getBody();
+
         
         
         std::string statements = rewriter.ConvertToString(s);
@@ -67,31 +74,34 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         
         // Point to start of function name
         SourceLocation start_of_function_name_token = dni.getLoc();
-        std::string new_function_name = "orig_"+fname;
+        std::string new_function_name = fname+"_orig";
         int length_of_function_name = get_length_of_token_at_location(start_of_function_name_token, this->rewriter);
         replace_text_at_location(rewriter, start_of_function_name_token, length_of_function_name, new_function_name.c_str());
         
-        // Add comment
-        char fc[256];
-        //sprintf(fc, "// Begin function %s returning %s\n", fname.data(), ret.data());
-        //rewriter.InsertText(start_of_function_decl_tokens, fc, true, true);
         
-        if (f->isMain())
-            llvm::errs() << "Found main()\n";
-        
-        //size_t position_of_return_statement = statements.find_first_of("ret");
-        //statements.replace(position_of_return_statement, 1, "end_log_function(), return}");
-        
+     std::string log_start = "{InstrumentFunctionDB inst_func_db(__FUNCTION__);\n";
         
         size_t position_of_first_curly_bracket = statements.find_first_of('{');
-        statements.replace(position_of_first_curly_bracket, 1, "{const char* fname = __PRETTY_FUNCTION__;  InstrumentFunctionDB inst_func_db(fname);");
+        statements.replace(position_of_first_curly_bracket, 1, log_start);
         
         
         
         SourceLocation END = s->getLocEnd().getLocWithOffset(1);
-        sprintf(fc, " %s debug_%s %s %s %s (* %s) %s = &debug_%s; \n", return_type_str.c_str(), fname.data(), func_args_string.c_str(),statements.c_str(),
-                return_type_str.c_str(), fname.data(), func_args_string.c_str(),fname.data());
-        rewriter.InsertText(END, fc, true, true);
+        
+        
+        std::ostringstream debug_version_of_function;
+        debug_version_of_function << " " << return_type_str.c_str() << " " << fname.data() << "_debug";
+        debug_version_of_function << " " << func_args_string.c_str();
+        debug_version_of_function << " " << statements.c_str();
+        //now write the function pointer
+        debug_version_of_function << " " << return_type_str.c_str();
+        debug_version_of_function << " (* " << fname.data()<< ")";
+        debug_version_of_function << " " << func_args_string.c_str();
+        debug_version_of_function << " = &" << fname.data() << "_debug; \n";
+        
+        
+        // PUT THIS BAXK IN!sprintf(fc, " %s debug_%s %s %s %s (* %s) %s = &debug_%s; \n", return_type_str.c_str(), fname.data(), func_args_string.c_str(),statements.c_str(), return_type_str.c_str(), fname.data(), func_args_string.c_str(),fname.data());
+        rewriter.InsertText(END, debug_version_of_function.str(), true, true);
         printf("End of: %s\n", "VisitFunctionDecl");
     }
     
