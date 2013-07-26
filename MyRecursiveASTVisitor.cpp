@@ -13,6 +13,16 @@
 #include <iostream>
 #include <sstream>
 
+void replaceAll(std::string& str, const std::string& from, const std::string& to) {
+    if(from.empty())
+        return;
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+}
+
 /*
  Check it doesn't contain bad statements which would make the debug code not work
  */
@@ -34,6 +44,103 @@ bool contains_bad_statements(Stmt *s) {
         }
     }
     return false; //everything is good
+}
+
+void modify_statements(Rewriter* rewriter, Stmt *s) {
+    for(StmtIterator it = s->child_begin(); it != s->child_end(); ++it) {
+        
+        Stmt* statement_from_it = *it;
+        
+        if (statement_from_it == NULL) continue;
+        if (!it->children().empty()) {modify_statements(rewriter,*it);}
+        
+        if (isa<CompoundAssignOperator>(*statement_from_it)) {
+            llvm::errs() << "Compund Assign!!" << "\n\n\n";
+            
+        } /*else if (isa<Decl>(*statement_from_it)) {
+            llvm::errs() << "Decl!!" << "\n\n\n";
+            Decl *decl = cast<Decl>(s);
+            decl->getDeclKindName();
+            
+        }*/
+
+        else if (isa<DeclStmt>(*statement_from_it)) {
+            DeclStmt *declStatement = cast<DeclStmt>(statement_from_it);
+            if (declStatement->isSingleDecl()) {
+                Decl* d = declStatement->getSingleDecl();
+                d->getDeclKindName();
+                rewriter->InsertTextAfter(d->getLocStart(), "/*DECL*/");
+            }
+        } else if (isa<CompoundStmt>(*statement_from_it)) {
+            // basically blocks of statements {}
+            CompoundStmt *st = cast<CompoundStmt>(statement_from_it);
+            rewriter->InsertTextAfter(st->getLocStart(), "/*Compound*/");
+        }
+        else if (isa<Expr>(*statement_from_it)) {
+            
+            
+            
+           // llvm::errs() << "Expression!!" << "\n\n\n";
+            Expr *st = cast<Expr>(statement_from_it);
+            
+            
+            
+            if (isa<clang::BinaryOperator>(st)) {
+                
+                llvm::errs() << "Binary operator" ;
+                //rewriter->InsertTextAfter(st->getLocStart(), "/*BINOP*/ ");
+                //rewriter->InsertTextAfter(st->getLocEnd(), "/*End of Binop*/");
+                
+                BinaryOperator* biOp = (BinaryOperator *) st;
+                if (biOp->isAssignmentOp()) {
+                    // get the lhs and rhs of the operator
+                    Expr* lhs = biOp->getLHS();
+                    
+                    
+                    
+                    Expr* rhs = biOp->getRHS();
+                    if (rhs->isLValue()) continue; //current doesn't support val = val = val
+                    
+                    std::string var_name = rewriter->ConvertToString(lhs);
+                    replaceAll(var_name,"\"","'");
+                    
+                    std::ostringstream debug_version_of_exp;
+                    
+                    debug_version_of_exp << "/*LHSValue*/ (inst_func_db.log_change_start(";
+                    debug_version_of_exp << "\"" << var_name << "\",";
+                    debug_version_of_exp << rewriter->ConvertToString(lhs);
+                    debug_version_of_exp << "),";
+                    
+                    rewriter->InsertTextAfter(lhs->getLocStart(), debug_version_of_exp.str());
+                    rewriter->InsertTextAfter(biOp->getOperatorLoc(), ")/*End of LHS*/");
+                    rewriter->InsertTextAfter(rhs->getLocStart(), "/*RHSValue*/ ");
+                    rewriter->InsertTextAfter(rhs->getLocEnd(), "/*End of RHS*/");
+                    
+                }
+                
+                
+            } else {
+                continue;
+                QualType q = st->getType(); //value type of expression
+                llvm::errs() << q.getAsString();
+                if (st->isLValue()) {
+                    rewriter->InsertTextAfter(st->getLocStart(), "/*LValue*/ ");
+                    rewriter->InsertTextAfter(st->getLocEnd(), "");
+                } else if (st->isXValue()) {
+                    rewriter->InsertTextAfter(st->getLocStart(), "/*XValue*/ ");
+                    rewriter->InsertTextAfter(st->getLocEnd(), "");
+                }
+            
+            
+            }
+        }
+        else {
+            //it->PrintStats();
+            //llvm::errs() << "else it is:" << it->getStmtClassName() << "\n\n\n";
+            
+        }
+    }
+   
 }
 
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
@@ -129,6 +236,11 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         SourceLocation END = s->getLocEnd().getLocWithOffset(1);
         
         std::string whole_func = get_location_to_string(rewriter, &rewriter.getSourceMgr(), start_of_stmts, END);
+        
+        /*
+         Do all modifications after this
+         */
+        modify_statements(&rewriter,s);
         
         
         std::string debug_func = "{ if (!ALI_GLOBAL_DEBUG) {";
