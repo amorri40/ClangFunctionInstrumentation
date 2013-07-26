@@ -13,6 +13,28 @@
 #include <iostream>
 #include <sstream>
 
+/*
+ Check it doesn't contain bad statements which would make the debug code not work
+ */
+bool contains_bad_statements(Stmt *s) {
+    for(StmtIterator it = s->child_begin(); it != s->child_end(); ++it) {
+        
+        Stmt* statement_from_it = *it;
+        
+        if (statement_from_it == NULL) continue;
+        if (!it->children().empty()) {if (contains_bad_statements(*it)) return true;}
+        
+        
+        if (isa<LabelStmt>(*statement_from_it)) {
+            llvm::errs() << "Label_Statement!" << "\n\n\n";
+            return true; //we don't want to debug functions with label statements
+        } else {
+            //llvm::errs() << "Not Label_Statement it is:" << it->getStmtClassName() << "\n\n\n";
+            
+        }
+    }
+    return false; //everything is good
+}
 
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
 {
@@ -56,12 +78,15 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         fprintf(stderr, "Visiting Function: %s %p\n", fname.c_str(), (void*)f);
         SourceRange sr = f->getSourceRange();
         Stmt *s = f->getBody();
-
         
+        
+        if (contains_bad_statements(s)) return true; //check it doesn't contain bad statements
         
         std::string statements = rewriter.ConvertToString(s);
         QualType return_type = f->getResultType();
         std::string return_type_str = return_type.getAsString();
+        
+        
         
         SourceLocation end_of_func_name = clang::Lexer::getLocForEndOfToken(dni.getEndLoc(), 0, rewriter.getSourceMgr(), rewriter.getLangOpts());
         SourceLocation start_of_stmts =clang::Lexer::GetBeginningOfToken(s->getLocStart(), rewriter.getSourceMgr(), rewriter.getLangOpts());
@@ -76,32 +101,74 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         SourceLocation start_of_function_name_token = dni.getLoc();
         std::string new_function_name = fname+"_orig";
         int length_of_function_name = get_length_of_token_at_location(start_of_function_name_token, this->rewriter);
-        replace_text_at_location(rewriter, start_of_function_name_token, length_of_function_name, new_function_name.c_str());
         
+        
+        
+        //if(!f->isGlobal()) return true;
+        //if(!f->isFileContext()) return true;
+        
+        
+        std::string proper_func_name = get_location_to_string(rewriter, &rewriter.getSourceMgr(), sr.getBegin(), end_of_func_name);
+        
+        if(f->getQualifierLoc().hasQualifier()) {
+            return true;
+        std::string namespace_info = get_location_to_string(rewriter, &rewriter.getSourceMgr(), f->getQualifierLoc().getBeginLoc(), dni.getBeginLoc());
+        
+        
+        llvm::errs() << namespace_info << " namespace_info\n\n";
+        } else {
+            //replace_text_at_location(rewriter, start_of_function_name_token, length_of_function_name, new_function_name.c_str());
+        }
         
      std::string log_start = "{InstrumentFunctionDB inst_func_db(__FUNCTION__);\n";
         
-        size_t position_of_first_curly_bracket = statements.find_first_of('{');
-        statements.replace(position_of_first_curly_bracket, 1, log_start);
+        
         
         
         
         SourceLocation END = s->getLocEnd().getLocWithOffset(1);
         
+        std::string whole_func = get_location_to_string(rewriter, &rewriter.getSourceMgr(), start_of_stmts, END);
+        
+        
+        std::string debug_func = "{ if (!ALI_GLOBAL_DEBUG) {";
+        
+        size_t position_of_first_curly_bracket = statements.find_first_of('{');
+        //statements.replace(position_of_first_curly_bracket, 1, debug_func);
+        //replace_text_at_location(rewriter,position_of_first_curly_bracket,1,debug_func);
+        
+        
+        //current idea: create inline version of original function which calls a function pointer, static int count;
+        // issues:
+        
         
         std::ostringstream debug_version_of_function;
-        debug_version_of_function << " " << return_type_str.c_str() << " " << fname.data() << "_debug";
+        debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT) ";
+        debug_version_of_function << " " << whole_func;
+        debug_version_of_function << " else {InstrumentFunctionDB inst_func_db(__FUNCTION__); \n #endif \n";
+        /*
+        debug_version_of_function << "\n " << proper_func_name << "_debug";
+        //debug_version_of_function << " " << return_type_str.c_str() << " " << fname.data() << "_debug";
         debug_version_of_function << " " << func_args_string.c_str();
-        debug_version_of_function << " " << statements.c_str();
+        debug_version_of_function << " " << whole_func;
+        debug_version_of_function << "\n " << proper_func_name << " " << func_args_string.c_str() << " { return "<< fname << "_debug();"<<" }";*/
         //now write the function pointer
-        debug_version_of_function << " " << return_type_str.c_str();
+        /*debug_version_of_function << " " << return_type_str.c_str();
         debug_version_of_function << " (* " << fname.data()<< ")";
         debug_version_of_function << " " << func_args_string.c_str();
-        debug_version_of_function << " = &" << fname.data() << "_debug; \n";
+        debug_version_of_function << " = &" << fname.data() << "_debug; \n";*/
+        
         
         
         // PUT THIS BAXK IN!sprintf(fc, " %s debug_%s %s %s %s (* %s) %s = &debug_%s; \n", return_type_str.c_str(), fname.data(), func_args_string.c_str(),statements.c_str(), return_type_str.c_str(), fname.data(), func_args_string.c_str(),fname.data());
-        rewriter.InsertText(END, debug_version_of_function.str(), true, true);
+        //rewriter.InsertText(END, debug_version_of_function.str(), true, true);
+        //statements.append(debug_version_of_function.str());
+        rewriter.InsertTextAfter(start_of_stmts, debug_version_of_function.str());
+        rewriter.InsertTextAfter(END, "\n #if NO_INSTRUMENT == false \n } \n #endif \n");
+        rewriter.InsertTextAfter(END, "}");
+        //rewriter.InsertText(END, debug_version_of_function.str(), true, true);
+        //statements.replace(position_of_first_curly_bracket, 1, debug_version_of_function.str());
+        
         printf("End of: %s\n", "VisitFunctionDecl");
     }
     
