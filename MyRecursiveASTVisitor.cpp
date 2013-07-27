@@ -100,21 +100,40 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                     
                     Expr* rhs = biOp->getRHS();
                     if (rhs->isLValue()) continue; //current doesn't support val = val = val
-                    
+                    /*
+                     *left hand side
+                     */
                     std::string var_name = rewriter->ConvertToString(lhs);
                     replaceAll(var_name,"\"","'");
                     
-                    std::ostringstream debug_version_of_exp;
+                    std::ostringstream debug_version_of_lhs;
                     
-                    debug_version_of_exp << "/*LHSValue*/ (inst_func_db.log_change_start(";
-                    debug_version_of_exp << "\"" << var_name << "\",";
-                    debug_version_of_exp << rewriter->ConvertToString(lhs);
-                    debug_version_of_exp << "),";
+                    debug_version_of_lhs << "/*LHSValue*/ (inst_func_db.log_change_lhs(";
+                    debug_version_of_lhs << "\"" << var_name << "\",__LINE__,";
+                    debug_version_of_lhs << rewriter->ConvertToString(lhs);
+                    debug_version_of_lhs << "),";
                     
-                    rewriter->InsertTextAfter(lhs->getLocStart(), debug_version_of_exp.str());
+                    rewriter->InsertTextAfter(lhs->getLocStart(), debug_version_of_lhs.str());
                     rewriter->InsertTextAfter(biOp->getOperatorLoc(), ")/*End of LHS*/");
-                    rewriter->InsertTextAfter(rhs->getLocStart(), "/*RHSValue*/ ");
-                    rewriter->InsertTextAfter(rhs->getLocEnd(), "/*End of RHS*/");
+                    
+                    /*
+                     now do the right hand side
+                    */
+                    std::string rhs_name = rewriter->ConvertToString(lhs);
+                    replaceAll(rhs_name,"\"","'");
+                    
+                    std::ostringstream debug_version_of_rhs;
+                    
+                    debug_version_of_rhs << "/*RHSValue*/ (inst_func_db.log_change_rhs(";
+                    debug_version_of_rhs << "\"" << var_name << "\",__LINE__,";
+                    //debug_version_of_rhs << rewriter->ConvertToString(rhs);
+                    //debug_version_of_rhs << "),";
+                    
+                    
+                    
+                    rewriter->InsertTextAfter(rhs->getLocStart(), debug_version_of_rhs.str());
+                    rewriter->InsertTextAfterToken(rhs->getLocEnd(), "))/*End of RHS*/");
+                    
                     
                 }
                 
@@ -257,7 +276,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         std::ostringstream debug_version_of_function;
         debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT) ";
         debug_version_of_function << " " << whole_func;
-        debug_version_of_function << " else {InstrumentFunctionDB inst_func_db(__FUNCTION__); \n #endif \n";
+        debug_version_of_function << " else {static StaticFunctionData ali_function_db(__FUNCTION__, __LINE__); InstrumentFunctionDB inst_func_db(&ali_function_db);  \n #endif \n";
         /*
         debug_version_of_function << "\n " << proper_func_name << "_debug";
         //debug_version_of_function << " " << return_type_str.c_str() << " " << fname.data() << "_debug";
