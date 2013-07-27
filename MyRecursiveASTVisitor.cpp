@@ -108,13 +108,13 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                     
                     std::ostringstream debug_version_of_lhs;
                     
-                    debug_version_of_lhs << "/*LHSValue*/ (inst_func_db.log_change_lhs(";
+                    debug_version_of_lhs << "(inst_func_db.log_change_lhs(";
                     debug_version_of_lhs << "\"" << var_name << "\",__LINE__,";
                     debug_version_of_lhs << rewriter->ConvertToString(lhs);
                     debug_version_of_lhs << "),";
                     
                     rewriter->InsertTextAfter(lhs->getLocStart(), debug_version_of_lhs.str());
-                    rewriter->InsertTextAfter(biOp->getOperatorLoc(), ")/*End of LHS*/");
+                    rewriter->InsertTextAfter(biOp->getOperatorLoc(), ")");
                     
                     /*
                      now do the right hand side
@@ -246,7 +246,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
             //replace_text_at_location(rewriter, start_of_function_name_token, length_of_function_name, new_function_name.c_str());
         }
         
-     std::string log_start = "{InstrumentFunctionDB inst_func_db(__FUNCTION__);\n";
+     //std::string log_start = "{InstrumentFunctionDB inst_func_db(__FUNCTION__);\n";
         
         
         
@@ -264,7 +264,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         
         std::string debug_func = "{ if (!ALI_GLOBAL_DEBUG) {";
         
-        size_t position_of_first_curly_bracket = statements.find_first_of('{');
+        //size_t position_of_first_curly_bracket = statements.find_first_of('{');
         //statements.replace(position_of_first_curly_bracket, 1, debug_func);
         //replace_text_at_location(rewriter,position_of_first_curly_bracket,1,debug_func);
         
@@ -276,7 +276,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         std::ostringstream debug_version_of_function;
         debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT) ";
         debug_version_of_function << " " << whole_func;
-        debug_version_of_function << " else {static StaticFunctionData ali_function_db(__FUNCTION__, __LINE__); InstrumentFunctionDB inst_func_db(&ali_function_db);  \n #endif \n";
+        debug_version_of_function << " else {static StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); InstrumentFunctionDB inst_func_db(&ali_function_db);  \n #endif \n";
         /*
         debug_version_of_function << "\n " << proper_func_name << "_debug";
         //debug_version_of_function << " " << return_type_str.c_str() << " " << fname.data() << "_debug";

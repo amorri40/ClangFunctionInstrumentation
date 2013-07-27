@@ -7,6 +7,8 @@
 //
 #define _Bool bool
 #include <vector>
+#include <map>
+
 #ifndef TestAliClang_log_functions_h
 #define TestAliClang_log_functions_h
 #import <iostream>
@@ -14,11 +16,13 @@
 #include <sstream>
 
 
+
 #import <mach/mach.h>
 
 #define NO_INSTRUMENT false
 
-typedef std::vector<std::vector<std::string>> vector_of_vector_of_string;
+typedef std::vector<std::vector<std::string> > vector_of_vector_of_string;
+typedef std::map<int, std::vector<std::string> > map_of_vector_of_string;
 // ...
 
 extern bool ALI_GLOBAL_DEBUG;
@@ -31,7 +35,7 @@ struct StaticFunctionData {
     std::string func_name;
     //function_line_data lines[];
     int start_of_function_line_number;
-    std::vector<vector_of_vector_of_string> all_function_executions;
+    std::vector<map_of_vector_of_string> all_function_executions;
     
     StaticFunctionData(std::string the_func_name, int the_line_number) : func_name(the_func_name), start_of_function_line_number(the_line_number) {
         //possibly take in number of lines
@@ -43,12 +47,13 @@ struct StaticFunctionData {
         std::cout << "\nFunction: " << func_name << " \n";
         
         for(std::vector<vector_of_vector_of_string>::size_type execution = 0; execution != all_function_executions.size(); execution++) {
-            vector_of_vector_of_string line_data = all_function_executions[execution];
+            map_of_vector_of_string line_data = all_function_executions[execution];
             
-            for(vector_of_vector_of_string::size_type i = 0; i != line_data.size(); i++) {
-                if (line_data[i].empty()) continue;
-                std::cout << "  " << i << ": ";
-                for(std::vector<std::string>::reverse_iterator it2 = line_data[i].rbegin(); it2 != line_data[i].rend(); ++it2) {
+            for(map_of_vector_of_string::iterator line = line_data.begin(); line != line_data.end(); ++line) { //for(map_of_vector_of_string::size_type i = 0; i != line_data.size(); i++) {
+                //if (line_data[i].empty()) continue;
+                int line_num = line->first;
+                std::cout << "  " << line_num << ": ";
+                for(std::vector<std::string>::reverse_iterator it2 = line->second.rbegin(); it2 != line->second.rend(); ++it2) {
                     std::cout << *it2;
                 }
                 std::cout << "\n";
@@ -81,7 +86,7 @@ struct InstrumentFunctionDB {
     //const char* function_name;
     //int start_of_function_line_number;
     StaticFunctionData* ali_function_db;
-    std::vector<std::vector<std::string> > line_data;
+    std::map<int, std::vector<std::string> > line_data;
     //memory, cpu time, battery etc
     
     InstrumentFunctionDB(StaticFunctionData* the_db) : ali_function_db(the_db)  {
@@ -110,9 +115,9 @@ struct InstrumentFunctionDB {
         std::ostringstream oss;
         oss << " LHS(" << (typeid(val).name()) << " " << var_name << " = " << val << ") ";
         
-        if (line_data.size() <= line_number) {
+        /*if (line_data.size() <= line_number) {
             line_data.resize(line_number+1);
-        }
+        }*/
         line_data[line_number].push_back(oss.str());
         return val;
     }
@@ -122,9 +127,9 @@ struct InstrumentFunctionDB {
         std::ostringstream oss;
         oss << " RHS(" << (typeid(val).name()) << " " << var_name << " = " << val << ") ";
         
-        if (line_data.size() <= line_number) {
+        /*if (line_data.size() <= line_number) {
             line_data.resize(line_number+1);
-        }
+        }*/
         line_data[line_number].push_back(oss.str());
         
         return val;
@@ -137,9 +142,9 @@ struct InstrumentFunctionDB {
         std::ostringstream oss;
         oss << " RHS(" << (typeid(val).name()) << " " << var_name << " = " << val << ") ";
         
-        if (line_data.size() <= line_number) {
+        /*if (line_data.size() <= line_number) {
             line_data.resize(line_number+1);
-        }
+        }*/
         line_data[line_number].push_back(oss.str());
         
         return val;
@@ -153,9 +158,9 @@ struct InstrumentFunctionDB {
         std::ostringstream oss;
         oss << " RHS(" << (typeid(val).name()) << " " << var_name << " = " << val << ") ";
         
-        if (line_data.size() <= line_number) {
+        /*if (line_data.size() <= line_number) {
             line_data.resize(line_number+1);
-        }
+        }*/
         line_data[line_number].push_back(oss.str());
         
         return val;
@@ -169,9 +174,9 @@ struct InstrumentFunctionDB {
         std::ostringstream oss;
         oss << " RHS(" << (typeid(val).name()) << " " << var_name << " = " << val << ") ";
         
-        if (line_data.size() <= line_number) {
+        /*if (line_data.size() <= line_number) {
             line_data.resize(line_number+1);
-        }
+        }*/
         line_data[line_number].push_back(oss.str());
         
         return val;
@@ -212,9 +217,9 @@ struct InstrumentFunctionDB {
         std::ostringstream oss;
         oss << " RHS(" << (typeid(val).name()) << " " << var_name << " = " << val << ") ";
         
-        if (line_data.size() <= line_number) {
+        /*if (line_data.size() <= line_number) {
             line_data.resize(line_number+1);
-        }
+        }*/
         line_data[line_number].push_back(oss.str());
         
         return val;
@@ -225,9 +230,9 @@ struct InstrumentFunctionDB {
         std::ostringstream oss;
         oss << " RHS(" << (typeid(val).name()) << " " << var_name << " = " << val << ") ";
         
-        if (line_data.size() <= line_number) {
+        /*if (line_data.size() <= line_number) {
             line_data.resize(line_number+1);
-        }
+        }*/
         line_data[line_number].push_back(oss.str());
         
         return val;

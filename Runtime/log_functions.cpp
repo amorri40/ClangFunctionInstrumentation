@@ -5,12 +5,12 @@
 //  Created by Alasdair Morrison on 26/07/2013.
 //  Copyright (c) 2013 Alasdair Morrison. All rights reserved.
 //
-
+#define NO_INSTRUMENT true
 #include "log_functions.h"
 #include <sstream>
 
 bool ALI_GLOBAL_DEBUG = true;
-#define NO_INSTRUMENT true
+
 
 template <class T> std::string TToStr(const T& t)
 {
