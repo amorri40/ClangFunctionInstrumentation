@@ -14,7 +14,21 @@ bool ALI_GLOBAL_DEBUG = true;
 sqlite3 *ali__log__db;
 
 
-template <class T> std::string TToStr(const T& t)
+/*template <class T> std::string TToStr(const T& t)
+{
+    std::ostringstream oss;
+    oss << t;
+    return oss.str();
+}*/
+
+template <class T> std::string TToStr(T& t)
+{
+    std::ostringstream oss;
+    oss << t;
+    return oss.str();
+}
+
+template <class T> std::string TToStr(T* t)
 {
     std::ostringstream oss;
     oss << t;
