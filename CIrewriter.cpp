@@ -224,7 +224,7 @@ std::string get_outputfilename_for_filename(std::string fileName) {
 
 int main(int argc, char **argv)
 {
-    std::cout << "start of program";
+    //std::cout << "start of program";
 
   if (argc < 2)
   {
@@ -232,9 +232,7 @@ int main(int argc, char **argv)
      return 1;
   }
 
-  // Get filename
-  std::string fileName(argv[argc - 1]);
-  make_sure_file_exists(fileName);
+  
     
     
     const char* c = *argv;
@@ -249,20 +247,20 @@ int main(int argc, char **argv)
   setup_diagostics(compiler);
     
   setup_header_info(compiler);
-std::cout << "after steup header info";
+//std::cout << "after steup header info";
   CompilerInvocation *Invocation = pass_flags_to_preprocessor(compiler, argc, argv);
    
     
   set_default_target(compiler);
-std::cout << "after set def";
+//std::cout << "after set def";
   compiler.createFileManager();
-    std::cout << "after create filem";
+    //std::cout << "after create filem";
   compiler.createSourceManager(compiler.getFileManager());
 
   setup_header_info(compiler);
 
   setup_language_options_cxx(Invocation);
-  printf("%s\n", "setup language options");
+  //printf("%s\n", "setup language options");
 
   compiler.createPreprocessor();
   //compiler.getPreprocessorOpts().UsePredefines = false;
@@ -271,15 +269,26 @@ std::cout << "after set def";
     
 
   compiler.createASTContext();
-  printf("%s\n", "created AST Context");
+  //printf("%s\n", "created AST Context");
 
   // Initialize rewriter
   Rewriter Rewrite;
   Rewrite.setSourceMgr(compiler.getSourceManager(), compiler.getLangOpts());
-  printf("%s\n", "created rewriter");
+  //printf("%s\n", "created rewriter");
+    
+    clang::FrontendOptions fo = compiler.getFrontendOpts();
+    std::string fileName = fo.Inputs[0].getFile(); //could loop over multiple input files
+    fo.FixAndRecompile = 1;
+    
+    bool outputfile = fileName.substr(fileName.find_last_of(".") + 1) == "o";
+    if (outputfile) return 0;
+    
+    // Get filename
+    //std::string fileName(argv[argc - 1]);
+    make_sure_file_exists(fileName);
 
   load_cxx_file(compiler, fileName);
-  printf("%s\n", "Opened input file");
+  printf("%s %s\n", "Opened input file",fileName.c_str());
 
   
 
@@ -292,16 +301,16 @@ std::cout << "after set def";
   if (!OutErrorInfo.empty()) {
      llvm::errs() << "Cannot open " << outName << " for writing\n";
   }
-  printf("%s\n", "Opened output file");
+  //printf("%s\n", "Opened output file");
 
     MyASTConsumer astConsumer(Rewrite,&compiler.getSourceManager()); // create the ast consumer
     
-    // Parse the AST wtith out astConsumer
+    // Parse the AST wtith our astConsumer
     ParseAST(compiler.getPreprocessor(), &astConsumer, compiler.getASTContext());
-    printf("%s\n", "After parseAST");
+    //printf("%s\n", "After parseAST");
     //compiler.getDiagnosticClient().EndSourceFile();
 
-    printf("%s\n", "before write to start of file");
+    //printf("%s\n", "before write to start of file");
     // Output some #ifdefs
     outFile << "//Debug file auto generated from clanginstrumentation \n";
     outFile << "extern void start_log_function(); extern void end_log_function(); \n#include <log_functions.h> \n";
@@ -315,7 +324,7 @@ std::cout << "after set def";
         outFile << normal_file;
     }
     else outFile << std::string(RewriteBuf->begin(), RewriteBuf->end());
-      printf("%s\n", "After getRewriteBufferFor");
+      //printf("%s\n", "After getRewriteBufferFor");
     
     
     
@@ -330,13 +339,14 @@ std::cout << "after set def";
         oss << argv[i] << " ";
     }
     
-    llvm::errs() << "about to run clang" << oss.str().c_str() << "\n";
+    llvm::errs() << "about to run clang :" << oss.str().c_str() << "\n";
     
     //int compile_status = execv("clang", argv);
     //char* arguments[] = {"-v"};
     //int compile_status = execvp("clang", arguments);
-    system(oss.str().c_str());
+    //system(oss.str().c_str());
     //printf("%s %d\n", "Running proper clang: ", compile_status);
+    llvm::errs() << "==================================== \n\n";
 
   return 0;
 }

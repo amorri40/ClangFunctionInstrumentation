@@ -36,7 +36,7 @@ bool contains_bad_statements(Stmt *s) {
         
         
         if (isa<LabelStmt>(*statement_from_it)) {
-            llvm::errs() << "Label_Statement!" << "\n\n\n";
+            //llvm::errs() << "Label_Statement!" << "\n\n\n";
             return true; //we don't want to debug functions with label statements
         } else {
             //llvm::errs() << "Not Label_Statement it is:" << it->getStmtClassName() << "\n\n\n";
@@ -55,7 +55,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         if (!it->children().empty()) {modify_statements(rewriter,*it);}
         
         if (isa<CompoundAssignOperator>(*statement_from_it)) {
-            llvm::errs() << "Compund Assign!!" << "\n\n\n";
+            //llvm::errs() << "Compund Assign!!" << "\n\n\n";
             
         } /*else if (isa<Decl>(*statement_from_it)) {
             llvm::errs() << "Decl!!" << "\n\n\n";
