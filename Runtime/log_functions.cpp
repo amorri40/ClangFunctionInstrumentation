@@ -5,11 +5,13 @@
 //  Created by Alasdair Morrison on 26/07/2013.
 //  Copyright (c) 2013 Alasdair Morrison. All rights reserved.
 //
-#define NO_INSTRUMENT true
+
 #include "log_functions.h"
+#define NO_INSTRUMENT true
 #include <sstream>
 
 bool ALI_GLOBAL_DEBUG = true;
+sqlite3 *ali__log__db;
 
 
 template <class T> std::string TToStr(const T& t)

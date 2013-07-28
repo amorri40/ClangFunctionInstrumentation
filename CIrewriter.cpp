@@ -54,6 +54,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <vector>
+#include <sstream>
 
 #include "llvm/Support/Host.h"
 #include "llvm/Support/raw_ostream.h"
@@ -75,6 +76,9 @@
 #include "clang/Parse/ParseAST.h"
 #include "clang/Rewrite/Frontend/Rewriters.h"
 #include "clang/Rewrite/Core/Rewriter.h"
+#include "clang/Tooling/CommonOptionsParser.h"
+#include "clang/Tooling/Tooling.h"
+#include "clang/Frontend/Utils.h"
 
 using namespace clang;
 #include "clang_setup_functions.h"
@@ -97,8 +101,9 @@ void make_sure_file_exists(std::string fileName) {
 CompilerInvocation* pass_flags_to_preprocessor(CompilerInstance& compiler, int argc, char **argv) {
   // Create an invocation that passes any flags to preprocessor
   CompilerInvocation *invocation = new CompilerInvocation;
-  CompilerInvocation::CreateFromArgs(*invocation, argv + 1, argv + argc,
-                                      compiler.getDiagnostics());
+  CompilerInvocation::CreateFromArgs(*invocation, argv + 1, argv + argc, compiler.getDiagnostics());
+    //clang::createInvocationFromCommandLine(ArrayRef<const char *>(argv, argc));
+    
   compiler.setInvocation(invocation);
   return invocation;
 }
@@ -112,10 +117,10 @@ void set_default_target(CompilerInstance& compiler) {
                                       pto.getPtr()));
   compiler.setTarget(pti.getPtr());
 }
-
+#include "clang/Basic/Version.h"
 void setup_header_info(CompilerInstance& compiler) {
   HeaderSearchOptions &headerSearchOptions = compiler.getHeaderSearchOpts();
-
+  headerSearchOptions.ResourceDir = LLVM_PREFIX "/lib/clang/" CLANG_VERSION_STRING;
   // <Warning!!> -- Platform Specific Code lives here
   // This depends on A) that you're running linux and
   // B) that you have the same GCC LIBs installed that
@@ -130,38 +135,41 @@ void setup_header_info(CompilerInstance& compiler) {
   // clang -v -c test.c
   // or clang++ for C++ paths as used below:
     headerSearchOptions.AddPath("/Users/alasdairmorrison/Dropbox/projects/clangparsing/build/debug+asserts/lib/clang/3.4/include", //was 4.6
-                                clang::frontend::Angled,
+                                clang::frontend::System,//clang::frontend::Angled,
                                 false,
-                                false);
+                                true);
+    
   headerSearchOptions.AddPath("/usr/include/c++/4.2.1", //was 4.6
           clang::frontend::Angled,
           false,
           false);
     
-  /*headerSearchOptions.AddPath("/usr/include/c++/4.6/i686-linux-gnu",
+  
+  headerSearchOptions.AddPath("/usr/include/c++/4.2.1/backward", //was 4.6
+          clang::frontend::Angled,
+          false,
+          false);
+  /*headerSearchOptions.AddPath("/usr/local/include",
           clang::frontend::Angled,
           false,
           false);*/
-  headerSearchOptions.AddPath("/usr/include/c++/4.6/backward",
+  /*headerSearchOptions.AddPath("/usr/local/lib/clang/3.3/include",
           clang::frontend::Angled,
           false,
-          false);
-  headerSearchOptions.AddPath("/usr/local/include",
-          clang::frontend::Angled,
-          false,
-          false);
-  headerSearchOptions.AddPath("/usr/local/lib/clang/3.3/include",
-          clang::frontend::Angled,
-          false,
-          false);/*
+          false);*//*
   headerSearchOptions.AddPath("/usr/include/i386-linux-gnu",
           clang::frontend::Angled,
           false,
           false);*/
-  headerSearchOptions.AddPath("/usr/include",
+  /*headerSearchOptions.AddPath("/usr/include",
           clang::frontend::Angled,
           false,
-          false);
+          false);*/
+  headerSearchOptions.AddPath("/Users/alasdairmorrison/Dropbox/projects/clangparsing/build/debug+asserts/lib/clang/3.4/include/",
+                                clang::frontend::Angled,
+                                true,
+                                true);
+    //headerSearchOptions.
   // </Warning!!> -- End of Platform Specific Code
 }
 
@@ -172,10 +180,17 @@ void setup_language_options_cxx(CompilerInvocation* Invocation) {
     langOpts.CXXExceptions = 1; 
     langOpts.RTTI = 1; 
     langOpts.Bool = 1; 
-    langOpts.CPlusPlus = 1; 
+    langOpts.CPlusPlus = 1;
+    //langOpts.CPlusPlus11 = 1;
     Invocation->setLangDefaults(langOpts,
                                 clang::IK_CXX,
                                 clang::LangStandard::lang_cxx0x);
+    clang::HeaderSearchOptions hso = Invocation->getHeaderSearchOpts();
+    //hso.UseStandardCXXIncludes = 1;
+    //hso.UseBuiltinIncludes = 1;
+    //hso.Verbose = 1;
+    //hso.AddPath(<#llvm::StringRef Path#>, <#frontend::IncludeDirGroup Group#>, <#bool IsFramework#>, <#bool IgnoreSysRoot#>)
+    std::cout << hso.Sysroot;
 }
 
 /*
@@ -209,7 +224,7 @@ std::string get_outputfilename_for_filename(std::string fileName) {
 
 int main(int argc, char **argv)
 {
-  
+    std::cout << "start of program";
 
   if (argc < 2)
   {
@@ -220,16 +235,28 @@ int main(int argc, char **argv)
   // Get filename
   std::string fileName(argv[argc - 1]);
   make_sure_file_exists(fileName);
+    
+    
+    const char* c = *argv;
+    const char** cc = &c;
+    /*clang::tooling::CommonOptionsParser OptionsParser(argc, cc);
+    clang::tooling::ClangTool Tool(OptionsParser.getCompilations(),
+                   OptionsParser.getSourcePathList());*/
   
 
   CompilerInstance compiler;
+    
   setup_diagostics(compiler);
-
+    
+  setup_header_info(compiler);
+std::cout << "after steup header info";
   CompilerInvocation *Invocation = pass_flags_to_preprocessor(compiler, argc, argv);
-
+   
+    
   set_default_target(compiler);
-
+std::cout << "after set def";
   compiler.createFileManager();
+    std::cout << "after create filem";
   compiler.createSourceManager(compiler.getFileManager());
 
   setup_header_info(compiler);
@@ -238,7 +265,10 @@ int main(int argc, char **argv)
   printf("%s\n", "setup language options");
 
   compiler.createPreprocessor();
-  compiler.getPreprocessorOpts().UsePredefines = false;
+  //compiler.getPreprocessorOpts().UsePredefines = false;
+    //Preprocessor p = compiler.getPreprocessor();
+    //HeaderSearch& hs = p.getHeaderSearchInfo();
+    
 
   compiler.createASTContext();
   printf("%s\n", "created AST Context");
@@ -293,8 +323,20 @@ int main(int argc, char **argv)
 
   outFile.close();
   
-    int compile_status = execv("clang", argv);
-    printf("%s %d\n", "End of program", compile_status);
+    
+    std::ostringstream oss;
+    oss << "clang++ ";
+    for (int i=0; i<argc; i++) {
+        oss << argv[i] << " ";
+    }
+    
+    llvm::errs() << "about to run clang" << oss.str().c_str() << "\n";
+    
+    //int compile_status = execv("clang", argv);
+    //char* arguments[] = {"-v"};
+    //int compile_status = execvp("clang", arguments);
+    system(oss.str().c_str());
+    //printf("%s %d\n", "Running proper clang: ", compile_status);
 
   return 0;
 }

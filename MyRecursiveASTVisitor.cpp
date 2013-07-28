@@ -87,7 +87,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             
             if (isa<clang::BinaryOperator>(st)) {
                 
-                llvm::errs() << "Binary operator" ;
+                //llvm::errs() << "Binary operator" ;
                 //rewriter->InsertTextAfter(st->getLocStart(), "/*BINOP*/ ");
                 //rewriter->InsertTextAfter(st->getLocEnd(), "/*End of Binop*/");
                 
@@ -141,7 +141,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             } else {
                 continue;
                 QualType q = st->getType(); //value type of expression
-                llvm::errs() << q.getAsString();
+                //llvm::errs() << q.getAsString();
                 if (st->isLValue()) {
                     rewriter->InsertTextAfter(st->getLocStart(), "/*LValue*/ ");
                     rewriter->InsertTextAfter(st->getLocEnd(), "");
@@ -183,11 +183,11 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
             return true;
         }
         
-        if (f->isOverloadedOperator()) return true;
-        if ( f->getKind() == f->ClassScopeFunctionSpecialization) return true;
+        //if (f->isOverloadedOperator()) return true;
+        //if ( f->getKind() == f->ClassScopeFunctionSpecialization) return true;
         
-        if (f->isVirtualAsWritten()) return true;
-        if (f->isCXXClassMember() || f->isCXXInstanceMember()) return true;
+        //if (f->isVirtualAsWritten()) return true;
+        //if (f->isCXXClassMember() || f->isCXXInstanceMember()) return true;
         
         
         // Get name of function
@@ -198,10 +198,10 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
        // DeclarationName dn = dni.getName();
        // std::string fname = dn.getAsString();
         std::string fname = f->getNameAsString();
-        llvm::errs() << "Function name:" << fname << "\n";
+        //llvm::errs() << "Function name:" << fname << "\n";
         
         
-        fprintf(stderr, "Visiting Function: %s %p\n", fname.c_str(), (void*)f);
+        //fprintf(stderr, "Visiting Function: %s %p\n", fname.c_str(), (void*)f);
         SourceRange sr = f->getSourceRange();
         Stmt *s = f->getBody();
         
@@ -219,7 +219,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         
         std::string func_args_string = get_location_to_string(rewriter, &rewriter.getSourceMgr(), end_of_func_name, start_of_stmts);
         
-        llvm::errs() << func_args_string << "\n";
+        //llvm::errs() << func_args_string << "\n";
         
         rewriter.setSourceMgr(rewriter.getSourceMgr(), rewriter.getLangOpts());
         
@@ -241,7 +241,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         std::string namespace_info = get_location_to_string(rewriter, &rewriter.getSourceMgr(), f->getQualifierLoc().getBeginLoc(), dni.getBeginLoc());
         
         
-        llvm::errs() << namespace_info << " namespace_info\n\n";
+        //llvm::errs() << namespace_info << " namespace_info\n\n";
         } else {
             //replace_text_at_location(rewriter, start_of_function_name_token, length_of_function_name, new_function_name.c_str());
         }
@@ -262,7 +262,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         modify_statements(&rewriter,s);
         
         
-        std::string debug_func = "{ if (!ALI_GLOBAL_DEBUG) {";
+        //std::string debug_func = "{ if (!ALI_GLOBAL_DEBUG) {";
         
         //size_t position_of_first_curly_bracket = statements.find_first_of('{');
         //statements.replace(position_of_first_curly_bracket, 1, debug_func);
@@ -300,7 +300,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         //rewriter.InsertText(END, debug_version_of_function.str(), true, true);
         //statements.replace(position_of_first_curly_bracket, 1, debug_version_of_function.str());
         
-        printf("End of: %s\n", "VisitFunctionDecl");
+        //printf("End of: %s\n", "VisitFunctionDecl");
     }
     
     return true; // returning false aborts the traversal

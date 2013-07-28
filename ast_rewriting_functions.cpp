@@ -30,7 +30,7 @@ bool replace_text_at_location(Rewriter &rewriter, clang::SourceLocation start, i
 }*/
 
 std::string get_location_to_string(Rewriter &rewriter, clang::SourceManager* sm, clang::SourceLocation start, clang::SourceLocation end) {
-    start.dump(*sm);
+    //start.dump(*sm);
     //clang::SourceLocation _begin(start.), _end(end.getLocEnd());
     return std::string(sm->getCharacterData(start),
                        sm->getCharacterData(end));//-sm->getCharacterData(start));
