@@ -152,7 +152,7 @@ struct InstrumentFunctionDB {
             ali_function_db->all_function_executions.push_back(line_data);
         }
         
-        //printf(" >> Log Destructor: Mem diff:%ld bytes Time:%f \n",mem_difference,time_difference);
+        printf(" >> Log Destructor: Mem diff:%ld bytes Time:%f \n",mem_difference,time_difference);
     }
     
     template <class T> T log_change_lhs(std::string var_name, int line_number, T val) {

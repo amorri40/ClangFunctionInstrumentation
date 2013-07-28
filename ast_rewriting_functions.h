@@ -9,6 +9,8 @@
 #ifndef ClangInstrumentationPlugin_ast_rewriting_functions_h
 #define ClangInstrumentationPlugin_ast_rewriting_functions_h
 
+void replaceAll(std::string& str, const std::string& from, const std::string& to);
+
 int get_length_of_token_at_location(clang::SourceLocation Loc, Rewriter &rewriter);
 
 bool replace_text_at_location(Rewriter &rewriter, clang::SourceLocation start, int end, const char* new_text);

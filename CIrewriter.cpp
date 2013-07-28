@@ -84,6 +84,8 @@ using namespace clang;
 #include "clang_setup_functions.h"
 #include "MyASTConsumer.h"
 
+#include "ast_rewriting_functions.h"
+
 /*
  Check if file of fileName exists and if not it exits this program
  */
@@ -217,10 +219,39 @@ std::string get_outputfilename_for_filename(std::string fileName) {
     size_t ext = outName.rfind(".");
     if (ext == std::string::npos)
        ext = outName.length();
-    outName.insert(ext, "_out");
+    //outName.insert(ext, "_out");
+    outName.append(".debug");
     return outName;
 }
 //
+
+int run_proper_clang(int argc, char **argv, bool link) {
+    std::ostringstream oss;
+    if (!link)
+    oss << "clang++ -xc++ -I/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime ";
+    else
+        oss << "clang++ ";
+    for (int i=1; i<argc; i++) { //don't include argument0 as it is aliclang executable path
+        std::string argument = argv[i];
+        replaceAll(argument,".cpp",".cpp.debug");
+        //replaceAll(argument,".o",".o.debug");
+        oss << argument << " ";
+    }
+//oss << "2>fakeclang_output.txt";
+    
+    llvm::errs() << "about to run clang :" << oss.str().c_str() << "\n";
+    int compile_status = system(oss.str().c_str());
+    //int compile_status = execlp(oss.str().c_str(),NULL);
+    llvm::errs() << "==================================== \n\n";
+    return compile_status;
+    
+    //int compile_status = execv("clang", argv);
+    //char* arguments[] = {"-v"};
+    //int compile_status = execvp("clang", arguments);
+    
+    
+    //printf("%s %d\n", "Running proper clang: ", compile_status);
+}
 
 int main(int argc, char **argv)
 {
@@ -231,15 +262,6 @@ int main(int argc, char **argv)
      llvm::errs() << "Usage: CIrewriter <options> <filename>\n";
      return 1;
   }
-
-  
-    
-    
-    const char* c = *argv;
-    const char** cc = &c;
-    /*clang::tooling::CommonOptionsParser OptionsParser(argc, cc);
-    clang::tooling::ClangTool Tool(OptionsParser.getCompilations(),
-                   OptionsParser.getSourcePathList());*/
   
 
   CompilerInstance compiler;
@@ -247,44 +269,35 @@ int main(int argc, char **argv)
   setup_diagostics(compiler);
     
   setup_header_info(compiler);
-//std::cout << "after steup header info";
   CompilerInvocation *Invocation = pass_flags_to_preprocessor(compiler, argc, argv);
-   
     
   set_default_target(compiler);
-//std::cout << "after set def";
+
   compiler.createFileManager();
-    //std::cout << "after create filem";
+  
   compiler.createSourceManager(compiler.getFileManager());
 
   setup_header_info(compiler);
 
   setup_language_options_cxx(Invocation);
-  //printf("%s\n", "setup language options");
 
   compiler.createPreprocessor();
-  //compiler.getPreprocessorOpts().UsePredefines = false;
-    //Preprocessor p = compiler.getPreprocessor();
-    //HeaderSearch& hs = p.getHeaderSearchInfo();
     
 
   compiler.createASTContext();
-  //printf("%s\n", "created AST Context");
 
   // Initialize rewriter
   Rewriter Rewrite;
   Rewrite.setSourceMgr(compiler.getSourceManager(), compiler.getLangOpts());
-  //printf("%s\n", "created rewriter");
     
     clang::FrontendOptions fo = compiler.getFrontendOpts();
     std::string fileName = fo.Inputs[0].getFile(); //could loop over multiple input files
     fo.FixAndRecompile = 1;
     
     bool outputfile = fileName.substr(fileName.find_last_of(".") + 1) == "o";
-    if (outputfile) return 0;
+    if (outputfile) return run_proper_clang(argc,argv, true); //link files
     
-    // Get filename
-    //std::string fileName(argv[argc - 1]);
+
     make_sure_file_exists(fileName);
 
   load_cxx_file(compiler, fileName);
@@ -301,16 +314,13 @@ int main(int argc, char **argv)
   if (!OutErrorInfo.empty()) {
      llvm::errs() << "Cannot open " << outName << " for writing\n";
   }
-  //printf("%s\n", "Opened output file");
+  
 
     MyASTConsumer astConsumer(Rewrite,&compiler.getSourceManager()); // create the ast consumer
     
     // Parse the AST wtith our astConsumer
     ParseAST(compiler.getPreprocessor(), &astConsumer, compiler.getASTContext());
-    //printf("%s\n", "After parseAST");
-    //compiler.getDiagnosticClient().EndSourceFile();
-
-    //printf("%s\n", "before write to start of file");
+    
     // Output some #ifdefs
     outFile << "//Debug file auto generated from clanginstrumentation \n";
     outFile << "extern void start_log_function(); extern void end_log_function(); \n#include <log_functions.h> \n";
@@ -332,22 +342,8 @@ int main(int argc, char **argv)
 
   outFile.close();
   
-    
-    std::ostringstream oss;
-    oss << "clang++ ";
-    for (int i=0; i<argc; i++) {
-        oss << argv[i] << " ";
-    }
-    
-    llvm::errs() << "about to run clang :" << oss.str().c_str() << "\n";
-    
-    //int compile_status = execv("clang", argv);
-    //char* arguments[] = {"-v"};
-    //int compile_status = execvp("clang", arguments);
-    //system(oss.str().c_str());
-    //printf("%s %d\n", "Running proper clang: ", compile_status);
-    llvm::errs() << "==================================== \n\n";
+    return run_proper_clang(argc,argv, false);
 
-  return 0;
+  //return 0;
 }
 
