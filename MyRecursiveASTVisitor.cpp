@@ -27,11 +27,7 @@ bool contains_bad_statements(Stmt *s) {
         
         
         if (isa<LabelStmt>(*statement_from_it)) {
-            //llvm::errs() << "Label_Statement!" << "\n\n\n";
             return true; //we don't want to debug functions with label statements
-        } else {
-            //llvm::errs() << "Not Label_Statement it is:" << it->getStmtClassName() << "\n\n\n";
-            
         }
     }
     return false; //everything is good
@@ -71,18 +67,9 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         }
         else if (isa<Expr>(*statement_from_it)) {
             
-            
-            
-           // llvm::errs() << "Expression!!" << "\n\n\n";
             Expr *st = cast<Expr>(statement_from_it);
             
-            
-            
             if (isa<clang::BinaryOperator>(st)) {
-                
-                //llvm::errs() << "Binary operator" ;
-                //rewriter->InsertTextAfter(st->getLocStart(), "/*BINOP*/ ");
-                //rewriter->InsertTextAfter(st->getLocEnd(), "/*End of Binop*/");
                 
                 BinaryOperator* biOp = (BinaryOperator *) st;
                 if (biOp->isAssignmentOp()) {
@@ -161,57 +148,39 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             }
         }
         else {
-            //it->PrintStats();
-            //llvm::errs() << "else it is:" << it->getStmtClassName() << "\n\n\n";
-            
         }
     }
    
 }
 
+bool modify_main_function(FunctionDecl *f) {
+    
+    return true;
+
+}
+
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
 {
     
-    //f->dump();
-    //DeclarationName new_name =
-    //f->setDeclName (DeclarationName N)
-    //f->getLocation();
-    //if (f->isFromASTFile()) return true;
     if (f->hasBody())
     {
-        if (f->isMain()) return true;
         
+        // First check if we are in the cpp file passed to the compiler
         SourceLocation sl = f->getLocation();
-        
-        
-        //fprintf(stderr, "filename: %s \n",rewriter.getSourceMgr().getFilename(sl).str().c_str());
         if (rewriter.getSourceMgr().getFileID(sl) !=
             rewriter.getSourceMgr().getMainFileID()) {
-            return true;
+            return true; //we are not in the main cpp file
         }
         
-        //if (f->isOverloadedOperator()) return true;
-        //if ( f->getKind() == f->ClassScopeFunctionSpecialization) return true;
-        
-        //if (f->isVirtualAsWritten()) return true;
-        //if (f->isCXXClassMember() || f->isCXXInstanceMember()) return true;
-        
+        if (f->isMain()) return modify_main_function(f);
         
         // Get name of function
         DeclarationNameInfo dni = f->getNameInfo();
-        
-        //llvm::errs() << dni.getAsString() << "\n";
-        // llvm::errs() << f->getQualifiedNameAsString()<< "\n";
-       // DeclarationName dn = dni.getName();
-       // std::string fname = dn.getAsString();
         std::string fname = f->getNameAsString();
-        //llvm::errs() << "Function name:" << fname << "\n";
         
-        
-        //fprintf(stderr, "Visiting Function: %s %p\n", fname.c_str(), (void*)f);
         SourceRange sr = f->getSourceRange();
+        // get the body of this function so we can modify it
         Stmt *s = f->getBody();
-        
         
         if (contains_bad_statements(s)) return true; //check it doesn't contain bad statements
         
@@ -226,8 +195,6 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         
         std::string func_args_string = get_location_to_string(rewriter, &rewriter.getSourceMgr(), end_of_func_name, start_of_stmts);
         
-        //llvm::errs() << func_args_string << "\n";
-        
         rewriter.setSourceMgr(rewriter.getSourceMgr(), rewriter.getLangOpts());
         
         // Point to start of function name
@@ -235,29 +202,13 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         std::string new_function_name = fname+"_orig";
         int length_of_function_name = get_length_of_token_at_location(start_of_function_name_token, this->rewriter);
         
-        
-        
-        //if(!f->isGlobal()) return true;
-        //if(!f->isFileContext()) return true;
-        
-        
         std::string proper_func_name = get_location_to_string(rewriter, &rewriter.getSourceMgr(), sr.getBegin(), end_of_func_name);
         
         if(f->getQualifierLoc().hasQualifier()) {
             return true;
         std::string namespace_info = get_location_to_string(rewriter, &rewriter.getSourceMgr(), f->getQualifierLoc().getBeginLoc(), dni.getBeginLoc());
         
-        
-        //llvm::errs() << namespace_info << " namespace_info\n\n";
-        } else {
-            //replace_text_at_location(rewriter, start_of_function_name_token, length_of_function_name, new_function_name.c_str());
         }
-        
-     //std::string log_start = "{InstrumentFunctionDB inst_func_db(__FUNCTION__);\n";
-        
-        
-        
-        
         
         SourceLocation END = s->getLocEnd().getLocWithOffset(1);
         
@@ -268,46 +219,16 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
          */
         modify_statements(&rewriter,s);
         
-        
-        //std::string debug_func = "{ if (!ALI_GLOBAL_DEBUG) {";
-        
-        //size_t position_of_first_curly_bracket = statements.find_first_of('{');
-        //statements.replace(position_of_first_curly_bracket, 1, debug_func);
-        //replace_text_at_location(rewriter,position_of_first_curly_bracket,1,debug_func);
-        
-        
-        //current idea: create inline version of original function which calls a function pointer, static int count;
-        // issues:
-        
-        
         std::ostringstream debug_version_of_function;
         debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT) ";
         debug_version_of_function << " " << whole_func;
         debug_version_of_function << " else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db);  \n #endif \n";
-        /*
-        debug_version_of_function << "\n " << proper_func_name << "_debug";
-        //debug_version_of_function << " " << return_type_str.c_str() << " " << fname.data() << "_debug";
-        debug_version_of_function << " " << func_args_string.c_str();
-        debug_version_of_function << " " << whole_func;
-        debug_version_of_function << "\n " << proper_func_name << " " << func_args_string.c_str() << " { return "<< fname << "_debug();"<<" }";*/
-        //now write the function pointer
-        /*debug_version_of_function << " " << return_type_str.c_str();
-        debug_version_of_function << " (* " << fname.data()<< ")";
-        debug_version_of_function << " " << func_args_string.c_str();
-        debug_version_of_function << " = &" << fname.data() << "_debug; \n";*/
         
         
-        
-        // PUT THIS BAXK IN!sprintf(fc, " %s debug_%s %s %s %s (* %s) %s = &debug_%s; \n", return_type_str.c_str(), fname.data(), func_args_string.c_str(),statements.c_str(), return_type_str.c_str(), fname.data(), func_args_string.c_str(),fname.data());
-        //rewriter.InsertText(END, debug_version_of_function.str(), true, true);
-        //statements.append(debug_version_of_function.str());
         rewriter.InsertTextAfter(start_of_stmts, debug_version_of_function.str());
         rewriter.InsertTextAfter(END, "\n #if NO_INSTRUMENT == false \n } \n #endif \n");
         rewriter.InsertTextAfter(END, "}");
-        //rewriter.InsertText(END, debug_version_of_function.str(), true, true);
-        //statements.replace(position_of_first_curly_bracket, 1, debug_version_of_function.str());
         
-        //printf("End of: %s\n", "VisitFunctionDecl");
     }
     
     return true; // returning false aborts the traversal
