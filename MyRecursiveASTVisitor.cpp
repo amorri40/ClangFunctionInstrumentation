@@ -43,19 +43,17 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         Stmt* statement_from_it = *it;
         
         if (statement_from_it == NULL) continue;
+        
+        std::ostringstream class_name;
+        class_name << " /*" << it->getStmtClassName() << "*/ ";
+        
+        
+        if (it->getLocStart().isInvalid()) continue;
+        rewriter->InsertText(it->getLocStart(), class_name.str());
+        
         if (!it->children().empty()) {modify_statements(rewriter,*it);}
         
-        if (isa<CompoundAssignOperator>(*statement_from_it)) {
-            //llvm::errs() << "Compund Assign!!" << "\n\n\n";
-            
-        } /*else if (isa<Decl>(*statement_from_it)) {
-            llvm::errs() << "Decl!!" << "\n\n\n";
-            Decl *decl = cast<Decl>(s);
-            decl->getDeclKindName();
-            
-        }*/
-
-        else if (isa<DeclStmt>(*statement_from_it)) {
+         if (isa<DeclStmt>(*statement_from_it)) {
             DeclStmt *declStatement = cast<DeclStmt>(statement_from_it);
             if (declStatement->isSingleDecl()) {
                 Decl* d = declStatement->getSingleDecl();
@@ -64,8 +62,12 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             }
         } else if (isa<CompoundStmt>(*statement_from_it)) {
             // basically blocks of statements {}
+            
             CompoundStmt *st = cast<CompoundStmt>(statement_from_it);
             rewriter->InsertTextAfter(st->getLocStart(), "/*Compound*/");
+        }
+        else if (isa<CompoundAssignOperator>(*statement_from_it)) {
+        //ignore compound statements
         }
         else if (isa<Expr>(*statement_from_it)) {
             
@@ -87,10 +89,16 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                     // get the lhs and rhs of the operator
                     Expr* lhs = biOp->getLHS();
                     
+                    if (isa<clang::ImplicitCastExpr>(lhs)) continue;
                     
                     
                     Expr* rhs = biOp->getRHS();
-                    if (rhs->isLValue()) continue; //current doesn't support val = val = val
+                    //if (rhs->isLValue()) continue; //current doesn't support val = val = val
+                    if (isa<clang::UnaryOperator>(rhs)) continue;
+                    if (isa<clang::CompoundAssignOperator>(rhs)) continue;
+                    if (isa<clang::BinaryOperator>(rhs)) continue;
+                    if (isa<clang::BinaryConditionalOperator>(rhs)) continue;
+                    if (isa<clang::ImplicitCastExpr>(rhs)) continue;
                     /*
                      *left hand side
                      */
@@ -101,17 +109,22 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                     
                     debug_version_of_lhs << "(inst_func_db.log_change_lhs(";
                     debug_version_of_lhs << "\"" << var_name << "\",__LINE__,";
-                    debug_version_of_lhs << rewriter->ConvertToString(lhs);
-                    debug_version_of_lhs << "),";
+                    //debug_version_of_lhs << rewriter->ConvertToString(lhs);
+                    //debug_version_of_lhs << "),";
+                    
+                    if (lhs->getLocStart().isInvalid()) continue;
+                    if (biOp->getOperatorLoc().isInvalid()) continue;
+                    if (rhs->getLocStart().isInvalid()) continue;
+                    if (biOp->getLocEnd().isInvalid()) continue;
                     
                     rewriter->InsertTextAfter(lhs->getLocStart(), debug_version_of_lhs.str());
-                    rewriter->InsertTextAfter(biOp->getOperatorLoc(), ")");
+                    rewriter->InsertTextAfter(biOp->getOperatorLoc(), "))");
                     
                     /*
                      now do the right hand side
                     */
-                    std::string rhs_name = rewriter->ConvertToString(lhs);
-                    replaceAll(rhs_name,"\"","'");
+                    //std::string rhs_name = rewriter->ConvertToString(lhs);
+                    //replaceAll(rhs_name,"\"","'");
                     
                     std::ostringstream debug_version_of_rhs;
                     
@@ -120,11 +133,14 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                     //debug_version_of_rhs << rewriter->ConvertToString(rhs);
                     //debug_version_of_rhs << "),";
                     
+                    std::ostringstream class_name;
+                    //class_name << "/*" << rhs->getStmtClassName() << "*/";
                     
+                    //rewriter->InsertText(rhs->getExprLoc(), class_name.str());
                     
-                    rewriter->InsertTextAfter(rhs->getLocStart(), debug_version_of_rhs.str());
-                    rewriter->InsertTextAfterToken(rhs->getLocEnd(), "))/*End of RHS*/");
-                    
+                    rewriter->InsertTextBefore(rhs->getLocStart(), debug_version_of_rhs.str());
+                    rewriter->InsertTextAfterToken(biOp->getLocEnd(), "))/*End of RHS*/");
+                    llvm::errs() << rhs->getStmtClassName() << "," ;
                     
                 }
                 
@@ -265,9 +281,9 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         
         
         std::ostringstream debug_version_of_function;
-        debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT) ";
+        debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT) ";
         debug_version_of_function << " " << whole_func;
-        debug_version_of_function << " else {static StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); InstrumentFunctionDB inst_func_db(&ali_function_db);  \n #endif \n";
+        debug_version_of_function << " else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db);  \n #endif \n";
         /*
         debug_version_of_function << "\n " << proper_func_name << "_debug";
         //debug_version_of_function << " " << return_type_str.c_str() << " " << fname.data() << "_debug";
