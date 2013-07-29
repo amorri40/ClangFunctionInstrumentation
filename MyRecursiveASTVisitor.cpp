@@ -153,10 +153,18 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
    
 }
 
-bool modify_main_function(FunctionDecl *f) {
-    
-    return true;
+inline SourceLocation getBeginningOfStatement(Stmt *s, Rewriter* rewriter) {
+    return clang::Lexer::GetBeginningOfToken(s->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
+}
 
+/*
+ Add the segfault handler to the main method (this doesn't work for libraries (since they don't have a main method)
+ */
+bool modify_main_function(Stmt *s, Rewriter* rewriter) {
+    //Add the segfault handler to the start of the main function
+    SourceLocation start_of_stmts = getBeginningOfStatement(s,rewriter);
+    rewriter->InsertTextAfterToken(start_of_stmts, " SEGFAULTHANDLE ");
+    return true;
 }
 
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
@@ -172,15 +180,18 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
             return true; //we are not in the main cpp file
         }
         
-        if (f->isMain()) return modify_main_function(f);
+        // get the body of this function so we can modify it
+        Stmt *s = f->getBody();
+        
+        if (f->isMain()) return modify_main_function(s, &rewriter);
         
         // Get name of function
         DeclarationNameInfo dni = f->getNameInfo();
         std::string fname = f->getNameAsString();
         
         SourceRange sr = f->getSourceRange();
-        // get the body of this function so we can modify it
-        Stmt *s = f->getBody();
+        
+        
         
         if (contains_bad_statements(s)) return true; //check it doesn't contain bad statements
         

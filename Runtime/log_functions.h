@@ -23,6 +23,9 @@
 ( std::ostringstream() << std::dec << x ) ).str())
 
 #define NO_INSTRUMENT false
+#define SEGFAULTHANDLE ali_clang_plugin_runtime::install_handlers();
+
+#define FLUSH_DB_FOR_EACH_CHANGE true //slower but effective for segfaults
 
 namespace ali_clang_plugin_runtime {
 
@@ -44,8 +47,8 @@ namespace ali_clang_plugin_runtime {
     extern bool ALI_GLOBAL_DEBUG;
 
     unsigned long report_memory(void);
-    //template <class T> std::string TToStr(T& t);
-    //template <class T> std::string TToStr(T* t);
+    void segfault_handler(int sig);
+    void install_handlers();
 
     #define BUFFER_SIZE 256
 
@@ -58,6 +61,7 @@ namespace ali_clang_plugin_runtime {
         StaticFunctionData(std::string the_func_name, int the_line_number, std::string the_file_name) : func_name(the_func_name), start_of_function_line_number(the_line_number), file_name(the_file_name) {
             //possibly take in number of lines
             //possibly create sqlite db
+            SEGFAULTHANDLE //temp for library
         }
         
         void create_tables() {
@@ -227,6 +231,9 @@ namespace ali_clang_plugin_runtime {
             std::ostringstream var_value;
             var_value << val;
             line_data[line_number].push_back((Change){true,typeid(val).name(),var_name,var_value.str(),clock()});
+            
+            if (FLUSH_DB_FOR_EACH_CHANGE) ali_function_db->flush_to_db();
+            
             return val;
         }
         
@@ -314,7 +321,7 @@ namespace ali_clang_plugin_runtime {
         
     };
 
-    void segfault_handler(int sig);
+    
 }
 
 #endif

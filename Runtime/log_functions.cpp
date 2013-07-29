@@ -10,6 +10,8 @@
 #define NO_INSTRUMENT true
 #include <sstream>
 
+namespace ali_clang_plugin_runtime {
+
 bool ALI_GLOBAL_DEBUG = true;
 sqlite3 *ali__log__db;
 
@@ -63,4 +65,8 @@ void segfault_handler(int sig) {
     fprintf(stderr, "Error: signal %d:\n", sig);
     backtrace_symbols_fd(array, size, STDERR_FILENO);
     exit(1);
+}
+    void install_handlers() {
+        signal(SIGSEGV, segfault_handler);
+    }
 }
