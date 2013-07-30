@@ -64,6 +64,8 @@ inline void insert_before_after_2(Stmt *st, Rewriter* rewriter, std::string befo
 }
 
 void modify_statements(Rewriter* rewriter, Stmt *s) {
+    
+    
     for(StmtIterator it = s->child_begin(); it != s->child_end(); ++it) {
         
         Stmt* statement_from_it = *it;
@@ -71,11 +73,22 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         if (statement_from_it == NULL) continue;
         if (it->getLocStart().isInvalid()) continue;
         
-        if (isa<CaseStmt>(*statement_from_it)) continue; //temp
-        
-       
-        
-         if (isa<DeclStmt>(*statement_from_it)) {
+        if (isa<CaseStmt>(*statement_from_it)) {
+            CaseStmt *caseStatement = cast<CaseStmt>(statement_from_it);
+            insert_before_after_2(caseStatement->getSubStmt(), rewriter, " /* start of case rhs */ ", " /* end of case rhs */ ");
+            //caseStatement->get
+            //caseStatement->getSubStmt()->
+            modify_statements(rewriter,caseStatement->getSubStmt());
+            continue;
+        } else if (isa<SwitchCase>(*statement_from_it) || isa<SwitchCase>(*statement_from_it)) {
+            SwitchCase *caseStatement = cast<SwitchCase>(statement_from_it);
+            insert_before_after_2(caseStatement->getSubStmt(), rewriter, " /* start of switch */ ", " /* end of switch */ ");
+            //caseStatement->get
+            
+            //modify_statements(rewriter,caseStatement->get);
+            continue;
+        }
+         else if (isa<DeclStmt>(*statement_from_it)) {
             DeclStmt *declStatement = cast<DeclStmt>(statement_from_it);
             if (declStatement->isSingleDecl()) {
                 Decl* d = declStatement->getSingleDecl();
@@ -86,13 +99,14 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             ReturnStmt *declStatement = cast<ReturnStmt>(statement_from_it);
             //insert_before_after(declStatement->getRetValue(), rewriter, " LOGRETURN(( ", ")) ");
                 
-                 
-        } else if (isa<CompoundStmt>(*statement_from_it)) {
+         } else if (isa<IntegerLiteral>(*statement_from_it) || isa<StringLiteral>(*statement_from_it)) {
+          continue;
+        } /*else if (isa<CompoundStmt>(*statement_from_it)) {
             // basically blocks of statements {}
             
             CompoundStmt *st = cast<CompoundStmt>(statement_from_it);
-            rewriter->InsertTextAfter(st->getLocStart(), " /* Compound */ ");
-        }
+            rewriter->InsertTextAfter(st->getLocStart(), " /* Compound  ");
+        }*/
         /*else if (isa<CompoundAssignOperator>(*statement_from_it)) {
         //ignore compound statements
         }*/
@@ -139,14 +153,11 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             
             
         }
-        /*else if (isa<IntegerLiteral>(*statement_from_it)) {
-            continue;
-        }*/
         else if (isa<BinaryOperator>(*statement_from_it)) {
             BinaryOperator *dre = cast<BinaryOperator>(statement_from_it);
             insert_before_after(dre->getLHS(), rewriter, " LHS(( ", ")) ");
-            insert_before_after(dre->getRHS(), rewriter, " RHS(( ", ")) ");
-            continue; //ignore children
+            //insert_before_after(dre->getRHS(), rewriter, " RHS(( ", ")) ");
+            //continue; //ignore children
         }
         else if (isa<BinaryConditionalOperator>(*statement_from_it)) {
             
@@ -155,12 +166,19 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         else if (isa<CXXOperatorCallExpr>(*statement_from_it)) {
             CXXOperatorCallExpr *dre = cast<CXXOperatorCallExpr>(statement_from_it);
             for (int i=0; i<dre->getNumArgs(); i++) {
+                Expr* arg = dre->getArg(i);
                 //modify_statements(rewriter,dre->getArg(i));
                 if (dre->getArg(i) == NULL) continue;
                 if (dre->getArg(i)->isLValue())
                 insert_before_after(dre->getArg(i), rewriter, " OPERATOR_LHS_ARG((", ")) ");
-                else
-                insert_before_after(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG((", ")) ");
+                else if (dre->getArg(i)->isRValue()) {
+                    //if (dre->getArg(i)->
+                    std::ostringstream comment;
+                    comment << " /*" << arg->getType().getAsString() << "*/ OPERATOR_RHS_ARG((";
+                    
+                    //if (!arg->isOrdinaryOrBitFieldObject())
+                insert_before_after(dre->getArg(i), rewriter, comment.str(), ")) ");
+                }
             }
             
             //continue;
@@ -169,16 +187,18 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         else if (isa<DeclRefExpr>(*statement_from_it)) {
            DeclRefExpr *dre = cast<DeclRefExpr>(statement_from_it);
             if (dre->isRValue()) {
-                std::string var_name = rewriter->ConvertToString(dre);
-                std::ostringstream debug_version_of_rhs;
-                int start_col = rewriter->getSourceMgr().getPresumedColumnNumber(dre->getLocStart());
-                int end_col = rewriter->getSourceMgr().getPresumedColumnNumber(dre->getLocEnd());
-                int line = rewriter->getSourceMgr().getPresumedLineNumber(dre->getLocStart());
+//                std::string var_name = rewriter->ConvertToString(dre);
+//                std::ostringstream debug_version_of_rhs;
+//                int start_col = rewriter->getSourceMgr().getPresumedColumnNumber(dre->getLocStart());
+//                int end_col = rewriter->getSourceMgr().getPresumedColumnNumber(dre->getLocEnd());
+//                int line = rewriter->getSourceMgr().getPresumedLineNumber(dre->getLocStart());
+//                
+//                debug_version_of_rhs << " /*RHSValue*/ (inst_func_db.log_change_rhs(";
+//                debug_version_of_rhs << "\"" << start_col << "_" << end_col << "_" << line << "_" << dre->getType().getAsString() << "_" << dre->getStmtClassName() << "\",__LINE__,";
+//                
+//            insert_before_after(dre,rewriter,debug_version_of_rhs.str(),"))");
+                insert_before_after(dre, rewriter, " RHS(( ", ")) ");
                 
-                debug_version_of_rhs << " /*RHSValue*/ (inst_func_db.log_change_rhs(";
-                debug_version_of_rhs << "\"" << start_col << "_" << end_col << "_" << line << "_" << dre->getType().getAsString() << "_" << dre->getStmtClassName() << "\",__LINE__,";
-                
-            insert_before_after(dre,rewriter,debug_version_of_rhs.str(),"))");
             } else if ( dre->isXValue()) {
                
                 insert_before_after(dre,rewriter," /* x value declref! */ "," /* end x value*/ ");
@@ -218,6 +238,9 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         }
         else if (isa<CallExpr>(*statement_from_it)) {
             CallExpr *dre = cast<CallExpr>(statement_from_it);
+            if (dre->isRValue())
+                insert_before_after_2(dre,rewriter," CALLR(( "," )) ");
+            else
             insert_before_after_2(dre,rewriter," CALL(( "," )) ");
             
             for (int i=0; i<dre->getNumArgs(); i++) {

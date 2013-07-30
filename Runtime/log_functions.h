@@ -25,15 +25,16 @@
 #define NO_INSTRUMENT false
 #define SEGFAULTHANDLE ali_clang_plugin_runtime::install_handlers();
 #define CALL(arg) (arg)
+#define CALLR(arg) (arg) //call with return
 #define MEMBER_CALL(arg) (arg)
 #define MEMBER_EXPR(arg) (arg)
 #define OPERATOR_LHS_ARG(arg) (arg)
 #define OPERATOR_RHS_ARG(arg) (arg)
 #define CALL_ARG(arg) (arg)
-#define RHS(arg) (arg)
+#define RHS(arg) inst_func_db.log_rhs(0,0,(arg))
 #define LHS(arg) (arg)
 #define LOGRETURN(arg) (arg)
-#define LOGPARAMETER(arg) (arg)
+#define LOGPARAMETER(arg) inst_func_db.log_parameter(0,0,(arg))
 
 #define FLUSH_DB_FOR_EACH_CHANGE true 
 //slower but effective for segfaults
@@ -273,7 +274,29 @@ namespace ali_clang_plugin_runtime {
             ali_clang_flush_db_on_each_change
         }
         
+        template <class T> void log_parameter(int start_loc, int end_loc, T& param) {
+            
+        }
         
+        template <class T> void log_lhs(int start_loc, int end_loc, T& param) {
+            
+        }
+        
+        template <class T> T& log_rhs(int start_loc, int end_loc, T& param) {
+            return param;
+        }
+        
+        template <class T> const T& log_rhs(int start_loc, int end_loc, const T& param) {
+            return param;
+        }
+        
+        template <class T> T*& log_rhs(int start_loc, int end_loc, T*& param) {
+            return param;
+        }
+        
+        template <class T> const T*& log_rhs(int start_loc, int end_loc, const T*& param) {
+            return param;
+        }
         
         template <class T> T& log_change_lhs(std::string var_name, int line_number, T& val) {
             line_number = line_number - ali_function_db->start_of_function_line_number ;
