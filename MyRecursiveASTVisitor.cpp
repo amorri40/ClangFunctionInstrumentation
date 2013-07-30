@@ -66,27 +66,17 @@ inline void insert_before_after_2(Stmt *st, Rewriter* rewriter, std::string befo
 void modify_statements(Rewriter* rewriter, Stmt *s) {
     
     
-    for(StmtIterator it = s->child_begin(); it != s->child_end(); ++it) {
+    
         
-        Stmt* statement_from_it = *it;
+    Stmt* statement_from_it = s;//*it;
         
-        if (statement_from_it == NULL) continue;
-        if (it->getLocStart().isInvalid()) continue;
+        if (statement_from_it == NULL) return;
+        if (s->getLocStart().isInvalid()) return;
         
         if (isa<CaseStmt>(*statement_from_it)) {
             CaseStmt *caseStatement = cast<CaseStmt>(statement_from_it);
-            insert_before_after_2(caseStatement->getSubStmt(), rewriter, " /* start of case rhs */ ", " /* end of case rhs */ ");
-            //caseStatement->get
-            //caseStatement->getSubStmt()->
             modify_statements(rewriter,caseStatement->getSubStmt());
-            continue;
-        } else if (isa<SwitchCase>(*statement_from_it) || isa<SwitchCase>(*statement_from_it)) {
-            SwitchCase *caseStatement = cast<SwitchCase>(statement_from_it);
-            insert_before_after_2(caseStatement->getSubStmt(), rewriter, " /* start of switch */ ", " /* end of switch */ ");
-            //caseStatement->get
-            
-            //modify_statements(rewriter,caseStatement->get);
-            continue;
+            return;
         }
          else if (isa<DeclStmt>(*statement_from_it)) {
             DeclStmt *declStatement = cast<DeclStmt>(statement_from_it);
@@ -95,73 +85,12 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 d->getDeclKindName();
                 rewriter->InsertTextAfter(d->getLocStart(), " /*DECL*/ ");
             }
-         } else if (isa<ReturnStmt>(*statement_from_it)) {
-            ReturnStmt *declStatement = cast<ReturnStmt>(statement_from_it);
-            //insert_before_after(declStatement->getRetValue(), rewriter, " LOGRETURN(( ", ")) ");
-                
-         } else if (isa<IntegerLiteral>(*statement_from_it) || isa<StringLiteral>(*statement_from_it)) {
-          continue;
-        } /*else if (isa<CompoundStmt>(*statement_from_it)) {
-            // basically blocks of statements {}
-            
-            CompoundStmt *st = cast<CompoundStmt>(statement_from_it);
-            rewriter->InsertTextAfter(st->getLocStart(), " /* Compound  ");
-        }*/
-        /*else if (isa<CompoundAssignOperator>(*statement_from_it)) {
-        //ignore compound statements
-        }*/
-        else if (false) {//(isa<CallExpr>(*statement_from_it)) {
-            
-            CallExpr *st = cast<CallExpr>(statement_from_it);
-            
-            
-            SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts()); //getBeginningOfStatement(statement_from_it,rewriter);
-            SourceLocation end = clang::Lexer::getLocForEndOfToken(st->getLocEnd(),0, rewriter->getSourceMgr(), rewriter->getLangOpts());
-            if (end.isInvalid()) continue;
-            if (begining.isInvalid()) continue;
-            
-            if (st->getDirectCallee()== NULL) continue;
-            
-            std::string function_name = st->getDirectCallee()->getNameAsString();
-            
-            /*for (int argument =0; argument < st->getNumArgs(); argument++) {
-                Expr* arg = st->getArg(argument);
-                int start_col = rewriter->getSourceMgr().getPresumedColumnNumber(arg->getLocStart());
-                std::ostringstream argument_data;
-                argument_data << "\"" << function_name << "\",__LINE__, " << start_col << ", ";
-                argument_data << argument << ", ";
-                insert_before_after(arg,rewriter,"(inst_func_db.log_argument(","))");
-            }*/
-            
-            
-            std::ostringstream debug_call;
-            
-            debug_call << " (inst_func_db.log_call(";
-            //debug_call << "\"" << st->getDirectCallee()->getNameAsString() << "\",__LINE__), ";
-            debug_call << "\"" <<  function_name << "\",__LINE__), ";
-            if (st->isBuiltinCall())
-            continue;
-            //insert_before_after(st,rewriter,debug_call.str()," ) /*endcall ");
-            
-            if (!rewriter->isRewritable(end)) continue;
-            if (!rewriter->isRewritable(begining)) continue;
-            
-            bool b = rewriter->InsertTextBefore(begining, debug_call.str());
-            if (!b)
-                bool a = rewriter->InsertTextBefore(end, " ) /*endcall*/ ");
-            
-            
-            
+        } else if (isa<IntegerLiteral>(*statement_from_it) || isa<StringLiteral>(*statement_from_it)) {
+             return;
         }
         else if (isa<BinaryOperator>(*statement_from_it)) {
             BinaryOperator *dre = cast<BinaryOperator>(statement_from_it);
             insert_before_after(dre->getLHS(), rewriter, " LHS(( ", ")) ");
-            //insert_before_after(dre->getRHS(), rewriter, " RHS(( ", ")) ");
-            //continue; //ignore children
-        }
-        else if (isa<BinaryConditionalOperator>(*statement_from_it)) {
-            
-            //continue;
         }
         else if (isa<CXXOperatorCallExpr>(*statement_from_it)) {
             CXXOperatorCallExpr *dre = cast<CXXOperatorCallExpr>(statement_from_it);
@@ -171,13 +100,13 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 if (dre->getArg(i) == NULL) continue;
                 if (dre->getArg(i)->isLValue())
                 insert_before_after(dre->getArg(i), rewriter, " OPERATOR_LHS_ARG((", ")) ");
-                else if (dre->getArg(i)->isRValue()) {
-                    //if (dre->getArg(i)->
-                    std::ostringstream comment;
-                    comment << " /*" << arg->getType().getAsString() << "*/ OPERATOR_RHS_ARG((";
+                else if (arg->isRValue()) {
+                   
+                    if (arg->getType().isCanonical())
+                insert_before_after(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_CANONICAL((", ")) ");
+                    else
+                    insert_before_after(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_NOTCANONICAL((", ")) ");
                     
-                    //if (!arg->isOrdinaryOrBitFieldObject())
-                insert_before_after(dre->getArg(i), rewriter, comment.str(), ")) ");
                 }
             }
             
@@ -207,7 +136,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 d << " /* LValue " << dre->getStmtClassName() << " " << dre->getDecl()->getNameAsString() << "*/ ";
                 
                 //insert_before_after(dre,rewriter,d.str()," /* end L value*/ ");
-                continue;
+                return;
             }
         }
         else if (isa<CXXBindTemporaryExpr>(*statement_from_it)) {
@@ -229,7 +158,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 if (dre->getArg(i) == NULL) continue;
                 insert_before_after(dre->getArg(i), rewriter, " CALL_ARG(( ", ")) ");
             }
-            continue; // don't want to parse the memberExpr!!
+            return; // don't want to parse the memberExpr!!
         }
         else if (isa<MemberExpr>(*statement_from_it)) {
             MemberExpr *dre = cast<MemberExpr>(statement_from_it);
@@ -249,84 +178,6 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 insert_before_after(dre->getArg(i), rewriter, " CALL_ARG((", ")) ");
             }
         }
-        
-        else if (false) {//else if (isa<Expr>(*statement_from_it)) {
-            
-            Expr *st = cast<Expr>(statement_from_it);
-            
-            if (isa<clang::BinaryOperator>(st)) {
-                
-                BinaryOperator* biOp = (BinaryOperator *) st;
-                if (biOp->isAssignmentOp()) {
-                    // get the lhs and rhs of the operator
-                    Expr* lhs = biOp->getLHS();
-                    
-                    if (isa<clang::ImplicitCastExpr>(lhs)) continue;
-                    
-                    
-                    Expr* rhs = biOp->getRHS();
-                    //if (rhs->isLValue()) continue; //current doesn't support val = val = val
-                    if (isa<clang::UnaryOperator>(rhs)) continue;
-                    if (isa<clang::CompoundAssignOperator>(rhs)) continue;
-                    if (isa<clang::BinaryOperator>(rhs)) continue;
-                    if (isa<clang::BinaryConditionalOperator>(rhs)) continue;
-                    if (isa<clang::ImplicitCastExpr>(rhs)) continue;
-                    /*
-                     *left hand side
-                     */
-                    std::string var_name = rewriter->ConvertToString(lhs);
-                    replaceAll(var_name,"\"","'");
-                    
-                    std::ostringstream debug_version_of_lhs;
-                    
-                    debug_version_of_lhs << "(inst_func_db.log_change_lhs(";
-                    debug_version_of_lhs << "\"" << var_name << "\",__LINE__,";
-                    debug_version_of_lhs << rewriter->ConvertToString(lhs);
-                    debug_version_of_lhs << "),";
-                    
-                    if (lhs->getLocStart().isInvalid()) continue;
-                    if (biOp->getOperatorLoc().isInvalid()) continue;
-                    if (rhs->getLocStart().isInvalid()) continue;
-                    if (biOp->getLocEnd().isInvalid()) continue;
-                    
-                    if (!rewriter->isRewritable(lhs->getLocStart()) || !rewriter->isRewritable(biOp->getOperatorLoc())) continue;
-                    
-                    rewriter->InsertTextAfter(lhs->getLocStart(), debug_version_of_lhs.str());
-                    rewriter->InsertTextAfter(biOp->getOperatorLoc(), " ) ");
-                    
-                    
-                    /*
-                     now do the right hand side
-                    */
-                    //std::string rhs_name = rewriter->ConvertToString(lhs);
-                    //replaceAll(rhs_name,"\"","'");
-                    
-                    std::ostringstream debug_version_of_rhs;
-                    
-                    debug_version_of_rhs << " /*RHSValue*/ (inst_func_db.log_change_rhs(";
-                    debug_version_of_rhs << "\"" << var_name << "\",__LINE__,";
-                    //debug_version_of_rhs << rewriter->ConvertToString(rhs);
-                    //debug_version_of_rhs << "),";
-                    
-                    std::ostringstream class_name;
-                    //class_name << "/*" << rhs->getStmtClassName() << "*/";
-                    
-                    //rewriter->InsertText(rhs->getExprLoc(), class_name.str());
-                    
-                    rewriter->InsertTextBefore(rhs->getLocStart(), debug_version_of_rhs.str());
-                    rewriter->InsertTextAfterToken(biOp->getLocEnd(), "))/*End of RHS*/ ");
-                    //llvm::errs() << rhs->getStmtClassName() << "," ;
-                    
-                }
-                
-                
-            }
-            //else {
-            
-            
-            
-            
-            } //end if binary operator
         else {
             std::ostringstream class_name;
             class_name << " /*" << statement_from_it->getStmtClassName() << "*/ "; //should this not be statement_from_id
@@ -334,15 +185,17 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             class_name.str("");
             class_name << " /* END " << statement_from_it->getStmtClassName() << "*/ ";
             
-            if (statement_from_it->getLocStart().isInvalid()) continue;
+            if (statement_from_it->getLocStart().isInvalid()) return;
             //rewriter->InsertText(statement_from_it->getLocStart(), class_name.str());
             //insert_before_after_2(statement_from_it,rewriter,beg,class_name.str());
         
         }
-        
-        if (!it->children().empty()) {modify_statements(rewriter,*it); continue;}
-        
-    } //end of for loop
+    
+    
+    for(StmtIterator it = s->child_begin(); it != s->child_end(); ++it) {
+        modify_statements(rewriter,*it);
+        //if (!it->children().empty()) {modify_statements(rewriter,*it); continue;}
+    }
    
 }
 
