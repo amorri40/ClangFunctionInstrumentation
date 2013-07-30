@@ -63,11 +63,31 @@ inline void insert_before_after_2(Stmt *st, Rewriter* rewriter, std::string befo
         rewriter->InsertTextAfter(end, after);
 }
 
+void handle_call_argument(Expr* arg, Rewriter* rewriter) {
+    if (arg == NULL) return;
+    
+    if (arg->getType()->hasIntegerRepresentation()) {
+    insert_before_after(arg, rewriter, " CALL_ARG((", ")) ");
+    } else if (arg->getType()->isBuiltinType()) {
+        insert_before_after(arg, rewriter, " CALL_ARG((", ")) ");
+    } else if (arg->getType()->isPointerType()) {
+        if (arg->getType().isCanonical())
+          insert_before_after(arg, rewriter, " CALL_ARG((", ")) ");
+        else
+            insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ");
+    }
+    else if (arg->getType()->hasPointerRepresentation()) {
+        insert_before_after(arg, rewriter, " CALL_ARG(( (void *) ", ")) ");
+    } else {
+        insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ");
+    }
+}
+
 void modify_statements(Rewriter* rewriter, Stmt *s) {
     
     
     
-        
+    
     Stmt* statement_from_it = s;//*it;
         
         if (statement_from_it == NULL) return;
@@ -85,18 +105,20 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 d->getDeclKindName();
                 rewriter->InsertTextAfter(d->getLocStart(), " /*DECL*/ ");
             }
+             return; //ignore decl children
         } else if (isa<IntegerLiteral>(*statement_from_it) || isa<StringLiteral>(*statement_from_it)) {
              return;
         }
         else if (isa<BinaryOperator>(*statement_from_it)) {
             BinaryOperator *dre = cast<BinaryOperator>(statement_from_it);
+            if (dre->getOpcodeStr() == ",") return; //ignore comma operator
             insert_before_after(dre->getLHS(), rewriter, " LHS(( ", ")) ");
         }
         else if (isa<CXXOperatorCallExpr>(*statement_from_it)) {
             CXXOperatorCallExpr *dre = cast<CXXOperatorCallExpr>(statement_from_it);
             for (int i=0; i<dre->getNumArgs(); i++) {
                 Expr* arg = dre->getArg(i);
-                //modify_statements(rewriter,dre->getArg(i));
+                
                 if (dre->getArg(i) == NULL) continue;
                 if (dre->getArg(i)->isLValue())
                 insert_before_after(dre->getArg(i), rewriter, " OPERATOR_LHS_ARG((", ")) ");
@@ -110,22 +132,11 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 }
             }
             
-            //continue;
         }
         
         else if (isa<DeclRefExpr>(*statement_from_it)) {
            DeclRefExpr *dre = cast<DeclRefExpr>(statement_from_it);
             if (dre->isRValue()) {
-//                std::string var_name = rewriter->ConvertToString(dre);
-//                std::ostringstream debug_version_of_rhs;
-//                int start_col = rewriter->getSourceMgr().getPresumedColumnNumber(dre->getLocStart());
-//                int end_col = rewriter->getSourceMgr().getPresumedColumnNumber(dre->getLocEnd());
-//                int line = rewriter->getSourceMgr().getPresumedLineNumber(dre->getLocStart());
-//                
-//                debug_version_of_rhs << " /*RHSValue*/ (inst_func_db.log_change_rhs(";
-//                debug_version_of_rhs << "\"" << start_col << "_" << end_col << "_" << line << "_" << dre->getType().getAsString() << "_" << dre->getStmtClassName() << "\",__LINE__,";
-//                
-//            insert_before_after(dre,rewriter,debug_version_of_rhs.str(),"))");
                 insert_before_after(dre, rewriter, " RHS(( ", ")) ");
                 
             } else if ( dre->isXValue()) {
@@ -139,24 +150,13 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 return;
             }
         }
-        else if (isa<CXXBindTemporaryExpr>(*statement_from_it)) {
-            CXXBindTemporaryExpr *dre = cast<CXXBindTemporaryExpr>(statement_from_it);
-            
-            insert_before_after_2(dre,rewriter,"(/*CXXBindTemporaryExpr*/ "," /*End CXXBindTemporaryExpr*/)");
-        }
-        else if (isa<ImplicitCastExpr>(*statement_from_it)) {
-            ImplicitCastExpr *dre = cast<ImplicitCastExpr>(statement_from_it);
-            
-            //insert_before_after_2(dre,rewriter,"(/*ImplicitCastExpr*/ "," /*ImplicitCastExpr*/)");
-        }
         else if (isa<CXXMemberCallExpr>(*statement_from_it)) {
             CXXMemberCallExpr *dre = cast<CXXMemberCallExpr>(statement_from_it);
             
             insert_before_after_2(dre,rewriter," MEMBER_CALL(( "," )) ");
             for (int i=0; i<dre->getNumArgs(); i++) {
-                //modify_statements(rewriter,dre->getArg(i));
-                if (dre->getArg(i) == NULL) continue;
-                insert_before_after(dre->getArg(i), rewriter, " CALL_ARG(( ", ")) ");
+                Expr* arg = dre->getArg(i);
+                handle_call_argument(arg,rewriter);
             }
             return; // don't want to parse the memberExpr!!
         }
@@ -173,9 +173,8 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             insert_before_after_2(dre,rewriter," CALL(( "," )) ");
             
             for (int i=0; i<dre->getNumArgs(); i++) {
-                //modify_statements(rewriter,dre->getArg(i));
-                if (dre->getArg(i) == NULL) continue;
-                insert_before_after(dre->getArg(i), rewriter, " CALL_ARG((", ")) ");
+                Expr* arg = dre->getArg(i);
+                handle_call_argument(arg,rewriter);
             }
         }
         else {
