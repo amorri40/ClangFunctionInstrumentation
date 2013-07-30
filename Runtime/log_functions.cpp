@@ -82,10 +82,12 @@ sqlite3 *ali__log__db;
                     //unique_special_id << special_id.str();
                     Change c = *it2;
                     
-                    current_line_types << c.type_of_var;
+                    current_line_types << "(" << c.start_loc << ":" << c.end_loc << "=" << c.value << c.type_of_var << ")";
                     current_line_values << c.value;
+                    current_line_names << "";
+                    unique_special_id << current_line_types.str();
                     
-                    if (c.type == CHANGE_LHS) {
+                    /*if (c.type == CHANGE_LHS) {
                         //unique_special_id << "L";
                         current_line_names << "->";
                         current_line_types << "->";
@@ -98,7 +100,7 @@ sqlite3 *ali__log__db;
                         current_line_names << c.name_of_var;
                     } else if (c.type == CHANGE_FUNCTIONCALL) {
                         current_line_names <<"(" << c.name_of_var << "())";
-                    }
+                    }*/
                     tim = c.time_of_change;
                     
                 }

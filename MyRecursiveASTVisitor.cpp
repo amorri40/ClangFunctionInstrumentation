@@ -43,6 +43,11 @@ inline void insert_before_after(Expr *st, Rewriter* rewriter, std::string before
     if (st->getLocEnd().isInvalid()) return;
     SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts()); //getBeginningOfStatement(statement_from_it,rewriter);
     SourceLocation end = clang::Lexer::getLocForEndOfToken(st->getLocEnd(),0, rewriter->getSourceMgr(), rewriter->getLangOpts());
+    
+    /*
+     Check the locations are valid and rewritable otherwise it will fail
+     */
+    
     if (end.isInvalid()) return;
     if (begining.isInvalid()) return;
     if (!rewriter->isRewritable(end)) return;
@@ -50,7 +55,23 @@ inline void insert_before_after(Expr *st, Rewriter* rewriter, std::string before
     
     bool b = rewriter->InsertTextBefore(begining, before);
     if (!b)
-        bool a = rewriter->InsertTextBefore(end, after);
+        rewriter->InsertTextBefore(end, after);
+}
+
+inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name) {
+    SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts()); //getBeginningOfStatement(statement_from_it,rewriter);
+    SourceLocation end = clang::Lexer::getLocForEndOfToken(st->getLocEnd(),0, rewriter->getSourceMgr(), rewriter->getLangOpts());
+    
+    int line = rewriter->getSourceMgr().getPresumedLineNumber(begining);
+    int beg = rewriter->getSourceMgr().getPresumedColumnNumber(begining);
+    int e = rewriter->getSourceMgr().getPresumedColumnNumber(end);
+    
+    std::ostringstream macro_call;
+    macro_call << macro_name << " ("<< line << ", ";
+    macro_call << beg << ", " << e <<", ";
+    macro_call << " (";
+    
+    insert_before_after(st,rewriter,macro_call.str(),")) ");
 }
 
 inline void insert_before_after_2(Stmt *st, Rewriter* rewriter, std::string before, std::string after) {
@@ -112,7 +133,9 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         else if (isa<BinaryOperator>(*statement_from_it)) {
             BinaryOperator *dre = cast<BinaryOperator>(statement_from_it);
             if (dre->getOpcodeStr() == ",") return; //ignore comma operator
-            insert_before_after(dre->getLHS(), rewriter, " LHS(( ", ")) ");
+            //insert_before_after(dre->getLHS(), rewriter, " LHS(( ", ")) ");
+            if (isa<CXXNewExpr>(dre->getRHS())) return; //don't handle initilisations
+            wrap_with_macro(dre->getLHS(), rewriter, "LHS");
         }
         else if (isa<CXXOperatorCallExpr>(*statement_from_it)) {
             CXXOperatorCallExpr *dre = cast<CXXOperatorCallExpr>(statement_from_it);
@@ -121,13 +144,16 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 
                 if (dre->getArg(i) == NULL) continue;
                 if (dre->getArg(i)->isLValue())
-                insert_before_after(dre->getArg(i), rewriter, " OPERATOR_LHS_ARG((", ")) ");
+                    //insert_before_after(dre->getArg(i), rewriter, " OPERATOR_LHS_ARG((", ")) ");
+                    wrap_with_macro(dre->getArg(i), rewriter, "OPERATOR_LHS_ARG");
                 else if (arg->isRValue()) {
                    
                     if (arg->getType().isCanonical())
-                insert_before_after(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_CANONICAL((", ")) ");
+                //insert_before_after(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_CANONICAL((", ")) ");
+                        wrap_with_macro(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_CANONICAL");
                     else
-                    insert_before_after(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_NOTCANONICAL((", ")) ");
+                    //insert_before_after(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_NOTCANONICAL((", ")) ");
+                        wrap_with_macro(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_NOTCANONICAL");
                     
                 }
             }
@@ -137,7 +163,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         else if (isa<DeclRefExpr>(*statement_from_it)) {
            DeclRefExpr *dre = cast<DeclRefExpr>(statement_from_it);
             if (dre->isRValue()) {
-                insert_before_after(dre, rewriter, " RHS(( ", ")) ");
+                wrap_with_macro(dre, rewriter, " RHS");
                 
             } else if ( dre->isXValue()) {
                

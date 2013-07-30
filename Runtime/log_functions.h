@@ -28,12 +28,12 @@
 #define CALLR(arg) (arg) //call with return
 #define MEMBER_CALL(arg) (arg)
 #define MEMBER_EXPR(arg) (arg)
-#define OPERATOR_LHS_ARG(arg) (arg)
-#define OPERATOR_RHS_ARG_CANONICAL(arg) inst_func_db.log_rhs(0,0,(arg))
-#define OPERATOR_RHS_ARG_NOTCANONICAL(arg) (arg)
+#define OPERATOR_LHS_ARG(line,beg,end,arg) (arg)
+#define OPERATOR_RHS_ARG_CANONICAL(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
+#define OPERATOR_RHS_ARG_NOTCANONICAL(line,beg,end,arg) (arg)
 #define CALL_ARG(argument) inst_func_db.log_call_arg(0,0,(argument))
-#define RHS(arg) inst_func_db.log_rhs(0,0,(arg))
-#define LHS(arg) inst_func_db.log_rhs(0,0,(arg))
+#define RHS(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
+#define LHS(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
 //#define LOGRETURN(arg) (arg)
 #define LOGPARAMETER(arg) inst_func_db.log_parameter(0,0,(arg))
 #define ARG_UNKNOWN(arg) (arg)  
@@ -50,7 +50,9 @@ namespace ali_clang_plugin_runtime {
     struct Change {
         ChangeTypes type;
         std::string type_of_var;
-        std::string name_of_var;
+        //std::string name_of_var;
+        int start_loc;
+        int end_loc;
         std::string value;
         unsigned long time_of_change;
     };
@@ -130,7 +132,7 @@ namespace ali_clang_plugin_runtime {
         }
 
         
-        void log_call(std::string var_name, int line_number) {
+        /*void log_call(std::string var_name, int line_number) {
             line_number = line_number - ali_function_db->start_of_function_line_number ;
             
             line_data[line_number].push_back((Change){CHANGE_FUNCTIONCALL,"",var_name,"",clock()});
@@ -144,7 +146,7 @@ namespace ali_clang_plugin_runtime {
             line_data[line_number].push_back((Change){CHANGE_FUNCTIONCALL,"",var_name,"",clock()});
             
             ali_clang_flush_db_on_each_change
-        }
+        }*/
         
         /*template <class T> void log_lhs(int start_loc, int end_loc, T& param) {
             
@@ -185,27 +187,62 @@ namespace ali_clang_plugin_runtime {
          These templates log changes on each line
          */
         
-        template <class T> T& log_rhs(int start_loc, int end_loc, T& param) {
-            return param;
+        int& log_rhs(int line_num, int start_loc, int end_loc, int& val) {
+            std::ostringstream var_value; var_value << val;
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(int)",start_loc,end_loc,var_value.str(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
         }
         
-        template <class T> const T& log_rhs(int start_loc, int end_loc, const T& param) {
-            return param;
+        
+        
+        char*& log_rhs(int line_num, int start_loc, int end_loc, char*& val) {
+            line_data[line_num].push_back((Change){CHANGE_RHS,"",start_loc,end_loc,val,clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
         }
         
-        template <class T> T*& log_rhs(int start_loc, int end_loc, T*& param) {
-            return param;
+        const char*& log_rhs(int line_num, int start_loc, int end_loc, const char*& val) {
+            line_data[line_num].push_back((Change){CHANGE_RHS,"",start_loc,end_loc,val,clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
         }
         
-        template <class T> const T*& log_rhs(int start_loc, int end_loc, const T*& param) {
-            return param;
+        template <class T> T& log_rhs(int line_num, int start_loc, int end_loc, T& val) {
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(reference)",start_loc,end_loc,typeid(val).name(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
+        
+        template <class T> const T& log_rhs(int line_num, int start_loc, int end_loc, const T& val) {
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(const reference)",start_loc,end_loc,typeid(val).name(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
+        
+        template <class T> T*& log_rhs(int line_num, int start_loc, int end_loc, T*& val) {
+            //pointer so just check if valid
+            std::string var_value;
+            if (val == NULL) var_value = "cNULL"; else var_value = "cVALID";
+            line_data[line_num].push_back((Change){CHANGE_RHS,typeid(val).name(),start_loc,end_loc,var_value,clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
+        
+        template <class T> const T*& log_rhs(int line_num, int start_loc, int end_loc, const T*& val) {
+            //pointer so just check if valid
+            std::string var_value;
+            if (val == NULL) var_value = "cNULL"; else var_value = "cVALID";
+            line_data[line_num].push_back((Change){CHANGE_RHS,typeid(val).name(),start_loc,end_loc,var_value,clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
         }
         
         /*
          Older templates
          */
         
-        template <class T> T& log_change_lhs(std::string var_name, int line_number, T& val) {
+       /* template <class T> T& log_change_lhs(std::string var_name, int line_number, T& val) {
             line_number = line_number - ali_function_db->start_of_function_line_number ;
             /*std::ostringstream var_value;
             std::cout << CHECK::opEqualExists<T>::value <<std::endl;
@@ -213,17 +250,17 @@ namespace ali_clang_plugin_runtime {
                 var_value << val;
             } else {
                 var_value << "unknown";
-            }*/
+            }
             line_data[line_number].push_back((Change){CHANGE_LHS,typeid(val).name(),var_name,"var_value_lhs_unknown",clock()});
             
             ali_clang_flush_db_on_each_change
             
             return val;
-        }
+        }*/
         
         
         
-        template <class T> T* log_change_lhs(std::string var_name, int line_number, T* val) {
+        /*template <class T> T* log_change_lhs(std::string var_name, int line_number, T* val) {
             line_number = line_number - ali_function_db->start_of_function_line_number ;
             std::ostringstream var_value;
             
@@ -233,12 +270,12 @@ namespace ali_clang_plugin_runtime {
             ali_clang_flush_db_on_each_change
             
             return val;
-        }
+        }*/
         
         /*
-         RHS overloads
+         old RHS overloads
          */
-        template <class T> T& log_change_rhs(std::string var_name, int line_number, T& val) {
+       /* template <class T> T& log_change_rhs(std::string var_name, int line_number, T& val) {
             line_number = line_number - ali_function_db->start_of_function_line_number ;
             std::ostringstream var_value;
             var_value << val;
@@ -251,10 +288,10 @@ namespace ali_clang_plugin_runtime {
         struct is_pointer { static const bool value = false; };
         
         template<typename T>
-        struct is_pointer<T*> { static const bool value = true; };
+        struct is_pointer<T*> { static const bool value = true; };*/
         
         //const version
-        template <class T> const T& log_change_rhs(std::string var_name, int line_number, const T& val) {
+        /*template <class T> const T& log_change_rhs(std::string var_name, int line_number, const T& val) {
             line_number = line_number - ali_function_db->start_of_function_line_number ;
             std::ostringstream var_value;
             if (is_pointer<T>::value) {
@@ -321,7 +358,7 @@ namespace ali_clang_plugin_runtime {
             line_data[line_number].push_back((Change){CHANGE_RHS,typeid(val).name(),var_name,var_value.str(),clock()});
             return val;
         }
-        
+        */
         
         
     };

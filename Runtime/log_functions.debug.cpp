@@ -38,10 +38,10 @@ sqlite3 *ali__log__db;
 {} {
          /*DECL*/ char * sErrMsg = 0;
          /*DECL*/ std::ostringstream oss;
-         OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG((oss))  <<  OPERATOR_RHS_ARG_CANONICAL(("CREATE TABLE IF NOT EXISTS \"")) ))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((func_name)) ))  ))   <<  OPERATOR_RHS_ARG_CANONICAL(("_unique\" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ")) ;
+        OPERATOR_LHS_ARG (23, 9, 12,  (OPERATOR_LHS_ARG (23, 9, 47,  (OPERATOR_LHS_ARG (23, 9, 60,  (oss))  <<  OPERATOR_RHS_ARG_CANONICAL (23, 16, 47,  ("CREATE TABLE IF NOT EXISTS \"")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (23, 51, 60,  (func_name)) ))  ))   <<  OPERATOR_RHS_ARG_CANONICAL (23, 65, 197,  ("_unique\" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ")) ;
          CALLR(( sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  MEMBER_CALL((  ARG_UNKNOWN((oss.str().c_str()))  )) , NULL, NULL,  CALL_ARG((&sErrMsg)) ) )) ;
          MEMBER_CALL(( oss.str( ARG_UNKNOWN(("")) ) )) ; //clear string stream
-         OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG((oss))  <<  OPERATOR_RHS_ARG_CANONICAL(("CREATE TABLE IF NOT EXISTS \"")) ))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((func_name)) ))  ))   <<  OPERATOR_RHS_ARG_CANONICAL(("_all\" (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)")) ;
+        OPERATOR_LHS_ARG (26, 9, 12,  (OPERATOR_LHS_ARG (26, 9, 47,  (OPERATOR_LHS_ARG (26, 9, 60,  (oss))  <<  OPERATOR_RHS_ARG_CANONICAL (26, 16, 47,  ("CREATE TABLE IF NOT EXISTS \"")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (26, 51, 60,  (func_name)) ))  ))   <<  OPERATOR_RHS_ARG_CANONICAL (26, 65, 193,  ("_all\" (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)")) ;
          CALLR(( sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  MEMBER_CALL((  ARG_UNKNOWN((oss.str().c_str()))  )) , NULL, NULL,  CALL_ARG((&sErrMsg)) ) )) ;
     }
 }
@@ -107,10 +107,12 @@ sqlite3 *ali__log__db;
                     //unique_special_id << special_id.str();
                     Change c = *it2;
                     
-                    current_line_types << c.type_of_var;
+                    current_line_types << "(" << c.start_loc << ":" << c.end_loc << "=" << c.value << "(" << c.type_of_var << "))";
                     current_line_values << c.value;
+                    current_line_names << "";
+                    unique_special_id << current_line_types.str();
                     
-                    if (c.type == CHANGE_LHS) {
+                    /*if (c.type == CHANGE_LHS) {
                         //unique_special_id << "L";
                         current_line_names << "->";
                         current_line_types << "->";
@@ -123,7 +125,7 @@ sqlite3 *ali__log__db;
                         current_line_names << c.name_of_var;
                     } else if (c.type == CHANGE_FUNCTIONCALL) {
                         current_line_names <<"(" << c.name_of_var << "())";
-                    }
+                    }*/
                     tim = c.time_of_change;
                     
                 }
@@ -169,7 +171,7 @@ sqlite3 *ali__log__db;
              CALLR(( fprintf(stderr,  CALL_ARG(("Can't open database: %s\n")) ,  CALLR((  CALL_ARG((sqlite3_errmsg( ARG_UNKNOWN((ali__log__db)) )))  )) ) )) ;
              CALLR(( exit( CALL_ARG((0)) ) )) ;
         }
-         OPERATOR_LHS_ARG((std::cout))  <<  OPERATOR_RHS_ARG_CANONICAL(("flush_to_db")) ;
+        OPERATOR_LHS_ARG (39, 9, 18,  (std::cout))  <<  OPERATOR_RHS_ARG_CANONICAL (39, 22, 35,  ("flush_to_db")) ;
          /*DECL*/ char * sErrMsg = 0;
         sqlite3_stmt * stmt_all, *stmt_unique;
          /*DECL*/ const char * tail = 0;
@@ -179,35 +181,35 @@ sqlite3 *ali__log__db;
          /*DECL*/ std::ostringstream oss;
          MEMBER_CALL(( create_tables() )) ;
         
-         OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG((oss))  <<  OPERATOR_RHS_ARG_CANONICAL(("INSERT INTO \"")) ))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((func_name)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL(("_all\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ;
+        OPERATOR_LHS_ARG (49, 9, 12,  (OPERATOR_LHS_ARG (49, 9, 32,  (OPERATOR_LHS_ARG (49, 9, 45,  (oss))  <<  OPERATOR_RHS_ARG_CANONICAL (49, 16, 32,  ("INSERT INTO \"")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (49, 36, 45,  (func_name)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (49, 49, 95,  ("_all\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ;
          CALLR(( sprintf( CALL_ARG((sSQL_all)) ,  MEMBER_CALL((  ARG_UNKNOWN((oss.str().c_str()))  )) ) )) ;
          CALLR(( sqlite3_prepare_v2( ARG_UNKNOWN((ali__log__db)) ,   CALL_ARG((sSQL_all)) , BUFFER_SIZE,  ARG_UNKNOWN((&stmt_all)) ,  CALL_ARG((&tail)) ) )) ;
          MEMBER_CALL(( oss.str( ARG_UNKNOWN(("")) ) )) ;
-         OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG((oss))  <<  OPERATOR_RHS_ARG_CANONICAL(("INSERT INTO \"")) ))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((func_name)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL(("_unique\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ;
+        OPERATOR_LHS_ARG (53, 9, 12,  (OPERATOR_LHS_ARG (53, 9, 32,  (OPERATOR_LHS_ARG (53, 9, 45,  (oss))  <<  OPERATOR_RHS_ARG_CANONICAL (53, 16, 32,  ("INSERT INTO \"")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (53, 36, 45,  (func_name)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (53, 49, 98,  ("_unique\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ;
          CALLR(( sprintf( CALL_ARG((sSQL_unique)) ,  MEMBER_CALL((  ARG_UNKNOWN((oss.str().c_str()))  )) ) )) ;
          CALLR(( sqlite3_prepare_v2( ARG_UNKNOWN((ali__log__db)) ,   CALL_ARG((sSQL_unique)) , BUFFER_SIZE,  ARG_UNKNOWN((&stmt_unique)) ,  CALL_ARG((&tail_unique)) ) )) ;
         
         
          CALLR(( sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  CALL_ARG(("BEGIN TRANSACTION")) , NULL, NULL,  CALL_ARG((&sErrMsg)) ) )) ;
-         OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG((std::cout))  <<  OPERATOR_RHS_ARG_CANONICAL(("\nFunction: ")) ))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((func_name)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL((" \n")) ;
+        OPERATOR_LHS_ARG (59, 9, 18,  (OPERATOR_LHS_ARG (59, 9, 36,  (OPERATOR_LHS_ARG (59, 9, 49,  (std::cout))  <<  OPERATOR_RHS_ARG_CANONICAL (59, 22, 36,  ("\nFunction: ")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (59, 40, 49,  (func_name)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (59, 53, 58,  (" \n")) ;
         
         
-        for( /*DECL*/ std::vector<map_of_vector_of_change>::size_type execution = 0;  LHS(( execution))  !=  MEMBER_CALL(( all_function_executions.size() )) ; execution++) {
+        for( /*DECL*/ std::vector<map_of_vector_of_change>::size_type execution = 0; LHS (62, 76, 85,  (execution))  !=  MEMBER_CALL(( all_function_executions.size() )) ; execution++) {
              /*DECL*/ map_of_vector_of_change line_data = all_function_executions[execution];
              /*DECL*/ std::ostringstream special_id;
-            for( /*DECL*/ map_of_vector_of_change::iterator line = line_data.begin();  OPERATOR_LHS_ARG((line))  !=  MEMBER_CALL((  OPERATOR_LHS_ARG((line_data.end()))  )) ; ++ OPERATOR_LHS_ARG((line)) ) { //for(map_of_vector_of_string::size_type i = 0; i != line_data.size(); i++) {
+            for( /*DECL*/ map_of_vector_of_change::iterator line = line_data.begin(); OPERATOR_LHS_ARG (65, 77, 81,  (line))  !=  MEMBER_CALL(( OPERATOR_LHS_ARG (65, 85, 100,  (line_data.end()))  )) ; ++OPERATOR_LHS_ARG (65, 104, 108,  (line)) ) { //for(map_of_vector_of_string::size_type i = 0; i != line_data.size(); i++) {
                 //if (line_data[i].empty()) continue;
                  /*DECL*/ int line_num = (line->first);
-                 OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG((std::cout))  <<  OPERATOR_RHS_ARG_CANONICAL(("  ")) ))  <<  OPERATOR_RHS_ARG_CANONICAL((line_num)) ))  <<  OPERATOR_RHS_ARG_CANONICAL((": ")) ;
-                 OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG((special_id))  <<  OPERATOR_RHS_ARG_CANONICAL((line_num)) ))  <<  OPERATOR_RHS_ARG_CANONICAL(("_")) ;
+                OPERATOR_LHS_ARG (68, 17, 26,  (OPERATOR_LHS_ARG (68, 17, 34,  (OPERATOR_LHS_ARG (68, 17, 46,  (std::cout))  <<  OPERATOR_RHS_ARG_CANONICAL (68, 30, 34,  ("  ")) ))  <<  OPERATOR_RHS_ARG_CANONICAL (68, 38, 46,  (line_num)) ))  <<  OPERATOR_RHS_ARG_CANONICAL (68, 50, 54,  (": ")) ;
+                OPERATOR_LHS_ARG (69, 17, 27,  (OPERATOR_LHS_ARG (69, 17, 39,  (special_id))  <<  OPERATOR_RHS_ARG_CANONICAL (69, 31, 39,  (line_num)) ))  <<  OPERATOR_RHS_ARG_CANONICAL (69, 43, 46,  ("_")) ;
                  /*DECL*/ std::string previous_r_value;
                  /*DECL*/ std::ostringstream unique_special_id;
                  /*DECL*/ std::ostringstream current_line_names;
                  /*DECL*/ std::ostringstream current_line_values;
                  /*DECL*/ std::ostringstream current_line_types;
                  /*DECL*/ int tim=0;
-                 OPERATOR_LHS_ARG((unique_special_id))  <<  MEMBER_CALL((  OPERATOR_LHS_ARG((special_id.str()))  )) ;
-                for( /*DECL*/ std::vector<Change>::reverse_iterator it2 = line->second.rbegin();  OPERATOR_LHS_ARG((it2))  !=  MEMBER_CALL((  OPERATOR_LHS_ARG((line->second.rend()))  )) ; ++ OPERATOR_LHS_ARG((it2)) ) {
+                OPERATOR_LHS_ARG (76, 17, 34,  (unique_special_id))  <<  MEMBER_CALL(( OPERATOR_LHS_ARG (76, 38, 54,  (special_id.str()))  )) ;
+                for( /*DECL*/ std::vector<Change>::reverse_iterator it2 = line->second.rbegin(); OPERATOR_LHS_ARG (77, 88, 91,  (it2))  !=  MEMBER_CALL(( OPERATOR_LHS_ARG (77, 95, 114,  (line->second.rend()))  )) ; ++OPERATOR_LHS_ARG (77, 118, 121,  (it2)) ) {
                     /*
                      All the changes that happened on this line during 1 execution of the function
                      */
@@ -215,24 +217,26 @@ sqlite3 *ali__log__db;
                     //unique_special_id << special_id.str();
                      /*DECL*/ Change c = *it2;
                     
-                     OPERATOR_LHS_ARG((current_line_types))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((c.type_of_var))  )) ;
-                     OPERATOR_LHS_ARG((current_line_values))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((c.value))  )) ;
+                    OPERATOR_LHS_ARG (85, 21, 39,  (OPERATOR_LHS_ARG (85, 21, 46,  (OPERATOR_LHS_ARG (85, 21, 61,  (OPERATOR_LHS_ARG (85, 21, 68,  (OPERATOR_LHS_ARG (85, 21, 81,  (OPERATOR_LHS_ARG (85, 21, 88,  (OPERATOR_LHS_ARG (85, 21, 99,  (OPERATOR_LHS_ARG (85, 21, 106,  (OPERATOR_LHS_ARG (85, 21, 123,  (current_line_types))  <<  OPERATOR_RHS_ARG_CANONICAL (85, 43, 46,  ("(")) ))  <<  MEMBER_EXPR((  OPERATOR_RHS_ARG_CANONICAL (85, 50, 61,  (c.start_loc)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (85, 65, 68,  (":")) ))  <<  MEMBER_EXPR((  OPERATOR_RHS_ARG_CANONICAL (85, 72, 81,  (c.end_loc)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (85, 85, 88,  ("=")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (85, 92, 99,  (c.value)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (85, 103, 106,  ("(")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (85, 110, 123,  (c.type_of_var)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (85, 127, 131,  ("))")) ;
+                    OPERATOR_LHS_ARG (86, 21, 40,  (current_line_values))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (86, 44, 51,  (c.value))  )) ;
+                    OPERATOR_LHS_ARG (87, 21, 39,  (current_line_names))  <<  OPERATOR_RHS_ARG_CANONICAL (87, 43, 45,  ("")) ;
+                    OPERATOR_LHS_ARG (88, 21, 38,  (unique_special_id))  <<  MEMBER_CALL(( OPERATOR_LHS_ARG (88, 42, 66,  (current_line_types.str()))  )) ;
                     
-                    if ( MEMBER_EXPR((  LHS(( c.type))  ))  ==  RHS(( CHANGE_LHS)) ) {
+                    /*if (c.type == CHANGE_LHS) {
                         //unique_special_id << "L";
-                         OPERATOR_LHS_ARG((current_line_names))  <<  OPERATOR_RHS_ARG_CANONICAL(("->")) ;
-                         OPERATOR_LHS_ARG((current_line_types))  <<  OPERATOR_RHS_ARG_CANONICAL(("->")) ;
-                         OPERATOR_LHS_ARG((current_line_values))  <<  OPERATOR_RHS_ARG_CANONICAL(("->")) ;
-                         OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG((unique_special_id))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((c.name_of_var)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL(("=")) ;
-                         OPERATOR_LHS_ARG((current_line_names))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((c.name_of_var))  )) ;
-                    } else if ( MEMBER_EXPR((  LHS(( c.type))  ))  ==  RHS(( CHANGE_RHS)) ) {
+                        current_line_names << "->";
+                        current_line_types << "->";
+                        current_line_values << "->";
+                        unique_special_id << c.name_of_var << "=";
+                        current_line_names << c.name_of_var;
+                    } else if (c.type == CHANGE_RHS) {
                         //right hand side
-                         OPERATOR_LHS_ARG((unique_special_id))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((c.value))  )) ;
-                         OPERATOR_LHS_ARG((current_line_names))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((c.name_of_var))  )) ;
-                    } else if ( MEMBER_EXPR((  LHS(( c.type))  ))  ==  RHS(( CHANGE_FUNCTIONCALL)) ) {
-                         OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG(( OPERATOR_LHS_ARG((current_line_names))  << OPERATOR_RHS_ARG_CANONICAL(("(")) ))  <<  MEMBER_EXPR((  OPERATOR_LHS_ARG((c.name_of_var)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL(("())")) ;
-                    }
-                     LHS(( tim))  =  MEMBER_EXPR(( c.time_of_change )) ;
+                        unique_special_id << c.value;
+                        current_line_names << c.name_of_var;
+                    } else if (c.type == CHANGE_FUNCTIONCALL) {
+                        current_line_names <<"(" << c.name_of_var << "())";
+                    }*/
+                    LHS (104, 21, 24,  (tim))  =  MEMBER_EXPR(( c.time_of_change )) ;
                     
                 }
                 
@@ -285,7 +289,7 @@ template <class T> std::string TToStr(T& t)
  else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 { LOGPARAMETER(t); } {
      /*DECL*/ std::ostringstream oss;
-     LHS(( oss))  << t;
+    LHS (143, 5, 8,  (oss))  << t;
     return  MEMBER_CALL(( oss.str() )) ;
 }
 }
@@ -306,7 +310,7 @@ template <class T> std::string TToStr(T* t)
  else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 { LOGPARAMETER(t); } {
      /*DECL*/ std::ostringstream oss;
-     LHS(( oss))  << t;
+    LHS (150, 5, 8,  (oss))  << t;
     return  MEMBER_CALL(( oss.str() )) ;
 }
 }
@@ -341,7 +345,7 @@ unsigned long report_memory(void) {
                                    TASK_BASIC_INFO,
                                    (task_info_t)&info,
                                    &size);
-    if(  LHS(( kerr))  == KERN_SUCCESS ) {
+    if( LHS (161, 9, 13,  (kerr))  == KERN_SUCCESS ) {
         //printf("Memory in use (in bytes): %u", info.resident_size);
         return  MEMBER_EXPR(( info.resident_size )) ;
     } else {
@@ -377,7 +381,7 @@ void segfault_handler(int sig) {
      /*DECL*/ size_t size;
     
     // get void*'s for all entries on the stack
-     LHS(( size))  =  CALLR(( backtrace( CALL_ARG((array)) ,  CALL_ARG((10)) ) )) ;
+    LHS (176, 5, 9,  (size))  =  CALLR(( backtrace( CALL_ARG((array)) ,  CALL_ARG((10)) ) )) ;
     
     // print out all the frames to stderr
      CALLR(( fprintf(stderr,  CALL_ARG(("Error: signal %d:\n")) ,  CALL_ARG((sig)) ) )) ;
