@@ -111,6 +111,7 @@
 		9C7757B8176F6C64005E57CC /* libPrintFuncNames.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libPrintFuncNames.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C981CEB17A43D3F002DCDE9 /* log_functions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = log_functions.cpp; sourceTree = "<group>"; };
 		9C981CEC17A43D3F002DCDE9 /* log_functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = log_functions.h; sourceTree = "<group>"; };
+		9CF1331817A6D60D0067EF00 /* log_functions.debug.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = log_functions.debug.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -223,6 +224,7 @@
 		9C981CEA17A43D3F002DCDE9 /* Runtime */ = {
 			isa = PBXGroup;
 			children = (
+				9CF1331817A6D60D0067EF00 /* log_functions.debug.cpp */,
 				9C981CEB17A43D3F002DCDE9 /* log_functions.cpp */,
 				9C981CEC17A43D3F002DCDE9 /* log_functions.h */,
 			);
