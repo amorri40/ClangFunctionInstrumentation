@@ -44,11 +44,21 @@ sqlite3 *ali__log__db;
         sqlite3_prepare_v2(ali__log__db,  sSQL_all, BUFFER_SIZE, &stmt, &tail);
         return stmt;
     }
+    
+    void bind_change_sql(sqlite3_stmt * stmt, std::string unique_id, std::string types, std::string names, std::string values, int line_num, int tim ) {
+        sqlite3_bind_text(stmt, 1, unique_id.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, types.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 3, names.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 4, values.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int(stmt, 5, line_num);
+        sqlite3_bind_int(stmt, 6, tim);
+        sqlite3_step(stmt);
+    }
 
     void StaticFunctionData::create_tables() {
         open_sqlite("enigma_compiler.sqlite");
         create_table(func_name, "_changes_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ");
-        create_table(func_name, "_changes_all", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
+        //create_table(func_name, "_changes_all", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
         create_table(func_name, "_executions_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ");
         create_table(func_name, "_executions_all", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
     }
@@ -57,67 +67,60 @@ sqlite3 *ali__log__db;
         if (all_function_executions.empty()) return;
         
         char * sErrMsg = 0;
-        sqlite3_stmt * stmt_all, *stmt_unique;
-        const char * tail = 0;
-        const char * tail_unique = 0;
-        char sSQL_all [BUFFER_SIZE] = "\0";
-        char sSQL_unique [BUFFER_SIZE] = "\0";
+        sqlite3_stmt *stmt_unique , *stmt_ex_unique, *stmt_ex_all;
         
         create_tables();
         
-        stmt_all = start_insert(func_name,"_changes_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
-        stmt_unique = start_insert(func_name,"_changes_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
+        //stmt_all = start_insert(func_name,"_changes_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
+        stmt_unique = start_insert(func_name,"_changes_unique"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
+        stmt_ex_all = start_insert(func_name,"_executions_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
+        stmt_ex_unique = start_insert(func_name,"_executions_unique"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
         
         sqlite3_exec(ali__log__db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
         
-        for(std::vector<map_of_vector_of_change>::size_type execution = 0; execution != all_function_executions.size(); execution++) {
-            map_of_vector_of_change line_data = all_function_executions[execution];
+        for(std::vector<vector_of_change>::size_type execution = 0; execution != all_function_executions.size(); execution++) {
+            vector_of_change line_data = all_function_executions[execution];
             std::ostringstream special_id;
-            for(map_of_vector_of_change::iterator line = line_data.begin(); line != line_data.end(); ++line) { //for(map_of_vector_of_string::size_type i = 0; i != line_data.size(); i++) {
-                //if (line_data[i].empty()) continue;
-                int line_num = (line->first);
-                std::cout << "  " << line_num << ": ";
-                special_id << line_num << "_";
-                std::string previous_r_value;
-                std::ostringstream unique_special_id;
+            std::ostringstream execution_id;
+            int tim=0;
+            for(vector_of_change::iterator it2 = line_data.begin(); it2 != line_data.end(); ++it2) { //
+               // int line_num = line_data.l;
+               // std::cout << "  " << line_num << ": ";
+               // special_id << line_num << "_";
+                //std::string previous_r_value;
+                
+                
                 std::ostringstream current_line_names;
                 std::ostringstream current_line_values;
                 std::ostringstream current_line_types;
-                int tim=0;
-                unique_special_id << special_id.str();
-                for(std::vector<Change>::reverse_iterator it2 = line->second.rbegin(); it2 != line->second.rend(); ++it2) {
+                
+                //unique_special_id << special_id.str();
+                //for(std::vector<Change>::reverse_iterator it2 = line->second.rbegin(); it2 != line->second.rend(); ++it2) {
+                    std::ostringstream unique_special_id;
                     /*
                      All the changes that happened on this line during 1 execution of the function
                      */
                     
-                    //unique_special_id << special_id.str();
                     Change c = *it2;
                     
-                    current_line_types << "(" << c.start_loc << ":" << c.end_loc << "=" << c.value << "("<< c.type_of_var << ")";
-                    current_line_values << c.value;
-                    current_line_names << "";
-                    unique_special_id << current_line_types.str();
+                    unique_special_id << "(" << c.line_num << ":" << c.start_loc << ":" << c.end_loc << "=" << c.value << " ("<< c.type_of_var << ")";
+                    //current_line_values << c.value;
+                    //current_line_names << "";
+                    //unique_special_id << current_line_types.str();
                     
-                    /*if (c.type == CHANGE_LHS) {
-                        //unique_special_id << "L";
-                        current_line_names << "->";
-                        current_line_types << "->";
-                        current_line_values << "->";
-                        unique_special_id << c.name_of_var << "=";
-                        current_line_names << c.name_of_var;
-                    } else if (c.type == CHANGE_RHS) {
-                        //right hand side
-                        unique_special_id << c.value;
-                        current_line_names << c.name_of_var;
-                    } else if (c.type == CHANGE_FUNCTIONCALL) {
-                        current_line_names <<"(" << c.name_of_var << "())";
-                    }*/
                     tim = c.time_of_change;
+                    
+                    //bind_change_sql(stmt_all,unique_special_id.str(), current_line_types.str(), current_line_names.str(), current_line_values.str(), c.line_num, tim);
+                    bind_change_sql(stmt_unique,unique_special_id.str(), current_line_types.str(), current_line_names.str(), current_line_values.str(), c.line_num, tim);
+                    
+                    execution_id << unique_special_id.str();
                     
                 }
                 
-                // << "_" << tim;
-                sqlite3_bind_text(stmt_all, 1, unique_special_id.str().c_str(), -1, SQLITE_TRANSIENT);
+                bind_change_sql(stmt_ex_all,execution_id.str(), "", "", "", 0, tim); //this is per line
+                bind_change_sql(stmt_ex_unique,execution_id.str(), "", "", "", 0, tim);
+                
+                /*sqlite3_bind_text(stmt_all, 1, unique_special_id.str().c_str(), -1, SQLITE_TRANSIENT);
                 sqlite3_bind_text(stmt_all, 2, current_line_types.str().c_str(), -1, SQLITE_TRANSIENT);
                 sqlite3_bind_text(stmt_all, 3, current_line_names.str().c_str(), -1, SQLITE_TRANSIENT);
                 sqlite3_bind_text(stmt_all, 4, current_line_values.str().c_str(), -1, SQLITE_TRANSIENT);
@@ -131,16 +134,16 @@ sqlite3 *ali__log__db;
                 sqlite3_bind_text(stmt_unique, 4, current_line_values.str().c_str(), -1, SQLITE_TRANSIENT);
                 sqlite3_bind_int(stmt_unique, 5, line_num);
                 sqlite3_bind_int(stmt_unique, 6, tim);
-                sqlite3_step(stmt_unique);
+                sqlite3_step(stmt_unique);*/
                 
                 
-                sqlite3_clear_bindings(stmt_all);
-                sqlite3_reset(stmt_all);
+                //sqlite3_clear_bindings(stmt_all);
+                //sqlite3_reset(stmt_all);
                 sqlite3_clear_bindings(stmt_unique);
                 sqlite3_reset(stmt_unique);
-                //std::cout << "\n";
+                
             }
-        }
+        
         
         sqlite3_exec(ali__log__db, "END TRANSACTION", NULL, NULL, &sErrMsg);
         sqlite3_close(ali__log__db);

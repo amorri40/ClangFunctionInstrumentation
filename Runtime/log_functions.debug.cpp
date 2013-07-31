@@ -18,31 +18,137 @@ namespace ali_clang_plugin_runtime {
 bool ALI_GLOBAL_DEBUG = true;
 sqlite3 *ali__log__db;
 
-
+    void open_sqlite(std::string db_name) { 
+ #if NO_INSTRUMENT == false 
+ if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT) 
+ #endif 
+ {
+        
+        /* Open database */
+        int rc = sqlite3_open(db_name.c_str(), &ali__log__db);
+        if( rc ){
+            fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(ali__log__db));
+            exit(0);
+        }
+    }
+ #if NO_INSTRUMENT == false 
+ else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
+{ LOGPARAMETER(db_name); } {
+        
+        /* Open database */
+         /*DECL*/ int rc = sqlite3_open(db_name.c_str(), &ali__log__db);
+        if( rc ){
+             CALLR(( fprintf(stderr,  CALL_ARG(("Can't open database: %s\n")) ,  CALLR((  CALL_ARG((sqlite3_errmsg( ARG_UNKNOWN((ali__log__db)) )))  )) ) )) ;
+             CALLR(( exit( CALL_ARG((0)) ) )) ;
+        }
+    }
+}
+#endif 
+}
+    
+    void create_table(std::string table_name, std::string table_name_suffix, std::string schema) { 
+ #if NO_INSTRUMENT == false 
+ if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT) 
+ #endif 
+ {
+        
+        std::ostringstream oss;
+        oss << "CREATE TABLE IF NOT EXISTS \"" << table_name << table_name_suffix  << "\" "<< schema;
+        char * sErrMsg = 0;
+        sqlite3_exec(ali__log__db, oss.str().c_str(), NULL, NULL, &sErrMsg);
+    }
+ #if NO_INSTRUMENT == false 
+ else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
+{ LOGPARAMETER(table_name);  LOGPARAMETER(table_name_suffix);  LOGPARAMETER(schema); } {
+        
+         /*DECL*/ std::ostringstream oss;
+        OPERATOR_LHS_ARG (31, 9, 12,  (OPERATOR_LHS_ARG (31, 9, 47,  (OPERATOR_LHS_ARG (31, 9, 61,  (OPERATOR_LHS_ARG (31, 9, 82,  (OPERATOR_LHS_ARG (31, 9, 92,  (oss))  <<  OPERATOR_RHS_ARG_CANONICAL (31, 16, 47,  ("CREATE TABLE IF NOT EXISTS \"")) ))  << OPERATOR_LHS_ARG (31, 51, 61,  (table_name)) ))  << OPERATOR_LHS_ARG (31, 65, 82,  (table_name_suffix)) ))   <<  OPERATOR_RHS_ARG_CANONICAL (31, 87, 92,  ("\" ")) )) << OPERATOR_LHS_ARG (31, 95, 101,  (schema)) ;
+         /*DECL*/ char * sErrMsg = 0;
+         CALLR(( sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  MEMBER_CALL((  ARG_UNKNOWN((oss.str().c_str()))  )) , NULL, NULL,  CALL_ARG((&sErrMsg)) ) )) ;
+    }
+}
+#endif 
+}
+    
+    sqlite3_stmt * start_insert(std::string table_name, std::string table_name_suffix, std::string schema) { 
+ #if NO_INSTRUMENT == false 
+ if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT) 
+ #endif 
+ {
+        char sSQL_all [BUFFER_SIZE] = "\0";
+        sqlite3_stmt * stmt;
+        const char * tail = 0;
+        
+        std::ostringstream oss;
+        oss << "INSERT INTO \"" << table_name << table_name_suffix  << "\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)";
+        sprintf(sSQL_all, oss.str().c_str());
+        sqlite3_prepare_v2(ali__log__db,  sSQL_all, BUFFER_SIZE, &stmt, &tail);
+        return stmt;
+    }
+ #if NO_INSTRUMENT == false 
+ else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
+{ LOGPARAMETER(table_name);  LOGPARAMETER(table_name_suffix);  LOGPARAMETER(schema); } {
+         /*DECL*/ char sSQL_all [BUFFER_SIZE] = "\0";
+         /*DECL*/ sqlite3_stmt * stmt;
+         /*DECL*/ const char * tail = 0;
+        
+         /*DECL*/ std::ostringstream oss;
+        OPERATOR_LHS_ARG (42, 9, 12,  (OPERATOR_LHS_ARG (42, 9, 32,  (OPERATOR_LHS_ARG (42, 9, 46,  (OPERATOR_LHS_ARG (42, 9, 67,  (oss))  <<  OPERATOR_RHS_ARG_CANONICAL (42, 16, 32,  ("INSERT INTO \"")) ))  << OPERATOR_LHS_ARG (42, 36, 46,  (table_name)) ))  << OPERATOR_LHS_ARG (42, 50, 67,  (table_name_suffix)) ))   <<  OPERATOR_RHS_ARG_CANONICAL (42, 72, 114,  ("\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ;
+         CALLR(( sprintf( CALL_ARG((sSQL_all)) ,  MEMBER_CALL((  ARG_UNKNOWN((oss.str().c_str()))  )) ) )) ;
+         CALLR(( sqlite3_prepare_v2( ARG_UNKNOWN((ali__log__db)) ,   CALL_ARG((sSQL_all)) , BUFFER_SIZE,  ARG_UNKNOWN((&stmt)) ,  CALL_ARG((&tail)) ) )) ;
+        return stmt;
+    }
+}
+#endif 
+}
+    
+    void bind_change_sql(sqlite3_stmt * stmt, std::string unique_id, std::string types, std::string names, std::string values, int line_num, int tim ) { 
+ #if NO_INSTRUMENT == false 
+ if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT) 
+ #endif 
+ {
+        sqlite3_bind_text(stmt, 1, unique_id.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, types.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 3, names.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 4, values.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int(stmt, 5, line_num);
+        sqlite3_bind_int(stmt, 6, tim);
+        sqlite3_step(stmt);
+    }
+ #if NO_INSTRUMENT == false 
+ else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
+{ LOGPARAMETER(stmt);  LOGPARAMETER(unique_id);  LOGPARAMETER(types);  LOGPARAMETER(names);  LOGPARAMETER(values);  LOGPARAMETER(line_num);  LOGPARAMETER(tim); } {
+         CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((1)) ,  MEMBER_CALL((  ARG_UNKNOWN((unique_id.c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
+         CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((2)) ,  MEMBER_CALL((  ARG_UNKNOWN((types.c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
+         CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((3)) ,  MEMBER_CALL((  ARG_UNKNOWN((names.c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
+         CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((4)) ,  MEMBER_CALL((  ARG_UNKNOWN((values.c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
+         CALLR(( sqlite3_bind_int( ARG_UNKNOWN((stmt)) ,  CALL_ARG((5)) ,  CALL_ARG((line_num)) ) )) ;
+         CALLR(( sqlite3_bind_int( ARG_UNKNOWN((stmt)) ,  CALL_ARG((6)) ,  CALL_ARG((tim)) ) )) ;
+         CALLR(( sqlite3_step( ARG_UNKNOWN((stmt)) ) )) ;
+    }
+}
+#endif 
+}
 
     void StaticFunctionData::create_tables() { 
  #if NO_INSTRUMENT == false 
  if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT) 
  #endif 
  {
-        char * sErrMsg = 0;
-        std::ostringstream oss;
-        oss << "CREATE TABLE IF NOT EXISTS \"" << func_name  << "_unique\" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ";
-        sqlite3_exec(ali__log__db, oss.str().c_str(), NULL, NULL, &sErrMsg);
-        oss.str(""); //clear string stream
-        oss << "CREATE TABLE IF NOT EXISTS \"" << func_name  << "_all\" (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)";
-        sqlite3_exec(ali__log__db, oss.str().c_str(), NULL, NULL, &sErrMsg);
+        open_sqlite("enigma_compiler.sqlite");
+        create_table(func_name, "_changes_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ");
+        //create_table(func_name, "_changes_all", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
+        create_table(func_name, "_executions_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ");
+        create_table(func_name, "_executions_all", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
     }
  #if NO_INSTRUMENT == false 
  else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 {} {
-         /*DECL*/ char * sErrMsg = 0;
-         /*DECL*/ std::ostringstream oss;
-        OPERATOR_LHS_ARG (23, 9, 12,  (OPERATOR_LHS_ARG (23, 9, 47,  (OPERATOR_LHS_ARG (23, 9, 60,  (oss))  <<  OPERATOR_RHS_ARG_CANONICAL (23, 16, 47,  ("CREATE TABLE IF NOT EXISTS \"")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (23, 51, 60,  (func_name)) ))  ))   <<  OPERATOR_RHS_ARG_CANONICAL (23, 65, 197,  ("_unique\" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ")) ;
-         CALLR(( sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  MEMBER_CALL((  ARG_UNKNOWN((oss.str().c_str()))  )) , NULL, NULL,  CALL_ARG((&sErrMsg)) ) )) ;
-         MEMBER_CALL(( oss.str( ARG_UNKNOWN(("")) ) )) ; //clear string stream
-        OPERATOR_LHS_ARG (26, 9, 12,  (OPERATOR_LHS_ARG (26, 9, 47,  (OPERATOR_LHS_ARG (26, 9, 60,  (oss))  <<  OPERATOR_RHS_ARG_CANONICAL (26, 16, 47,  ("CREATE TABLE IF NOT EXISTS \"")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (26, 51, 60,  (func_name)) ))  ))   <<  OPERATOR_RHS_ARG_CANONICAL (26, 65, 193,  ("_all\" (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)")) ;
-         CALLR(( sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  MEMBER_CALL((  ARG_UNKNOWN((oss.str().c_str()))  )) , NULL, NULL,  CALL_ARG((&sErrMsg)) ) )) ;
+         CALLR(( open_sqlite( ARG_UNKNOWN(("enigma_compiler.sqlite")) ) )) ;
+         CALLR(( create_table( MEMBER_EXPR((  ARG_UNKNOWN((func_name))  )) ,  ARG_UNKNOWN(("_changes_unique")) ,  ARG_UNKNOWN((" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ")) ) )) ;
+        //create_table(func_name, "_changes_all", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
+         CALLR(( create_table( MEMBER_EXPR((  ARG_UNKNOWN((func_name))  )) ,  ARG_UNKNOWN(("_executions_unique")) ,  ARG_UNKNOWN((" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ")) ) )) ;
+         CALLR(( create_table( MEMBER_EXPR((  ARG_UNKNOWN((func_name))  )) ,  ARG_UNKNOWN(("_executions_all")) ,  ARG_UNKNOWN((" (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)")) ) )) ;
     }
 }
 #endif 
@@ -53,85 +159,67 @@ sqlite3 *ali__log__db;
  if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT) 
  #endif 
  {
-        
         if (all_function_executions.empty()) return;
-        /* Open database */
-        int rc = sqlite3_open("enigma_compiler.sqlite", &ali__log__db);
-        if( rc ){
-            fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(ali__log__db));
-            exit(0);
-        }
-        std::cout << "flush_to_db";
+        
         char * sErrMsg = 0;
-        sqlite3_stmt * stmt_all, *stmt_unique;
+        sqlite3_stmt * stmt_all, *stmt_unique , *stmt_ex_unique, *stmt_ex_all;
         const char * tail = 0;
         const char * tail_unique = 0;
         char sSQL_all [BUFFER_SIZE] = "\0";
         char sSQL_unique [BUFFER_SIZE] = "\0";
-        std::ostringstream oss;
+        
         create_tables();
         
-        oss << "INSERT INTO \"" << func_name << "_all\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)";
-        sprintf(sSQL_all, oss.str().c_str());
-        sqlite3_prepare_v2(ali__log__db,  sSQL_all, BUFFER_SIZE, &stmt_all, &tail);
-        oss.str("");
-        oss << "INSERT INTO \"" << func_name << "_unique\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)";
-        sprintf(sSQL_unique, oss.str().c_str());
-        sqlite3_prepare_v2(ali__log__db,  sSQL_unique, BUFFER_SIZE, &stmt_unique, &tail_unique);
-        
+        //stmt_all = start_insert(func_name,"_changes_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
+        stmt_unique = start_insert(func_name,"_changes_unique"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
+        stmt_ex_all = start_insert(func_name,"_executions_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
+        stmt_ex_unique = start_insert(func_name,"_executions_unique"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
         
         sqlite3_exec(ali__log__db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
-        std::cout << "\nFunction: " << func_name << " \n";
         
-        
-        for(std::vector<map_of_vector_of_change>::size_type execution = 0; execution != all_function_executions.size(); execution++) {
-            map_of_vector_of_change line_data = all_function_executions[execution];
+        for(std::vector<vector_of_change>::size_type execution = 0; execution != all_function_executions.size(); execution++) {
+            vector_of_change line_data = all_function_executions[execution];
             std::ostringstream special_id;
-            for(map_of_vector_of_change::iterator line = line_data.begin(); line != line_data.end(); ++line) { //for(map_of_vector_of_string::size_type i = 0; i != line_data.size(); i++) {
-                //if (line_data[i].empty()) continue;
-                int line_num = (line->first);
-                std::cout << "  " << line_num << ": ";
-                special_id << line_num << "_";
-                std::string previous_r_value;
-                std::ostringstream unique_special_id;
+            std::ostringstream execution_id;
+            int tim=0;
+            for(vector_of_change::iterator it2 = line_data.begin(); it2 != line_data.end(); ++it2) { //
+               // int line_num = line_data.l;
+               // std::cout << "  " << line_num << ": ";
+               // special_id << line_num << "_";
+                //std::string previous_r_value;
+                
+                
                 std::ostringstream current_line_names;
                 std::ostringstream current_line_values;
                 std::ostringstream current_line_types;
-                int tim=0;
-                unique_special_id << special_id.str();
-                for(std::vector<Change>::reverse_iterator it2 = line->second.rbegin(); it2 != line->second.rend(); ++it2) {
+                
+                //unique_special_id << special_id.str();
+                //for(std::vector<Change>::reverse_iterator it2 = line->second.rbegin(); it2 != line->second.rend(); ++it2) {
+                    std::ostringstream unique_special_id;
                     /*
                      All the changes that happened on this line during 1 execution of the function
                      */
                     
-                    //unique_special_id << special_id.str();
                     Change c = *it2;
                     
-                    current_line_types << "(" << c.start_loc << ":" << c.end_loc << "=" << c.value << "(" << c.type_of_var << "))";
-                    current_line_values << c.value;
-                    current_line_names << "";
-                    unique_special_id << current_line_types.str();
+                    unique_special_id << "(" << c.line_num << ":" << c.start_loc << ":" << c.end_loc << "=" << c.value << " ("<< c.type_of_var << ")";
+                    //current_line_values << c.value;
+                    //current_line_names << "";
+                    //unique_special_id << current_line_types.str();
                     
-                    /*if (c.type == CHANGE_LHS) {
-                        //unique_special_id << "L";
-                        current_line_names << "->";
-                        current_line_types << "->";
-                        current_line_values << "->";
-                        unique_special_id << c.name_of_var << "=";
-                        current_line_names << c.name_of_var;
-                    } else if (c.type == CHANGE_RHS) {
-                        //right hand side
-                        unique_special_id << c.value;
-                        current_line_names << c.name_of_var;
-                    } else if (c.type == CHANGE_FUNCTIONCALL) {
-                        current_line_names <<"(" << c.name_of_var << "())";
-                    }*/
                     tim = c.time_of_change;
+                    
+                    //bind_change_sql(stmt_all,unique_special_id.str(), current_line_types.str(), current_line_names.str(), current_line_values.str(), c.line_num, tim);
+                    bind_change_sql(stmt_unique,unique_special_id.str(), current_line_types.str(), current_line_names.str(), current_line_values.str(), c.line_num, tim);
+                    
+                    execution_id << unique_special_id.str();
                     
                 }
                 
-                // << "_" << tim;
-                sqlite3_bind_text(stmt_all, 1, unique_special_id.str().c_str(), -1, SQLITE_TRANSIENT);
+                bind_change_sql(stmt_ex_all,execution_id.str(), "", "", "", 0, tim); //this is per line
+                bind_change_sql(stmt_ex_unique,execution_id.str(), "", "", "", 0, tim);
+                
+                /*sqlite3_bind_text(stmt_all, 1, unique_special_id.str().c_str(), -1, SQLITE_TRANSIENT);
                 sqlite3_bind_text(stmt_all, 2, current_line_types.str().c_str(), -1, SQLITE_TRANSIENT);
                 sqlite3_bind_text(stmt_all, 3, current_line_names.str().c_str(), -1, SQLITE_TRANSIENT);
                 sqlite3_bind_text(stmt_all, 4, current_line_values.str().c_str(), -1, SQLITE_TRANSIENT);
@@ -145,16 +233,16 @@ sqlite3 *ali__log__db;
                 sqlite3_bind_text(stmt_unique, 4, current_line_values.str().c_str(), -1, SQLITE_TRANSIENT);
                 sqlite3_bind_int(stmt_unique, 5, line_num);
                 sqlite3_bind_int(stmt_unique, 6, tim);
-                sqlite3_step(stmt_unique);
+                sqlite3_step(stmt_unique);*/
                 
                 
-                sqlite3_clear_bindings(stmt_all);
-                sqlite3_reset(stmt_all);
+                //sqlite3_clear_bindings(stmt_all);
+                //sqlite3_reset(stmt_all);
                 sqlite3_clear_bindings(stmt_unique);
                 sqlite3_reset(stmt_unique);
-                //std::cout << "\n";
+                
             }
-        }
+        
         
         sqlite3_exec(ali__log__db, "END TRANSACTION", NULL, NULL, &sErrMsg);
         sqlite3_close(ali__log__db);
@@ -163,108 +251,90 @@ sqlite3 *ali__log__db;
  #if NO_INSTRUMENT == false 
  else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 {} {
-        
         if ( MEMBER_CALL(( all_function_executions.empty() )) ) return;
-        /* Open database */
-         /*DECL*/ int rc = sqlite3_open("enigma_compiler.sqlite", &ali__log__db);
-        if( rc ){
-             CALLR(( fprintf(stderr,  CALL_ARG(("Can't open database: %s\n")) ,  CALLR((  CALL_ARG((sqlite3_errmsg( ARG_UNKNOWN((ali__log__db)) )))  )) ) )) ;
-             CALLR(( exit( CALL_ARG((0)) ) )) ;
-        }
-        OPERATOR_LHS_ARG (39, 9, 18,  (std::cout))  <<  OPERATOR_RHS_ARG_CANONICAL (39, 22, 35,  ("flush_to_db")) ;
+        
          /*DECL*/ char * sErrMsg = 0;
-        sqlite3_stmt * stmt_all, *stmt_unique;
+        sqlite3_stmt * stmt_all, *stmt_unique , *stmt_ex_unique, *stmt_ex_all;
          /*DECL*/ const char * tail = 0;
          /*DECL*/ const char * tail_unique = 0;
          /*DECL*/ char sSQL_all [BUFFER_SIZE] = "\0";
          /*DECL*/ char sSQL_unique [BUFFER_SIZE] = "\0";
-         /*DECL*/ std::ostringstream oss;
+        
          MEMBER_CALL(( create_tables() )) ;
         
-        OPERATOR_LHS_ARG (49, 9, 12,  (OPERATOR_LHS_ARG (49, 9, 32,  (OPERATOR_LHS_ARG (49, 9, 45,  (oss))  <<  OPERATOR_RHS_ARG_CANONICAL (49, 16, 32,  ("INSERT INTO \"")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (49, 36, 45,  (func_name)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (49, 49, 95,  ("_all\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ;
-         CALLR(( sprintf( CALL_ARG((sSQL_all)) ,  MEMBER_CALL((  ARG_UNKNOWN((oss.str().c_str()))  )) ) )) ;
-         CALLR(( sqlite3_prepare_v2( ARG_UNKNOWN((ali__log__db)) ,   CALL_ARG((sSQL_all)) , BUFFER_SIZE,  ARG_UNKNOWN((&stmt_all)) ,  CALL_ARG((&tail)) ) )) ;
-         MEMBER_CALL(( oss.str( ARG_UNKNOWN(("")) ) )) ;
-        OPERATOR_LHS_ARG (53, 9, 12,  (OPERATOR_LHS_ARG (53, 9, 32,  (OPERATOR_LHS_ARG (53, 9, 45,  (oss))  <<  OPERATOR_RHS_ARG_CANONICAL (53, 16, 32,  ("INSERT INTO \"")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (53, 36, 45,  (func_name)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (53, 49, 98,  ("_unique\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ;
-         CALLR(( sprintf( CALL_ARG((sSQL_unique)) ,  MEMBER_CALL((  ARG_UNKNOWN((oss.str().c_str()))  )) ) )) ;
-         CALLR(( sqlite3_prepare_v2( ARG_UNKNOWN((ali__log__db)) ,   CALL_ARG((sSQL_unique)) , BUFFER_SIZE,  ARG_UNKNOWN((&stmt_unique)) ,  CALL_ARG((&tail_unique)) ) )) ;
-        
+        //stmt_all = start_insert(func_name,"_changes_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
+        LHS (79, 9, 20,  (stmt_unique))  =  CALLR(( start_insert( MEMBER_EXPR((  ARG_UNKNOWN((func_name))  )) , ARG_UNKNOWN(("_changes_unique")) , ARG_UNKNOWN((" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ) )) ;
+        LHS (80, 9, 20,  (stmt_ex_all))  =  CALLR(( start_insert( MEMBER_EXPR((  ARG_UNKNOWN((func_name))  )) , ARG_UNKNOWN(("_executions_all")) , ARG_UNKNOWN((" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ) )) ;
+        LHS (81, 9, 23,  (stmt_ex_unique))  =  CALLR(( start_insert( MEMBER_EXPR((  ARG_UNKNOWN((func_name))  )) , ARG_UNKNOWN(("_executions_unique")) , ARG_UNKNOWN((" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ) )) ;
         
          CALLR(( sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  CALL_ARG(("BEGIN TRANSACTION")) , NULL, NULL,  CALL_ARG((&sErrMsg)) ) )) ;
-        OPERATOR_LHS_ARG (59, 9, 18,  (OPERATOR_LHS_ARG (59, 9, 36,  (OPERATOR_LHS_ARG (59, 9, 49,  (std::cout))  <<  OPERATOR_RHS_ARG_CANONICAL (59, 22, 36,  ("\nFunction: ")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (59, 40, 49,  (func_name)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (59, 53, 58,  (" \n")) ;
         
-        
-        for( /*DECL*/ std::vector<map_of_vector_of_change>::size_type execution = 0; LHS (62, 76, 85,  (execution))  !=  MEMBER_CALL(( all_function_executions.size() )) ; execution++) {
-             /*DECL*/ map_of_vector_of_change line_data = all_function_executions[execution];
+        for( /*DECL*/ std::vector<vector_of_change>::size_type execution = 0; LHS (85, 69, 78,  (execution))  !=  MEMBER_CALL(( all_function_executions.size() )) ; execution++) {
+             /*DECL*/ vector_of_change line_data = all_function_executions[execution];
              /*DECL*/ std::ostringstream special_id;
-            for( /*DECL*/ map_of_vector_of_change::iterator line = line_data.begin(); OPERATOR_LHS_ARG (65, 77, 81,  (line))  !=  MEMBER_CALL(( OPERATOR_LHS_ARG (65, 85, 100,  (line_data.end()))  )) ; ++OPERATOR_LHS_ARG (65, 104, 108,  (line)) ) { //for(map_of_vector_of_string::size_type i = 0; i != line_data.size(); i++) {
-                //if (line_data[i].empty()) continue;
-                 /*DECL*/ int line_num = (line->first);
-                OPERATOR_LHS_ARG (68, 17, 26,  (OPERATOR_LHS_ARG (68, 17, 34,  (OPERATOR_LHS_ARG (68, 17, 46,  (std::cout))  <<  OPERATOR_RHS_ARG_CANONICAL (68, 30, 34,  ("  ")) ))  <<  OPERATOR_RHS_ARG_CANONICAL (68, 38, 46,  (line_num)) ))  <<  OPERATOR_RHS_ARG_CANONICAL (68, 50, 54,  (": ")) ;
-                OPERATOR_LHS_ARG (69, 17, 27,  (OPERATOR_LHS_ARG (69, 17, 39,  (special_id))  <<  OPERATOR_RHS_ARG_CANONICAL (69, 31, 39,  (line_num)) ))  <<  OPERATOR_RHS_ARG_CANONICAL (69, 43, 46,  ("_")) ;
-                 /*DECL*/ std::string previous_r_value;
-                 /*DECL*/ std::ostringstream unique_special_id;
+             /*DECL*/ std::ostringstream execution_id;
+             /*DECL*/ int tim=0;
+            for( /*DECL*/ vector_of_change::iterator it2 = line_data.begin(); OPERATOR_LHS_ARG (90, 69, 72,  (it2))  !=  MEMBER_CALL(( OPERATOR_LHS_ARG (90, 76, 91,  (line_data.end()))  )) ; ++OPERATOR_LHS_ARG (90, 95, 98,  (it2)) ) { //
+               // int line_num = line_data.l;
+               // std::cout << "  " << line_num << ": ";
+               // special_id << line_num << "_";
+                //std::string previous_r_value;
+                
+                
                  /*DECL*/ std::ostringstream current_line_names;
                  /*DECL*/ std::ostringstream current_line_values;
                  /*DECL*/ std::ostringstream current_line_types;
-                 /*DECL*/ int tim=0;
-                OPERATOR_LHS_ARG (76, 17, 34,  (unique_special_id))  <<  MEMBER_CALL(( OPERATOR_LHS_ARG (76, 38, 54,  (special_id.str()))  )) ;
-                for( /*DECL*/ std::vector<Change>::reverse_iterator it2 = line->second.rbegin(); OPERATOR_LHS_ARG (77, 88, 91,  (it2))  !=  MEMBER_CALL(( OPERATOR_LHS_ARG (77, 95, 114,  (line->second.rend()))  )) ; ++OPERATOR_LHS_ARG (77, 118, 121,  (it2)) ) {
+                
+                //unique_special_id << special_id.str();
+                //for(std::vector<Change>::reverse_iterator it2 = line->second.rbegin(); it2 != line->second.rend(); ++it2) {
+                     /*DECL*/ std::ostringstream unique_special_id;
                     /*
                      All the changes that happened on this line during 1 execution of the function
                      */
                     
-                    //unique_special_id << special_id.str();
                      /*DECL*/ Change c = *it2;
                     
-                    OPERATOR_LHS_ARG (85, 21, 39,  (OPERATOR_LHS_ARG (85, 21, 46,  (OPERATOR_LHS_ARG (85, 21, 61,  (OPERATOR_LHS_ARG (85, 21, 68,  (OPERATOR_LHS_ARG (85, 21, 81,  (OPERATOR_LHS_ARG (85, 21, 88,  (OPERATOR_LHS_ARG (85, 21, 99,  (OPERATOR_LHS_ARG (85, 21, 106,  (OPERATOR_LHS_ARG (85, 21, 123,  (current_line_types))  <<  OPERATOR_RHS_ARG_CANONICAL (85, 43, 46,  ("(")) ))  <<  MEMBER_EXPR((  OPERATOR_RHS_ARG_CANONICAL (85, 50, 61,  (c.start_loc)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (85, 65, 68,  (":")) ))  <<  MEMBER_EXPR((  OPERATOR_RHS_ARG_CANONICAL (85, 72, 81,  (c.end_loc)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (85, 85, 88,  ("=")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (85, 92, 99,  (c.value)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (85, 103, 106,  ("(")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (85, 110, 123,  (c.type_of_var)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (85, 127, 131,  ("))")) ;
-                    OPERATOR_LHS_ARG (86, 21, 40,  (current_line_values))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (86, 44, 51,  (c.value))  )) ;
-                    OPERATOR_LHS_ARG (87, 21, 39,  (current_line_names))  <<  OPERATOR_RHS_ARG_CANONICAL (87, 43, 45,  ("")) ;
-                    OPERATOR_LHS_ARG (88, 21, 38,  (unique_special_id))  <<  MEMBER_CALL(( OPERATOR_LHS_ARG (88, 42, 66,  (current_line_types.str()))  )) ;
+                    OPERATOR_LHS_ARG (110, 21, 38,  (OPERATOR_LHS_ARG (110, 21, 45,  (OPERATOR_LHS_ARG (110, 21, 59,  (OPERATOR_LHS_ARG (110, 21, 66,  (OPERATOR_LHS_ARG (110, 21, 81,  (OPERATOR_LHS_ARG (110, 21, 88,  (OPERATOR_LHS_ARG (110, 21, 101,  (OPERATOR_LHS_ARG (110, 21, 108,  (OPERATOR_LHS_ARG (110, 21, 119,  (OPERATOR_LHS_ARG (110, 21, 127,  (OPERATOR_LHS_ARG (110, 21, 143,  (unique_special_id))  <<  OPERATOR_RHS_ARG_CANONICAL (110, 42, 45,  ("(")) ))  <<  MEMBER_EXPR((  OPERATOR_RHS_ARG_CANONICAL (110, 49, 59,  (c.line_num)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (110, 63, 66,  (":")) ))  <<  MEMBER_EXPR((  OPERATOR_RHS_ARG_CANONICAL (110, 70, 81,  (c.start_loc)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (110, 85, 88,  (":")) ))  <<  MEMBER_EXPR((  OPERATOR_RHS_ARG_CANONICAL (110, 92, 101,  (c.end_loc)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (110, 105, 108,  ("=")) ))  <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (110, 112, 119,  (c.value)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (110, 123, 127,  (" (")) )) <<  MEMBER_EXPR(( OPERATOR_LHS_ARG (110, 130, 143,  (c.type_of_var)) ))  ))  <<  OPERATOR_RHS_ARG_CANONICAL (110, 147, 150,  (")")) ;
+                    //current_line_values << c.value;
+                    //current_line_names << "";
+                    //unique_special_id << current_line_types.str();
                     
-                    /*if (c.type == CHANGE_LHS) {
-                        //unique_special_id << "L";
-                        current_line_names << "->";
-                        current_line_types << "->";
-                        current_line_values << "->";
-                        unique_special_id << c.name_of_var << "=";
-                        current_line_names << c.name_of_var;
-                    } else if (c.type == CHANGE_RHS) {
-                        //right hand side
-                        unique_special_id << c.value;
-                        current_line_names << c.name_of_var;
-                    } else if (c.type == CHANGE_FUNCTIONCALL) {
-                        current_line_names <<"(" << c.name_of_var << "())";
-                    }*/
-                    LHS (104, 21, 24,  (tim))  =  MEMBER_EXPR(( c.time_of_change )) ;
+                    LHS (115, 21, 24,  (tim))  =  MEMBER_EXPR(( c.time_of_change )) ;
+                    
+                    //bind_change_sql(stmt_all,unique_special_id.str(), current_line_types.str(), current_line_names.str(), current_line_values.str(), c.line_num, tim);
+                     CALLR(( bind_change_sql( ARG_UNKNOWN((stmt_unique)) , MEMBER_CALL((  ARG_UNKNOWN((unique_special_id.str()))  )) ,  MEMBER_CALL((  ARG_UNKNOWN((current_line_types.str()))  )) ,  MEMBER_CALL((  ARG_UNKNOWN((current_line_names.str()))  )) ,  MEMBER_CALL((  ARG_UNKNOWN((current_line_values.str()))  )) ,  MEMBER_EXPR((  CALL_ARG((c.line_num))  )) ,  CALL_ARG((tim)) ) )) ;
+                    
+                    OPERATOR_LHS_ARG (120, 21, 33,  (execution_id))  <<  MEMBER_CALL(( OPERATOR_LHS_ARG (120, 37, 60,  (unique_special_id.str()))  )) ;
                     
                 }
                 
-                // << "_" << tim;
-                 CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt_all)) ,  CALL_ARG((1)) ,  MEMBER_CALL((  ARG_UNKNOWN((unique_special_id.str().c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
-                 CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt_all)) ,  CALL_ARG((2)) ,  MEMBER_CALL((  ARG_UNKNOWN((current_line_types.str().c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
-                 CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt_all)) ,  CALL_ARG((3)) ,  MEMBER_CALL((  ARG_UNKNOWN((current_line_names.str().c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
-                 CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt_all)) ,  CALL_ARG((4)) ,  MEMBER_CALL((  ARG_UNKNOWN((current_line_values.str().c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
-                 CALLR(( sqlite3_bind_int( ARG_UNKNOWN((stmt_all)) ,  CALL_ARG((5)) ,  CALL_ARG((line_num)) ) )) ;
-                 CALLR(( sqlite3_bind_int( ARG_UNKNOWN((stmt_all)) ,  CALL_ARG((6)) ,  CALL_ARG((tim)) ) )) ;
-                 CALLR(( sqlite3_step( ARG_UNKNOWN((stmt_all)) ) )) ;
+                 CALLR(( bind_change_sql( ARG_UNKNOWN((stmt_ex_all)) , MEMBER_CALL((  ARG_UNKNOWN((execution_id.str()))  )) ,  ARG_UNKNOWN(("")) ,  ARG_UNKNOWN(("")) ,  ARG_UNKNOWN(("")) ,  CALL_ARG((0)) ,  CALL_ARG((tim)) ) )) ; //this is per line
+                 CALLR(( bind_change_sql( ARG_UNKNOWN((stmt_ex_unique)) , MEMBER_CALL((  ARG_UNKNOWN((execution_id.str()))  )) ,  ARG_UNKNOWN(("")) ,  ARG_UNKNOWN(("")) ,  ARG_UNKNOWN(("")) ,  CALL_ARG((0)) ,  CALL_ARG((tim)) ) )) ;
                 
-                 CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt_unique)) ,  CALL_ARG((1)) ,  MEMBER_CALL((  ARG_UNKNOWN((unique_special_id.str().c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
-                 CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt_unique)) ,  CALL_ARG((2)) ,  MEMBER_CALL((  ARG_UNKNOWN((current_line_types.str().c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
-                 CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt_unique)) ,  CALL_ARG((3)) ,  MEMBER_CALL((  ARG_UNKNOWN((current_line_names.str().c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
-                 CALLR(( sqlite3_bind_text( ARG_UNKNOWN((stmt_unique)) ,  CALL_ARG((4)) ,  MEMBER_CALL((  ARG_UNKNOWN((current_line_values.str().c_str()))  )) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT) )) ;
-                 CALLR(( sqlite3_bind_int( ARG_UNKNOWN((stmt_unique)) ,  CALL_ARG((5)) ,  CALL_ARG((line_num)) ) )) ;
-                 CALLR(( sqlite3_bind_int( ARG_UNKNOWN((stmt_unique)) ,  CALL_ARG((6)) ,  CALL_ARG((tim)) ) )) ;
-                 CALLR(( sqlite3_step( ARG_UNKNOWN((stmt_unique)) ) )) ;
+                /*sqlite3_bind_text(stmt_all, 1, unique_special_id.str().c_str(), -1, SQLITE_TRANSIENT);
+                sqlite3_bind_text(stmt_all, 2, current_line_types.str().c_str(), -1, SQLITE_TRANSIENT);
+                sqlite3_bind_text(stmt_all, 3, current_line_names.str().c_str(), -1, SQLITE_TRANSIENT);
+                sqlite3_bind_text(stmt_all, 4, current_line_values.str().c_str(), -1, SQLITE_TRANSIENT);
+                sqlite3_bind_int(stmt_all, 5, line_num);
+                sqlite3_bind_int(stmt_all, 6, tim);
+                sqlite3_step(stmt_all);
+                
+                sqlite3_bind_text(stmt_unique, 1, unique_special_id.str().c_str(), -1, SQLITE_TRANSIENT);
+                sqlite3_bind_text(stmt_unique, 2, current_line_types.str().c_str(), -1, SQLITE_TRANSIENT);
+                sqlite3_bind_text(stmt_unique, 3, current_line_names.str().c_str(), -1, SQLITE_TRANSIENT);
+                sqlite3_bind_text(stmt_unique, 4, current_line_values.str().c_str(), -1, SQLITE_TRANSIENT);
+                sqlite3_bind_int(stmt_unique, 5, line_num);
+                sqlite3_bind_int(stmt_unique, 6, tim);
+                sqlite3_step(stmt_unique);*/
                 
                 
-                 CALLR(( sqlite3_clear_bindings( ARG_UNKNOWN((stmt_all)) ) )) ;
-                 CALLR(( sqlite3_reset( ARG_UNKNOWN((stmt_all)) ) )) ;
+                //sqlite3_clear_bindings(stmt_all);
+                //sqlite3_reset(stmt_all);
                  CALLR(( sqlite3_clear_bindings( ARG_UNKNOWN((stmt_unique)) ) )) ;
                  CALLR(( sqlite3_reset( ARG_UNKNOWN((stmt_unique)) ) )) ;
-                //std::cout << "\n";
+                
             }
-        }
+        
         
          CALLR(( sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  CALL_ARG(("END TRANSACTION")) , NULL, NULL,  CALL_ARG((&sErrMsg)) ) )) ;
          CALLR(( sqlite3_close( ARG_UNKNOWN((ali__log__db)) ) )) ;
@@ -289,7 +359,7 @@ template <class T> std::string TToStr(T& t)
  else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 { LOGPARAMETER(t); } {
      /*DECL*/ std::ostringstream oss;
-    LHS (143, 5, 8,  (oss))  << t;
+    LHS (161, 5, 8,  (oss))  << t;
     return  MEMBER_CALL(( oss.str() )) ;
 }
 }
@@ -310,7 +380,7 @@ template <class T> std::string TToStr(T* t)
  else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 { LOGPARAMETER(t); } {
      /*DECL*/ std::ostringstream oss;
-    LHS (150, 5, 8,  (oss))  << t;
+    LHS (168, 5, 8,  (oss))  << t;
     return  MEMBER_CALL(( oss.str() )) ;
 }
 }
@@ -345,7 +415,7 @@ unsigned long report_memory(void) {
                                    TASK_BASIC_INFO,
                                    (task_info_t)&info,
                                    &size);
-    if( LHS (161, 9, 13,  (kerr))  == KERN_SUCCESS ) {
+    if( LHS (179, 9, 13,  (kerr))  == KERN_SUCCESS ) {
         //printf("Memory in use (in bytes): %u", info.resident_size);
         return  MEMBER_EXPR(( info.resident_size )) ;
     } else {
@@ -381,7 +451,7 @@ void segfault_handler(int sig) {
      /*DECL*/ size_t size;
     
     // get void*'s for all entries on the stack
-    LHS (176, 5, 9,  (size))  =  CALLR(( backtrace( CALL_ARG((array)) ,  CALL_ARG((10)) ) )) ;
+    LHS (194, 5, 9,  (size))  =  CALLR(( backtrace( CALL_ARG((array)) ,  CALL_ARG((10)) ) )) ;
     
     // print out all the frames to stderr
      CALLR(( fprintf(stderr,  CALL_ARG(("Error: signal %d:\n")) ,  CALL_ARG((sig)) ) )) ;
