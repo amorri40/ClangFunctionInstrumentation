@@ -139,13 +139,22 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         }
         else if (isa<CXXOperatorCallExpr>(*statement_from_it)) {
             CXXOperatorCallExpr *dre = cast<CXXOperatorCallExpr>(statement_from_it);
+            
+            
+            for (int i=0; i<dre->getNumArgs(); i++) {
+                Expr* arg = dre->getArg(i);
+            if (isa<CXXNewExpr>(arg)) return; //don't do any with new
+            }
+            
             for (int i=0; i<dre->getNumArgs(); i++) {
                 Expr* arg = dre->getArg(i);
                 
                 if (dre->getArg(i) == NULL) continue;
                 if (dre->getArg(i)->isLValue())
-                    //insert_before_after(dre->getArg(i), rewriter, " OPERATOR_LHS_ARG((", ")) ");
+                {
+                    
                     wrap_with_macro(dre->getArg(i), rewriter, "OPERATOR_LHS_ARG");
+                }
                 else if (arg->isRValue()) {
                    
                     if (arg->getType().isCanonical())

@@ -15,49 +15,60 @@ namespace ali_clang_plugin_runtime {
 bool ALI_GLOBAL_DEBUG = true;
 sqlite3 *ali__log__db;
 
-
-
-    void StaticFunctionData::create_tables() {
-        char * sErrMsg = 0;
-        std::ostringstream oss;
-        oss << "CREATE TABLE IF NOT EXISTS \"" << func_name  << "_unique\" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ";
-        sqlite3_exec(ali__log__db, oss.str().c_str(), NULL, NULL, &sErrMsg);
-        oss.str(""); //clear string stream
-        oss << "CREATE TABLE IF NOT EXISTS \"" << func_name  << "_all\" (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)";
-        sqlite3_exec(ali__log__db, oss.str().c_str(), NULL, NULL, &sErrMsg);
-    }
-    
-    void StaticFunctionData::flush_to_db() {
+    void open_sqlite(std::string db_name) {
         
-        if (all_function_executions.empty()) return;
         /* Open database */
-        int rc = sqlite3_open("enigma_compiler.sqlite", &ali__log__db);
+        int rc = sqlite3_open(db_name.c_str(), &ali__log__db);
         if( rc ){
             fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(ali__log__db));
             exit(0);
         }
-        std::cout << "flush_to_db";
+    }
+    
+    void create_table(std::string table_name, std::string table_name_suffix, std::string schema) {
+        
+        std::ostringstream oss;
+        oss << "CREATE TABLE IF NOT EXISTS \"" << table_name << table_name_suffix  << "\" "<< schema;
+        char * sErrMsg = 0;
+        sqlite3_exec(ali__log__db, oss.str().c_str(), NULL, NULL, &sErrMsg);
+    }
+    
+    sqlite3_stmt * start_insert(std::string table_name, std::string table_name_suffix, std::string schema) {
+        char sSQL_all [BUFFER_SIZE] = "\0";
+        sqlite3_stmt * stmt;
+        const char * tail = 0;
+        
+        std::ostringstream oss;
+        oss << "INSERT INTO \"" << table_name << table_name_suffix  << "\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)";
+        sprintf(sSQL_all, oss.str().c_str());
+        sqlite3_prepare_v2(ali__log__db,  sSQL_all, BUFFER_SIZE, &stmt, &tail);
+        return stmt;
+    }
+
+    void StaticFunctionData::create_tables() {
+        open_sqlite("enigma_compiler.sqlite");
+        create_table(func_name, "_changes_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ");
+        create_table(func_name, "_changes_all", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
+        create_table(func_name, "_executions_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ");
+        create_table(func_name, "_executions_all", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
+    }
+    
+    void StaticFunctionData::flush_to_db() {
+        if (all_function_executions.empty()) return;
+        
         char * sErrMsg = 0;
         sqlite3_stmt * stmt_all, *stmt_unique;
         const char * tail = 0;
         const char * tail_unique = 0;
         char sSQL_all [BUFFER_SIZE] = "\0";
         char sSQL_unique [BUFFER_SIZE] = "\0";
-        std::ostringstream oss;
+        
         create_tables();
         
-        oss << "INSERT INTO \"" << func_name << "_all\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)";
-        sprintf(sSQL_all, oss.str().c_str());
-        sqlite3_prepare_v2(ali__log__db,  sSQL_all, BUFFER_SIZE, &stmt_all, &tail);
-        oss.str("");
-        oss << "INSERT INTO \"" << func_name << "_unique\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)";
-        sprintf(sSQL_unique, oss.str().c_str());
-        sqlite3_prepare_v2(ali__log__db,  sSQL_unique, BUFFER_SIZE, &stmt_unique, &tail_unique);
-        
+        stmt_all = start_insert(func_name,"_changes_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
+        stmt_unique = start_insert(func_name,"_changes_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
         
         sqlite3_exec(ali__log__db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
-        std::cout << "\nFunction: " << func_name << " \n";
-        
         
         for(std::vector<map_of_vector_of_change>::size_type execution = 0; execution != all_function_executions.size(); execution++) {
             map_of_vector_of_change line_data = all_function_executions[execution];
@@ -82,7 +93,7 @@ sqlite3 *ali__log__db;
                     //unique_special_id << special_id.str();
                     Change c = *it2;
                     
-                    current_line_types << "(" << c.start_loc << ":" << c.end_loc << "=" << c.value << c.type_of_var << ")";
+                    current_line_types << "(" << c.start_loc << ":" << c.end_loc << "=" << c.value << "("<< c.type_of_var << ")";
                     current_line_values << c.value;
                     current_line_names << "";
                     unique_special_id << current_line_types.str();

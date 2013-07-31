@@ -185,7 +185,22 @@ namespace ali_clang_plugin_runtime {
         
         /*
          These templates log changes on each line
+         First primitive overloads
          */
+        
+        bool& log_rhs(int line_num, int start_loc, int end_loc, bool& val) {
+            std::ostringstream var_value; var_value << val;
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(bool)",start_loc,end_loc,var_value.str(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
+        
+        char& log_rhs(int line_num, int start_loc, int end_loc, char& val) {
+            std::ostringstream var_value; var_value << val;
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(byte)",start_loc,end_loc,var_value.str(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
         
         int& log_rhs(int line_num, int start_loc, int end_loc, int& val) {
             std::ostringstream var_value; var_value << val;
@@ -194,7 +209,33 @@ namespace ali_clang_plugin_runtime {
             return val;
         }
         
+        unsigned int& log_rhs(int line_num, int start_loc, int end_loc, unsigned int& val) {
+            std::ostringstream var_value; var_value << val;
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(uint)",start_loc,end_loc,var_value.str(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
         
+        long& log_rhs(int line_num, int start_loc, int end_loc, long& val) {
+            std::ostringstream var_value; var_value << val;
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(long)",start_loc,end_loc,var_value.str(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
+        
+        unsigned long& log_rhs(int line_num, int start_loc, int end_loc, unsigned long& val) {
+            std::ostringstream var_value; var_value << val;
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(ulong)",start_loc,end_loc,var_value.str(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
+        
+        double& log_rhs(int line_num, int start_loc, int end_loc, double& val) {
+            std::ostringstream var_value; var_value << val;
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(double)",start_loc,end_loc,var_value.str(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
         
         char*& log_rhs(int line_num, int start_loc, int end_loc, char*& val) {
             line_data[line_num].push_back((Change){CHANGE_RHS,"",start_loc,end_loc,val,clock()});
@@ -202,20 +243,78 @@ namespace ali_clang_plugin_runtime {
             return val;
         }
         
+        /*
+         constant versions
+         */
+        
         const char*& log_rhs(int line_num, int start_loc, int end_loc, const char*& val) {
             line_data[line_num].push_back((Change){CHANGE_RHS,"",start_loc,end_loc,val,clock()});
             ali_clang_flush_db_on_each_change
             return val;
         }
         
+        
+        const bool& log_rhs(int line_num, int start_loc, int end_loc, const bool& val) {
+            std::ostringstream var_value; var_value << val;
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(const bool)",start_loc,end_loc,var_value.str(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
+        
+        const char& log_rhs(int line_num, int start_loc, int end_loc, const char& val) {
+            std::ostringstream var_value; var_value << val;
+            line_data[line_num].push_back((Change){CHANGE_RHS,"(const char)",start_loc,end_loc,var_value.str(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
+        
+        
+        /*
+         
+         Template's for other types
+         
+         */
+        
+        template <class T, class T2> std::string& log_rhs(int line_num, int start_loc, int end_loc, std::string& val) {
+            std::ostringstream var_value; var_value << " ConstRef(" << sizeof(T) <<"," << typeid(val).name() << ")";
+            line_data[line_num].push_back((Change){CHANGE_RHS,var_value.str(),start_loc,end_loc,typeid(val).name(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
+        
+        template <class T, class T2> std::map<T,T2>& log_rhs(int line_num, int start_loc, int end_loc, std::map<T,T2>& val) {
+            std::ostringstream var_value; var_value << " ConstRef(" << sizeof(T) <<"," << typeid(val).name() << ")";
+            line_data[line_num].push_back((Change){CHANGE_RHS,var_value.str(),start_loc,end_loc,typeid(val).name(),clock()});
+            ali_clang_flush_db_on_each_change
+            return val;
+        }
+        
+        /*
+         This is the default case for unknown types
+         */
         template <class T> T& log_rhs(int line_num, int start_loc, int end_loc, T& val) {
-            line_data[line_num].push_back((Change){CHANGE_RHS,"(reference)",start_loc,end_loc,typeid(val).name(),clock()});
+            std::ostringstream var_value; //var_value << " Ref(" << sizeof(T) <<"," << typeid(val).name() << ")";
+            
+            if (sizeof(T) > sizeof(short int)) {
+            
+            //char buf[sizeof(T)];
+            short int buf;
+            if (&val == NULL) return val;
+            memcpy(&buf,&val,sizeof(short int));
+                var_value << buf ;
+            } else {
+                var_value << " Ref(" << sizeof(T) <<"," << typeid(val).name() << ")";
+            }
+            
+            
+            line_data[line_num].push_back((Change){CHANGE_RHS,typeid(val).name(),start_loc,end_loc,var_value.str(),clock()});
             ali_clang_flush_db_on_each_change
             return val;
         }
         
         template <class T> const T& log_rhs(int line_num, int start_loc, int end_loc, const T& val) {
-            line_data[line_num].push_back((Change){CHANGE_RHS,"(const reference)",start_loc,end_loc,typeid(val).name(),clock()});
+            std::ostringstream var_value; var_value << " ConstRef(" << sizeof(T) <<"," << typeid(val).name() << ")";
+            line_data[line_num].push_back((Change){CHANGE_RHS,var_value.str(),start_loc,end_loc,typeid(val).name(),clock()});
             ali_clang_flush_db_on_each_change
             return val;
         }
