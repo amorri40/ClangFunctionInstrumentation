@@ -38,10 +38,10 @@ inline SourceLocation getBeginningOfStatement(Stmt *s, Rewriter* rewriter) {
     return clang::Lexer::GetBeginningOfToken(s->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
 }
 
-inline void insert_before_after(Expr *st, Rewriter* rewriter, std::string before, std::string after) {
+inline void insert_before_after(Expr *st, Rewriter* rewriter, std::string before, std::string after, bool beforeEnd) {
     if (st->getLocStart().isInvalid()) return;
     if (st->getLocEnd().isInvalid()) return;
-    SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts()); //getBeginningOfStatement(statement_from_it,rewriter);
+    SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
     SourceLocation end = clang::Lexer::getLocForEndOfToken(st->getLocEnd(),0, rewriter->getSourceMgr(), rewriter->getLangOpts());
     
     /*
@@ -54,12 +54,18 @@ inline void insert_before_after(Expr *st, Rewriter* rewriter, std::string before
     if (!rewriter->isRewritable(begining)) return;
     
     bool b = rewriter->InsertTextBefore(begining, before);
-    if (!b)
+    if (!b) {
+        
+        if (beforeEnd) {
         rewriter->InsertTextBefore(end, after);
+        } else {
+            rewriter->InsertTextAfter(end, after);
+        }
+    }
 }
 
-inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name) {
-    SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts()); //getBeginningOfStatement(statement_from_it,rewriter);
+inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name, bool beforeEnd) {
+    SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
     SourceLocation end = clang::Lexer::getLocForEndOfToken(st->getLocEnd(),0, rewriter->getSourceMgr(), rewriter->getLangOpts());
     
     int line = rewriter->getSourceMgr().getPresumedLineNumber(begining);
@@ -71,36 +77,26 @@ inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name
     macro_call << beg << ", " << e <<", ";
     macro_call << " (";
     
-    insert_before_after(st,rewriter,macro_call.str(),")) ");
-}
-
-inline void insert_before_after_2(Stmt *st, Rewriter* rewriter, std::string before, std::string after) {
-    SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts()); //getBeginningOfStatement(statement_from_it,rewriter);
-    SourceLocation end = clang::Lexer::getLocForEndOfToken(st->getLocEnd(),0, rewriter->getSourceMgr(), rewriter->getLangOpts());
-    if (!rewriter->isRewritable(end)) return;
-    if (!rewriter->isRewritable(begining)) return;
-    bool b = rewriter->InsertTextBefore(begining, before);
-    if (!b)
-        rewriter->InsertTextAfter(end, after);
+    insert_before_after(st,rewriter,macro_call.str(),")) ", beforeEnd);
 }
 
 void handle_call_argument(Expr* arg, Rewriter* rewriter) {
     if (arg == NULL) return;
     
     if (arg->getType()->hasIntegerRepresentation()) {
-    insert_before_after(arg, rewriter, " CALL_ARG((", ")) ");
+    insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
     } else if (arg->getType()->isBuiltinType()) {
-        insert_before_after(arg, rewriter, " CALL_ARG((", ")) ");
+        insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
     } else if (arg->getType()->isPointerType()) {
         if (arg->getType().isCanonical())
-          insert_before_after(arg, rewriter, " CALL_ARG((", ")) ");
+          insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
         else
-            insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ");
+            insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
     }
     else if (arg->getType()->hasPointerRepresentation()) {
-        insert_before_after(arg, rewriter, " CALL_ARG(( (void *) ", ")) ");
+        insert_before_after(arg, rewriter, " CALL_ARG(( (void *) ", ")) ", true);
     } else {
-        insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ");
+        insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
     }
 }
 
@@ -120,7 +116,8 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             return;
         } else if (isa<ImplicitCastExpr>(*statement_from_it)) {
             ImplicitCastExpr *declStatement = cast<ImplicitCastExpr>(statement_from_it);
-            insert_before_after(declStatement, rewriter, " /*ImplicitCastExpr*/ ", " /*end ImplicitCastExpr*/ ");
+            insert_before_after(declStatement, rewriter, " /*ImplicitCastExpr*/ ", " /*end ImplicitCastExpr*/ ",false);
+            return; //don't get the children of an implicit cast atm (TODO FIX)
         }
          else if (isa<DeclStmt>(*statement_from_it)) {
             DeclStmt *declStatement = cast<DeclStmt>(statement_from_it);
@@ -138,7 +135,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             if (dre->getOpcodeStr() == ",") return; //ignore comma operator
             //insert_before_after(dre->getLHS(), rewriter, " LHS(( ", ")) ");
             if (isa<CXXNewExpr>(dre->getRHS())) return; //don't handle initilisations
-            wrap_with_macro(dre->getLHS(), rewriter, "LHS");
+            wrap_with_macro(dre->getLHS(), rewriter, "LHS", true);
         }
         else if (isa<CXXOperatorCallExpr>(*statement_from_it)) {
             CXXOperatorCallExpr *dre = cast<CXXOperatorCallExpr>(statement_from_it);
@@ -155,17 +152,14 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 if (dre->getArg(i) == NULL) continue;
                 if (dre->getArg(i)->isLValue())
                 {
-                    
-                    wrap_with_macro(dre->getArg(i), rewriter, "OPERATOR_LHS_ARG");
+                    wrap_with_macro(dre->getArg(i), rewriter, "OPERATOR_LHS_ARG", true);
                 }
                 else if (arg->isRValue()) {
                    
                     if (arg->getType().isCanonical())
-                //insert_before_after(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_CANONICAL((", ")) ");
-                        wrap_with_macro(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_CANONICAL");
+                        wrap_with_macro(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_CANONICAL", true);
                     else
-                    //insert_before_after(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_NOTCANONICAL((", ")) ");
-                        wrap_with_macro(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_NOTCANONICAL");
+                        wrap_with_macro(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_NOTCANONICAL", true);
                     
                 }
             }
@@ -174,23 +168,21 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         else if (isa<DeclRefExpr>(*statement_from_it)) {
            DeclRefExpr *dre = cast<DeclRefExpr>(statement_from_it);
             if (dre->isRValue()) {
-                wrap_with_macro(dre, rewriter, " RHS");
+                wrap_with_macro(dre, rewriter, " RHS", true);
                 
             } else if ( dre->isXValue()) {
                
-                insert_before_after(dre,rewriter," /* x value declref! */ "," /* end x value*/ ");
+                insert_before_after(dre,rewriter," /* x value declref! */ "," /* end x value*/ ", true);
             } else if ( dre->isLValue()) {
                 std::ostringstream d;
                 d << " /* LValue " << dre->getStmtClassName() << " " << dre->getDecl()->getNameAsString() << "*/ ";
-                
-                //insert_before_after(dre,rewriter,d.str()," /* end L value*/ ");
                 return;
             }
         }
         else if (isa<CXXMemberCallExpr>(*statement_from_it)) {
             CXXMemberCallExpr *dre = cast<CXXMemberCallExpr>(statement_from_it);
             
-            insert_before_after_2(dre,rewriter," MEMBER_CALL(( "," )) ");
+            insert_before_after(dre,rewriter," MEMBER_CALL(( "," )) ",false);
             for (int i=0; i<dre->getNumArgs(); i++) {
                 Expr* arg = dre->getArg(i);
                 handle_call_argument(arg,rewriter);
@@ -200,16 +192,16 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         else if (isa<MemberExpr>(*statement_from_it)) {
             MemberExpr *dre = cast<MemberExpr>(statement_from_it);
             
-            insert_before_after_2(dre,rewriter," MEMBER_EXPR(( "," )) ");
+            insert_before_after(dre,rewriter," MEMBER_EXPR(( "," )) ",false);
         }
         else if (isa<CallExpr>(*statement_from_it)) {
             CallExpr *dre = cast<CallExpr>(statement_from_it);
             if (dre->isRValue() && !(dre->getCallReturnType()->isVoidType()))
             {
-                insert_before_after_2(dre,rewriter," CALLR(( "," )) ");
+                insert_before_after(dre,rewriter," CALLR(( "," )) ",false);
             }
             else
-            insert_before_after_2(dre,rewriter," CALL(( "," )) ");
+            insert_before_after(dre,rewriter," CALL(( "," )) ",false);
             
             for (int i=0; i<dre->getNumArgs(); i++) {
                 Expr* arg = dre->getArg(i);
@@ -217,22 +209,19 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             }
         }
         else {
-            std::ostringstream class_name;
-            class_name << " /*" << statement_from_it->getStmtClassName() << "*/ "; //should this not be statement_from_id
-            std::string beg = class_name.str();
-            class_name.str("");
-            class_name << " /* END " << statement_from_it->getStmtClassName() << "*/ ";
-            
-            if (statement_from_it->getLocStart().isInvalid()) return;
-            //rewriter->InsertText(statement_from_it->getLocStart(), class_name.str());
-            //insert_before_after_2(statement_from_it,rewriter,beg,class_name.str());
+//            std::ostringstream class_name;
+//            class_name << " /*" << statement_from_it->getStmtClassName() << "*/ "; //should this not be statement_from_id
+//            std::string beg = class_name.str();
+//            class_name.str("");
+//            class_name << " /* END " << statement_from_it->getStmtClassName() << "*/ ";
+//            
+//            if (statement_from_it->getLocStart().isInvalid()) return;
         
         }
     
     
     for(StmtIterator it = s->child_begin(); it != s->child_end(); ++it) {
         modify_statements(rewriter,*it);
-        //if (!it->children().empty()) {modify_statements(rewriter,*it); continue;}
     }
    
 }
