@@ -25,7 +25,7 @@
 #define NO_INSTRUMENT false
 #define SEGFAULTHANDLE ali_clang_plugin_runtime::install_handlers();
 
-#define CALL(arg) (arg)
+#define CALL(arg) (inst_func_db.log_rhs(0,0,0,"Void"), (arg))
 //#define CALLR(arg) (arg) //call with return
 #define CALLR(argument) inst_func_db.log_rhs(0,0,0,(argument))
 #define MEMBER_CALL(arg) (arg)
@@ -33,8 +33,8 @@
 #define OPERATOR_LHS_ARG(line,beg,end,arg) (arg)
 #define OPERATOR_RHS_ARG_CANONICAL(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
 #define OPERATOR_RHS_ARG_NOTCANONICAL(line,beg,end,arg) (arg)
-#define CALL_ARG(argument) inst_func_db.log_call_arg(0,0,(argument))
-//#define CALL_ARG(argument) inst_func_db.log_rhs(0,0,0,(argument))
+//#define CALL_ARG(argument) inst_func_db.log_call_arg(0,0,(argument))
+#define CALL_ARG(line,beg,end,arg) inst_func_db.log_rhs(0,0,0,(arg))
 #define RHS(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
 #define LHS(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
 //#define LOGRETURN(arg) (arg)
@@ -190,7 +190,7 @@ namespace ali_clang_plugin_runtime {
             
         }
         
-        template <class T> T& log_call_arg(int start_loc, int end_loc, T& param) {
+       /* template <class T> T& log_call_arg(int start_loc, int end_loc, T& param) {
             return param;
         }
         
@@ -215,7 +215,7 @@ namespace ali_clang_plugin_runtime {
         }
         void* log_call_arg(int start_loc, int end_loc, void * param) {
             return param;
-        }
+        }*/
         
         /*
          These templates log changes on each line
@@ -290,12 +290,12 @@ namespace ali_clang_plugin_runtime {
         }
         
         
-        const bool& log_rhs(int line_num, int start_loc, int end_loc, const bool& val) {
+        /*const bool& log_rhs(int line_num, int start_loc, int end_loc, const bool& val) {
             std::ostringstream var_value; var_value << val;
             line_data.push_back((Change){CHANGE_RHS,"(const bool)",line_num,start_loc,end_loc,var_value.str(),clock()});
             ali_clang_flush_db_on_each_change
             return val;
-        }
+        }*/
         
         const char& log_rhs(int line_num, int start_loc, int end_loc, const char& val) {
             std::ostringstream var_value; var_value << val;
@@ -374,6 +374,26 @@ namespace ali_clang_plugin_runtime {
             ali_clang_flush_db_on_each_change
             return val;
         }
+        
+        template <class T> T** log_rhs(int line_num, int start_loc, int end_loc, T** param) {
+            return param;
+        }
+        
+        /*void*& log_rhs(int line_num, int start_loc, int end_loc, void* param) {
+            return *&*&param;
+        }*/
+        
+        /*void** log_rhs(int line_num, int start_loc, int end_loc, void** param) {
+            return param;
+        }*/
+        
+        void* log_rhs(int line_num, int start_loc, int end_loc, void* param) {
+            return param;
+        }
+        
+        /*void**& log_rhs(int line_num, int start_loc, int end_loc, void**& param) {
+            return param;
+        }*/
         
         /*
          Older templates
