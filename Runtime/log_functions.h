@@ -24,14 +24,17 @@
 
 #define NO_INSTRUMENT false
 #define SEGFAULTHANDLE ali_clang_plugin_runtime::install_handlers();
+
 #define CALL(arg) (arg)
-#define CALLR(arg) (arg) //call with return
+//#define CALLR(arg) (arg) //call with return
+#define CALLR(argument) inst_func_db.log_rhs(0,0,0,(argument))
 #define MEMBER_CALL(arg) (arg)
 #define MEMBER_EXPR(arg) (arg)
 #define OPERATOR_LHS_ARG(line,beg,end,arg) (arg)
 #define OPERATOR_RHS_ARG_CANONICAL(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
 #define OPERATOR_RHS_ARG_NOTCANONICAL(line,beg,end,arg) (arg)
 #define CALL_ARG(argument) inst_func_db.log_call_arg(0,0,(argument))
+//#define CALL_ARG(argument) inst_func_db.log_rhs(0,0,0,(argument))
 #define RHS(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
 #define LHS(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
 //#define LOGRETURN(arg) (arg)
@@ -77,6 +80,7 @@ namespace ali_clang_plugin_runtime {
         //function_line_data lines[];
         int start_of_function_line_number;
         std::vector<vector_of_change> all_function_executions;
+        std::map<std::string, long long> map_of_sqlrows;
         
         StaticFunctionData(std::string the_func_name, int the_line_number, std::string the_file_name) : func_name(the_func_name), start_of_function_line_number(the_line_number), file_name(the_file_name) {
             //possibly take in number of lines
@@ -145,7 +149,7 @@ namespace ali_clang_plugin_runtime {
         InstrumentFunctionDB(StaticFunctionData* the_db) : ali_function_db(the_db)  {
             start_time = clock();
             start_mem = report_memory();
-            //printf("\n >> Log Constructor: %s Mem:%ld bytes \n",the_function_name,start_mem);
+            printf("\n >> Log Constructor: %s Mem:%ld bytes \n",the_db->func_name.c_str(),start_mem);
         }
         ~InstrumentFunctionDB() {
             end_time = clock();
@@ -158,7 +162,7 @@ namespace ali_clang_plugin_runtime {
                 ali_function_db->flush_to_db();
             }
             
-            printf(" >> Log Destructor: Mem diff:%ld bytes Time:%f \n",mem_difference,time_difference);
+           // printf(" >> Log Destructor: Mem diff:%ld bytes Time:%f \n",mem_difference,time_difference);
         }
 
         
@@ -268,7 +272,8 @@ namespace ali_clang_plugin_runtime {
         }
         
         char*& log_rhs(int line_num, int start_loc, int end_loc, char*& val) {
-            line_data.push_back((Change){CHANGE_RHS,"",line_num, start_loc,end_loc,val,clock()});
+            if (val == NULL) return val;
+            line_data.push_back((Change){CHANGE_RHS,"(char*)",line_num, start_loc,end_loc,val,clock()});
             ali_clang_flush_db_on_each_change
             return val;
         }
@@ -278,7 +283,8 @@ namespace ali_clang_plugin_runtime {
          */
         
         const char*& log_rhs(int line_num, int start_loc, int end_loc, const char*& val) {
-            line_data.push_back((Change){CHANGE_RHS,"",line_num,start_loc,end_loc,val,clock()});
+            if (val == NULL) return val;
+            line_data.push_back((Change){CHANGE_RHS,"(const char*)",line_num,start_loc,end_loc,val,clock()});
             ali_clang_flush_db_on_each_change
             return val;
         }

@@ -118,6 +118,9 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             CaseStmt *caseStatement = cast<CaseStmt>(statement_from_it);
             modify_statements(rewriter,caseStatement->getSubStmt());
             return;
+        } else if (isa<ImplicitCastExpr>(*statement_from_it)) {
+            ImplicitCastExpr *declStatement = cast<ImplicitCastExpr>(statement_from_it);
+            insert_before_after(declStatement, rewriter, " /*ImplicitCastExpr*/ ", " /*end ImplicitCastExpr*/ ");
         }
          else if (isa<DeclStmt>(*statement_from_it)) {
             DeclStmt *declStatement = cast<DeclStmt>(statement_from_it);
@@ -168,7 +171,6 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             }
             
         }
-        
         else if (isa<DeclRefExpr>(*statement_from_it)) {
            DeclRefExpr *dre = cast<DeclRefExpr>(statement_from_it);
             if (dre->isRValue()) {
@@ -202,8 +204,10 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         }
         else if (isa<CallExpr>(*statement_from_it)) {
             CallExpr *dre = cast<CallExpr>(statement_from_it);
-            if (dre->isRValue())
+            if (dre->isRValue() && !(dre->getCallReturnType()->isVoidType()))
+            {
                 insert_before_after_2(dre,rewriter," CALLR(( "," )) ");
+            }
             else
             insert_before_after_2(dre,rewriter," CALL(( "," )) ");
             
