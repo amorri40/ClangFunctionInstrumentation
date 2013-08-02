@@ -100,7 +100,7 @@ void handle_call_argument(Expr* arg, Rewriter* rewriter) {
     }
 }
 
-void modify_statements(Rewriter* rewriter, Stmt *s) {
+void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
     
     
     
@@ -112,30 +112,41 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
         
         if (isa<CaseStmt>(*statement_from_it)) {
             CaseStmt *caseStatement = cast<CaseStmt>(statement_from_it);
-            modify_statements(rewriter,caseStatement->getSubStmt());
+            modify_statements(rewriter,caseStatement->getSubStmt(),f);
             return;
-        } else if (isa<ImplicitCastExpr>(*statement_from_it)) {
-            ImplicitCastExpr *declStatement = cast<ImplicitCastExpr>(statement_from_it);
-            insert_before_after(declStatement, rewriter, " /*ImplicitCastExpr*/ ", " /*end ImplicitCastExpr*/ ",false);
-            return; //don't get the children of an implicit cast atm (TODO FIX)
         }
+//        else if (isa<ImplicitCastExpr>(*statement_from_it)) {
+//            ImplicitCastExpr *declStatement = cast<ImplicitCastExpr>(statement_from_it);
+//            insert_before_after(declStatement, rewriter, " /*ImplicitCastExpr*/ ", " /*end ImplicitCastExpr*/ ",false);
+//            return; //don't get the children of an implicit cast atm (TODO FIX)
+//        }
          else if (isa<DeclStmt>(*statement_from_it)) {
             DeclStmt *declStatement = cast<DeclStmt>(statement_from_it);
+             //declStatement->getDeclGroup().
             if (declStatement->isSingleDecl()) {
                 Decl* d = declStatement->getSingleDecl();
+                //d
                 d->getDeclKindName();
-                rewriter->InsertTextAfter(d->getLocStart(), " /*DECL*/ ");
+                //rewriter->InsertTextAfter(d->getLocStart(), " /*DECL*/ ");
+                //wrap_with_macro(d->, rewriter, "RHS", true);
             }
              return; //ignore decl children
         } else if (isa<IntegerLiteral>(*statement_from_it) || isa<StringLiteral>(*statement_from_it)) {
              return;
         }
+        else if (isa<UnaryOperator>(*statement_from_it)) {
+            UnaryOperator *dre = cast<UnaryOperator>(statement_from_it);
+           // wrap_with_macro(dre->getSubExpr(), rewriter, " /*Unary*/", false);
+           // return;
+        }
         else if (isa<BinaryOperator>(*statement_from_it)) {
             BinaryOperator *dre = cast<BinaryOperator>(statement_from_it);
             if (dre->getOpcodeStr() == ",") return; //ignore comma operator
-            //insert_before_after(dre->getLHS(), rewriter, " LHS(( ", ")) ");
             if (isa<CXXNewExpr>(dre->getRHS())) return; //don't handle initilisations
-            wrap_with_macro(dre->getLHS(), rewriter, "LHS", true);
+            if (!dre->isAssignmentOp())
+                 wrap_with_macro(dre->getLHS(), rewriter, " /*BinaryOp*/ LHS", true);
+            modify_statements(rewriter,dre->getRHS(),f);
+            return;
         }
         else if (isa<CXXOperatorCallExpr>(*statement_from_it)) {
             CXXOperatorCallExpr *dre = cast<CXXOperatorCallExpr>(statement_from_it);
@@ -143,26 +154,38 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             
             for (int i=0; i<dre->getNumArgs(); i++) {
                 Expr* arg = dre->getArg(i);
-            if (isa<CXXNewExpr>(arg)) return; //don't do any with new
+            if (isa<CXXNewExpr>(arg)) return;
             }
+            
+            
             
             for (int i=0; i<dre->getNumArgs(); i++) {
                 Expr* arg = dre->getArg(i);
-                
-                if (dre->getArg(i) == NULL) continue;
-                if (dre->getArg(i)->isLValue())
-                {
-                    wrap_with_macro(dre->getArg(i), rewriter, "OPERATOR_LHS_ARG", true);
+                if (arg == NULL) continue;
+                modify_statements(rewriter,arg,f);
+                /*if (isa<IntegerLiteral>(arg) || isa<StringLiteral>(arg) || isa<ImplicitCastExpr>(arg)) {
+                    return;
                 }
-                else if (arg->isRValue()) {
+                
+                
+                if (arg->isLValue())
+                {
+                    if (dre->getOperator() == clang::OO_Equal) continue;
+                    if (dre->getOperator() == clang::OO_LessLess) continue;
+                   
+                }
+                
+                //else if (arg->isRValue()) {
+                //insert_before_after(dre,rewriter,arg->getStmtClassName(),arg->getStmtClassName(), true);
                    
                     if (arg->getType().isCanonical())
-                        wrap_with_macro(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_CANONICAL", true);
+                        wrap_with_macro(arg, rewriter, " OPERATOR_RHS_ARG_CANONICAL", true);
                     else
-                        wrap_with_macro(dre->getArg(i), rewriter, " OPERATOR_RHS_ARG_NOTCANONICAL", true);
-                    
-                }
+                        wrap_with_macro(arg, rewriter, " OPERATOR_RHS_ARG_NOTCANONICAL", true);
+                    */
+               // }
             }
+            return;
             
         }
         else if (isa<DeclRefExpr>(*statement_from_it)) {
@@ -176,29 +199,27 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
             } else if ( dre->isLValue()) {
                 std::ostringstream d;
                 d << " /* LValue " << dre->getStmtClassName() << " " << dre->getDecl()->getNameAsString() << "*/ ";
-                return;
+                
             }
+            return;
         }
-        else if (isa<CXXMemberCallExpr>(*statement_from_it)) {
-            CXXMemberCallExpr *dre = cast<CXXMemberCallExpr>(statement_from_it);
-            
-            insert_before_after(dre,rewriter," MEMBER_CALL(( "," )) ",false);
-            for (int i=0; i<dre->getNumArgs(); i++) {
-                Expr* arg = dre->getArg(i);
-                handle_call_argument(arg,rewriter);
-            }
-            return; // don't want to parse the memberExpr!!
-        }
-        else if (isa<MemberExpr>(*statement_from_it)) {
-            MemberExpr *dre = cast<MemberExpr>(statement_from_it);
-            
-            insert_before_after(dre,rewriter," MEMBER_EXPR(( "," )) ",false);
-        }
-        else if (isa<CallExpr>(*statement_from_it)) {
+//        else if (isa<CXXMemberCallExpr>(*statement_from_it)) {
+//            CXXMemberCallExpr *dre = cast<CXXMemberCallExpr>(statement_from_it);
+//            
+//            insert_before_after(dre,rewriter," MEMBER_CALL(( "," )) ",false);
+//            for (int i=0; i<dre->getNumArgs(); i++) {
+//                Expr* arg = dre->getArg(i);
+//                handle_call_argument(arg,rewriter);
+//            }
+//            return; // don't want to parse the memberExpr!!
+//        }
+    
+        else if (isa<CallExpr>(*statement_from_it) || isa<CXXMemberCallExpr>(*statement_from_it)) {
             CallExpr *dre = cast<CallExpr>(statement_from_it);
-            if (dre->isRValue() && !(dre->getCallReturnType()->isVoidType()))
+            if (/*dre->isRValue() &&*/ !(dre->getCallReturnType()->isVoidType()))
             {
-                insert_before_after(dre,rewriter," CALLR(( "," )) ",false);
+                //insert_before_after(dre,rewriter," CALLR(( "," )) ",false);
+                wrap_with_macro(dre, rewriter, " CALLR", false);
             }
             else
             insert_before_after(dre,rewriter," CALL(( "," )) ",false);
@@ -207,6 +228,13 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
                 Expr* arg = dre->getArg(i);
                 handle_call_argument(arg,rewriter);
             }
+            return;
+        }
+        else if (isa<MemberExpr>(*statement_from_it)) {
+            MemberExpr *dre = cast<MemberExpr>(statement_from_it);
+            
+            //insert_before_after(dre,rewriter," MEMBER_EXPR(( "," )) ",false);
+            return;
         }
         else {
 //            std::ostringstream class_name;
@@ -221,7 +249,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s) {
     
     
     for(StmtIterator it = s->child_begin(); it != s->child_end(); ++it) {
-        modify_statements(rewriter,*it);
+        modify_statements(rewriter,*it,f);
     }
    
 }
@@ -248,6 +276,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
             rewriter.getSourceMgr().getMainFileID()) {
             return true; //we are not in the main cpp file
         }
+        
         
         // get the body of this function so we can modify it
         Stmt *s = f->getBody();
@@ -291,7 +320,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         /*
          Do all modifications after this
          */
-        modify_statements(&rewriter,s);
+        modify_statements(&rewriter,s,f);
         
         std::ostringstream params_to_log;
         params_to_log << "{";
@@ -309,11 +338,12 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         /*
          Now write final output
          */
+        std::string proper_filename = rewriter.getSourceMgr().getFilename(f->getLocation());
         
         std::ostringstream debug_version_of_function;
         debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT) \n #endif \n";
         debug_version_of_function << " " << whole_func;
-        debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(__FUNCTION__, __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); \n";
+        debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); \n";
         debug_version_of_function << params_to_log.str();
         
         

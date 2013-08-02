@@ -25,24 +25,29 @@
 #define NO_INSTRUMENT false
 #define SEGFAULTHANDLE ali_clang_plugin_runtime::install_handlers();
 
-#define CALL(arg) (inst_func_db.log_rhs(0,0,0,"Void"), (arg))
-//#define CALLR(arg) (arg) //call with return
-#define CALLR(argument) inst_func_db.log_rhs(0,0,0,(argument))
+
+/*
+ defines that don't do anything yet
+ */
+#define LHS(line,beg,end,arg) (inst_func_db.log_change(line,beg,end,(arg)))
+#define ARG_UNKNOWN(arg) (arg)
+#define LOGPARAMETER(arg) (arg)
+#define RHS(line,beg,end,arg) (inst_func_db.log_change(line,beg,end,(arg)))
+#define CALL_ARG(arg) (arg)
+#define OPERATOR_RHS_ARG_CANONICAL(line,beg,end,arg) (inst_func_db.log_change(line,beg,end,(arg)))
 #define MEMBER_CALL(arg) (arg)
 #define MEMBER_EXPR(arg) (arg)
+#define OPERATOR_RHS_ARG_NOTCANONICAL(line,beg,end,arg) (inst_func_db.log_change(line,beg,end,(arg)))
 #define OPERATOR_LHS_ARG(line,beg,end,arg) (arg)
-#define OPERATOR_RHS_ARG_CANONICAL(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
-#define OPERATOR_RHS_ARG_NOTCANONICAL(line,beg,end,arg) (arg)
-//#define CALL_ARG(argument) inst_func_db.log_call_arg(0,0,(argument))
-#define CALL_ARG(line,beg,end,arg) inst_func_db.log_rhs(0,0,0,(arg))
-#define RHS(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
-#define LHS(line,beg,end,arg) inst_func_db.log_rhs(line,beg,end,(arg))
-//#define LOGRETURN(arg) (arg)
-#define LOGPARAMETER(arg) inst_func_db.log_parameter(0,0,(arg))
-#define ARG_UNKNOWN(arg) (arg)  
+#define CALL(arg) (arg)
+#define CALLR(line,beg,end,arg) (inst_func_db.log_change(line,beg,end,(arg)))
 
+/*
+ Main defines
+ */
+#define ali_clang_add_to_map(type,val) line_data.push_back((Change){CHANGE_RHS,type,line_num, start_loc,end_loc,val,clock()});
 #define FLUSH_DB_FOR_EACH_CHANGE true 
-#define ali_clang_flush_db_on_each_change if (FLUSH_DB_FOR_EACH_CHANGE) ali_function_db->flush_to_db();
+#define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(); line_data.clear();}}
 //slower but effective for segfaults
 
 namespace ali_clang_plugin_runtime {
@@ -85,7 +90,7 @@ namespace ali_clang_plugin_runtime {
         StaticFunctionData(std::string the_func_name, int the_line_number, std::string the_file_name) : func_name(the_func_name), start_of_function_line_number(the_line_number), file_name(the_file_name) {
             //possibly take in number of lines
             //possibly create sqlite db
-            SEGFAULTHANDLE //temp for library
+           // SEGFAULTHANDLE //temp for library
         }
         
         void create_tables();
@@ -97,26 +102,6 @@ namespace ali_clang_plugin_runtime {
         }
         
     };
-    
-   /* namespace CHECK  // namespace to let "operator ==" not become global
-    {
-        typedef char no[7];
-        typedef char print[7];
-        template<typename T> no& operator == (const T&, const T&);
-        template<typename T> print& operator << (std::ostream& o, const T&);
-        
-        template <typename T>
-        struct opEqualExists // *(T*)(0) can be replaced by *new T[1] also
-        {
-            enum { value = (sizeof(*(T*)(0) == *(T*)(0)) != sizeof(no)) };
-        };
-        
-        template <typename T>
-        struct opPrintExists // *(T*)(0) can be replaced by *new T[1] also
-        {
-            enum { value = (sizeof(*(std::ostream&) == *(T*)(0)) != sizeof(print)) };
-        };
-    }*/
     
     namespace has_insertion_operator_impl {
         typedef char no;
@@ -138,6 +123,17 @@ namespace ali_clang_plugin_runtime {
             static bool const debug__value = sizeof( test(s << t) ) == sizeof( yes );
         };
     }
+    
+    template <typename T>
+    struct is_iterator {
+        template <typename U>
+        static char test(typename std::iterator_traits<U>::pointer* x);
+        
+        template <typename U>
+        static long test(U*);
+        
+        static const bool value = sizeof(test<T>(nullptr)) == 1;
+    };
 
     struct InstrumentFunctionDB {
         double start_time, end_time, time_difference;
@@ -149,11 +145,15 @@ namespace ali_clang_plugin_runtime {
         InstrumentFunctionDB(StaticFunctionData* the_db) : ali_function_db(the_db)  {
             start_time = clock();
             start_mem = report_memory();
-            printf("\n >> Log Constructor: %s Mem:%ld bytes \n",the_db->func_name.c_str(),start_mem);
+            //printf("\n >> Log Constructor: %s Mem:%ld bytes \n",the_db->func_name.c_str(),start_mem);
+            //LOG_CONSTURCTOR
+            //line_data.push_back((Change){CHANGE_RHS,"",ali_function_db->start_of_function_line_number,0,0,std::string("Function enter"),clock()});
+            
         }
         ~InstrumentFunctionDB() {
             end_time = clock();
             end_mem = report_memory();
+            //line_data.push_back((Change){CHANGE_RHS,"",ali_function_db->start_of_function_line_number,0,0,"Function exit",clock()});
             
             time_difference = (double)(end_time - start_time) / CLOCKS_PER_SEC; //move this to another thread later
             mem_difference = end_mem - start_mem;
@@ -162,360 +162,145 @@ namespace ali_clang_plugin_runtime {
                 ali_function_db->flush_to_db();
             }
             
-           // printf(" >> Log Destructor: Mem diff:%ld bytes Time:%f \n",mem_difference,time_difference);
-        }
-
-        
-        /*void log_call(std::string var_name, int line_number) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
             
-            line_data[line_number].push_back((Change){CHANGE_FUNCTIONCALL,"",var_name,"",clock()});
             
-            ali_clang_flush_db_on_each_change
-        }
-        
-        void log_argument(std::string var_name, int line_number) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            
-            line_data[line_number].push_back((Change){CHANGE_FUNCTIONCALL,"",var_name,"",clock()});
-            
-            ali_clang_flush_db_on_each_change
-        }*/
-        
-        /*template <class T> void log_lhs(int start_loc, int end_loc, T& param) {
-            
-        }*/
-        
-        template <class T> void log_parameter(int start_loc, int end_loc, T& param) {
-            
-        }
-        
-       /* template <class T> T& log_call_arg(int start_loc, int end_loc, T& param) {
-            return param;
-        }
-        
-        template <class T> const T& log_call_arg(int start_loc, int end_loc, const T& param) {
-            return param;
-        }
-        
-        template <class T> T*& log_call_arg(int start_loc, int end_loc, T*& param) {
-            return param;
-        }
-        
-        template <class T> const T*& log_call_arg(int start_loc, int end_loc, const T*& param) {
-            return param;
-        }
-        
-        template <class T> T** log_call_arg(int start_loc, int end_loc, T** param) {
-            return param;
-        }
-
-        char*& log_call_arg(int start_loc, int end_loc, char *& param) {
-            return param;
-        }
-        void* log_call_arg(int start_loc, int end_loc, void * param) {
-            return param;
-        }*/
-        
-        /*
-         These templates log changes on each line
-         First primitive overloads
-         */
-        
-        bool& log_rhs(int line_num, int start_loc, int end_loc, bool& val) {
-            std::ostringstream var_value; var_value << val;
-            line_data.push_back((Change){CHANGE_RHS,"(bool)",line_num,start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        char& log_rhs(int line_num, int start_loc, int end_loc, char& val) {
-            std::ostringstream var_value; var_value << val;
-            line_data.push_back((Change){CHANGE_RHS,"(byte)",line_num,start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        int& log_rhs(int line_num, int start_loc, int end_loc, int& val) {
-            std::ostringstream var_value; var_value << val;
-            line_data.push_back((Change){CHANGE_RHS,"(int)",line_num,start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        unsigned int& log_rhs(int line_num, int start_loc, int end_loc, unsigned int& val) {
-            std::ostringstream var_value; var_value << val;
-            line_data.push_back((Change){CHANGE_RHS,"(uint)",line_num,start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        long& log_rhs(int line_num, int start_loc, int end_loc, long& val) {
-            std::ostringstream var_value; var_value << val;
-            line_data.push_back((Change){CHANGE_RHS,"(long)",line_num, start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        unsigned long& log_rhs(int line_num, int start_loc, int end_loc, unsigned long& val) {
-            std::ostringstream var_value; var_value << val;
-            line_data.push_back((Change){CHANGE_RHS,"(ulong)",line_num, start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        double& log_rhs(int line_num, int start_loc, int end_loc, double& val) {
-            std::ostringstream var_value; var_value << val;
-            line_data.push_back((Change){CHANGE_RHS,"(double)", line_num, start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        char*& log_rhs(int line_num, int start_loc, int end_loc, char*& val) {
-            if (val == NULL) return val;
-            line_data.push_back((Change){CHANGE_RHS,"(char*)",line_num, start_loc,end_loc,val,clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
+            //printf(" >> Log Destructor: %s Mem diff:%ld bytes Time:%f \n",ali_function_db->func_name.c_str(),mem_difference,time_difference);
         }
         
         /*
-         constant versions
+         constant overloads
          */
         
-        const char*& log_rhs(int line_num, int start_loc, int end_loc, const char*& val) {
-            if (val == NULL) return val;
-            line_data.push_back((Change){CHANGE_RHS,"(const char*)",line_num,start_loc,end_loc,val,clock()});
-            ali_clang_flush_db_on_each_change
+        const long double& log_change(int line_num, int start_loc, int end_loc, const long double& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
             return val;
         }
         
-        
-        /*const bool& log_rhs(int line_num, int start_loc, int end_loc, const bool& val) {
-            std::ostringstream var_value; var_value << val;
-            line_data.push_back((Change){CHANGE_RHS,"(const bool)",line_num,start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
+        const long int& log_change(int line_num, int start_loc, int end_loc, const long int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
             return val;
-        }*/
+        }
         
-        const char& log_rhs(int line_num, int start_loc, int end_loc, const char& val) {
-            std::ostringstream var_value; var_value << val;
-            line_data.push_back((Change){CHANGE_RHS,"(const char)", line_num, start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
+        const int& log_change(int line_num, int start_loc, int end_loc, const int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
             return val;
+        }
+        
+        const unsigned int& log_change(int line_num, int start_loc, int end_loc, const unsigned int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+            return val;
+        }
+        
+        const double& log_change(int line_num, int start_loc, int end_loc, const double& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+            return val;
+        }
+        
+        const char& log_change(int line_num, int start_loc, int end_loc, const char& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        }
+        
+        const float& log_change(int line_num, int start_loc, int end_loc, const float& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        }
+        
+        const size_t& log_change(int line_num, int start_loc, int end_loc, const size_t& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        }
+        
+        const std::string& log_change(int line_num, int start_loc, int end_loc, const std::string& val) { ali_clang_add_to_map(typeid(val).name(),val) return val;
+        }
+        
+        const char*& log_change(int line_num, int start_loc, int end_loc, const char*& val) { ali_clang_add_to_map(typeid(val).name(),val) return val;
         }
         
         
         /*
-         
-         Template's for other types
-         
+         Non constant overloads
          */
         
-        template <class T, class T2> std::string& log_rhs(int line_num, int start_loc, int end_loc, std::string& val) {
-            std::ostringstream var_value; var_value << val;
-            line_data.push_back((Change){CHANGE_RHS,typeid(val).name(),line_num,start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
+        long double& log_change(int line_num, int start_loc, int end_loc, long double& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
             return val;
         }
         
-        template <class T, class T2> std::map<T,T2>& log_rhs(int line_num, int start_loc, int end_loc, std::map<T,T2>& val) {
-            std::ostringstream var_value; var_value << " Map<" << typeid(T).name() << "," << typeid(T2).name() << "> (" << val.size() << ")";
-            line_data.push_back((Change){CHANGE_RHS,typeid(val).name(),line_num,start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
+        long int& log_change(int line_num, int start_loc, int end_loc, long int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
             return val;
+        }
+        
+        int& log_change(int line_num, int start_loc, int end_loc, int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+            return val;
+        }
+        
+        unsigned int& log_change(int line_num, int start_loc, int end_loc, unsigned int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+            return val;
+        }
+        
+        double& log_change(int line_num, int start_loc, int end_loc, double& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+            return val;
+        }
+        
+        char& log_change(int line_num, int start_loc, int end_loc, char& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        }
+        
+        float& log_change(int line_num, int start_loc, int end_loc, float& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        }
+        
+        size_t& log_change(int line_num, int start_loc, int end_loc, size_t& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        }
+        
+        std::string& log_change(int line_num, int start_loc, int end_loc, std::string& val) { ali_clang_add_to_map(typeid(val).name(),val) return val;
+        }
+        
+        char*& log_change(int line_num, int start_loc, int end_loc, char*& val) { ali_clang_add_to_map(typeid(val).name(),val) return val;
         }
         
         /*
-         This is the default case for unknown types
-         */
-        template <class T> T& log_rhs(int line_num, int start_loc, int end_loc, T& val) {
-            std::ostringstream var_value; //var_value << " Ref(" << sizeof(T) <<"," << typeid(val).name() << ")";
-            
-            // if ( has_insertion_operator_impl::has_insertion_operator<T&>::debug__value);
-            if (&val == NULL) return val;
-            //if (sizeof(T) >= sizeof(short int)) {
-            
-            short buf[sizeof(T)];
-            //short int buf;
-            
-            memcpy(&buf,&val,sizeof(T));
-                var_value << buf ;
-            //} else {
-            //    var_value << " Ref(" << sizeof(T) <<"," << typeid(val).name() << ")";
-            //}
-            
-            
-            line_data.push_back((Change){CHANGE_RHS,typeid(val).name(),line_num,start_loc,end_loc,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        template <class T> const T& log_rhs(int line_num, int start_loc, int end_loc, const T& val) {
-            std::ostringstream var_value; var_value << " ConstRef(" << sizeof(T) <<"," << typeid(val).name() << ")";
-            line_data.push_back((Change){CHANGE_RHS,var_value.str(),line_num, start_loc,end_loc,typeid(val).name(),clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        template <class T> T*& log_rhs(int line_num, int start_loc, int end_loc, T*& val) {
-            //pointer so just check if valid
-            std::string var_value;
-            if (val == NULL) var_value = "cNULL"; else var_value = "cVALID";
-            line_data.push_back((Change){CHANGE_RHS,typeid(val).name(),line_num, start_loc,end_loc,var_value,clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        template <class T> const T*& log_rhs(int line_num, int start_loc, int end_loc, const T*& val) {
-            //pointer so just check if valid
-            std::string var_value;
-            if (val == NULL) var_value = "cNULL"; else var_value = "cVALID";
-            line_data.push_back((Change){CHANGE_RHS,typeid(val).name(),line_num, start_loc,end_loc,var_value,clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        template <class T> T** log_rhs(int line_num, int start_loc, int end_loc, T** param) {
-            return param;
-        }
-        
-        /*void*& log_rhs(int line_num, int start_loc, int end_loc, void* param) {
-            return *&*&param;
-        }*/
-        
-        /*void** log_rhs(int line_num, int start_loc, int end_loc, void** param) {
-            return param;
-        }*/
-        
-        void* log_rhs(int line_num, int start_loc, int end_loc, void* param) {
-            return param;
-        }
-        
-        /*void**& log_rhs(int line_num, int start_loc, int end_loc, void**& param) {
-            return param;
-        }*/
-        
-        /*
-         Older templates
+         Templates to catch the rest
          */
         
-       /* template <class T> T& log_change_lhs(std::string var_name, int line_number, T& val) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            /*std::ostringstream var_value;
-            std::cout << CHECK::opEqualExists<T>::value <<std::endl;
-            if (typeid(T) == typeid(int)) {
-                var_value << val;
-            } else {
-                var_value << "unknown";
+        template <typename T> const T& log_change(int line_num, int start_loc, int end_loc, const T& val) {
+            std::string value;
+            if (is_iterator<T>::value) {
+                std::ostringstream v;
+                v<< "Iterator" << (*(int*)(&val));
+                value = v.str();
             }
-            line_data[line_number].push_back((Change){CHANGE_LHS,typeid(val).name(),var_name,"var_value_lhs_unknown",clock()});
+            else
+            {value = "constT&";
+                std::cout << value;}
             
-            ali_clang_flush_db_on_each_change
-            
+            ali_clang_add_to_map(typeid(val).name(),value)
+            return val;//(T&)val;
+        }
+        
+        
+        
+        template <typename T> T& log_change(int line_num, int start_loc, int end_loc, T& val) {
+            std::cout << "T&";
+            std::string value = "T&";
+            ali_clang_add_to_map(typeid(val).name(),value)
             return val;
-        }*/
-        
-        
-        
-        /*template <class T> T* log_change_lhs(std::string var_name, int line_number, T* val) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            std::ostringstream var_value;
-            
-            if (val == NULL) var_value << "cNULL"; else var_value << "cVALID";
-            line_data[line_number].push_back((Change){CHANGE_LHS,typeid(val).name(),var_name,var_value.str(),clock()});
-            
-            ali_clang_flush_db_on_each_change
-            
-            return val;
-        }*/
+        }
         
         /*
-         old RHS overloads
+         Pointer templates (just check if null or not for now
          */
-       /* template <class T> T& log_change_rhs(std::string var_name, int line_number, T& val) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            std::ostringstream var_value;
-            var_value << val;
-            line_data[line_number].push_back((Change){CHANGE_RHS,typeid(val).name(),var_name,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
+        
+        template <typename T> T* log_change(int line_num, int start_loc, int end_loc, T* val) {
+            std::string value;
+            if (val == NULL) value = "NULL"; else value = "VALID";
+            ali_clang_add_to_map(typeid(val).name(),value)
             return val;
         }
         
-        template<typename T>
-        struct is_pointer { static const bool value = false; };
-        
-        template<typename T>
-        struct is_pointer<T*> { static const bool value = true; };*/
-        
-        //const version
-        /*template <class T> const T& log_change_rhs(std::string var_name, int line_number, const T& val) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            std::ostringstream var_value;
-            if (is_pointer<T>::value) {
-                if (val == NULL) var_value << "cNULL"; else var_value << "cVALID";
-            } else {
-            var_value << val << "_const";
-            }
-            line_data[line_number].push_back((Change){CHANGE_RHS,typeid(val).name(),var_name,var_value.str(),clock()});
-            ali_clang_flush_db_on_each_change
+        template <typename T> const T* log_change(int line_num, int start_loc, int end_loc, const T* val) {
+            std::string value;
+            if (val == NULL) value = "cNULL"; else value = "cVALID";
+            ali_clang_add_to_map(typeid(val).name(),value)
             return val;
         }
         
+        /*
+         Special overloads
+         */
         
-        
-        
-        //pointer versions
-        template <class T> T*& log_change_rhs(std::string var_name, int line_number, T*& val) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            std::string strvalue; if (val == NULL) strvalue = "NULL"; else strvalue = "VALID";
-            line_data[line_number].push_back((Change){CHANGE_RHS,typeid(val).name(),var_name,strvalue,clock()});
-            ali_clang_flush_db_on_each_change
+        template <class T, class T2> std::map<T,T2>& log_change(int line_num, int start_loc, int end_loc, std::map<T,T2>& val) {
+            std::ostringstream value; value << " Map<" << typeid(T).name() << "," << typeid(T2).name() << "> (" << val.size() << ")";
+            ali_clang_add_to_map(typeid(val).name(),value.str())
             return val;
         }
-        
-        //const pointer versions
-        template <class T> const T*& log_change_rhs(std::string var_name, int line_number, const T*& val) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            std::string strvalue; if (val == NULL) strvalue = "NULL"; else strvalue = "cVALID";
-            line_data[line_number].push_back((Change){CHANGE_RHS,typeid(val).name(),var_name,strvalue,clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        char* log_change_rhs(std::string var_name, int line_number, char* val) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            
-            line_data[line_number].push_back((Change){CHANGE_RHS,typeid(val).name(),var_name,val,clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        const char* log_change_rhs(std::string var_name, int line_number, const char* val) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            
-            line_data[line_number].push_back((Change){CHANGE_RHS,typeid(val).name(),var_name,val,clock()});
-            ali_clang_flush_db_on_each_change
-            return val;
-        }
-        
-        
-        
-        int& log_change_rhs(std::string var_name, int line_number, int& val) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            std::ostringstream var_value;
-            var_value << val;
-            line_data[line_number].push_back((Change){CHANGE_RHS,typeid(val).name(),var_name,var_value.str(),clock()});
-            return val;
-        }
-        
-        int log_change_rhs(std::string var_name, int line_number, const int& val) {
-            line_number = line_number - ali_function_db->start_of_function_line_number ;
-            std::ostringstream var_value;
-            var_value << val;
-            line_data[line_number].push_back((Change){CHANGE_RHS,typeid(val).name(),var_name,var_value.str(),clock()});
-            return val;
-        }
-        */
         
         
     };

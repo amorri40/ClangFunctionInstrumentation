@@ -12,7 +12,7 @@
 
 namespace ali_clang_plugin_runtime {
 
-bool ALI_GLOBAL_DEBUG = true;
+    bool ALI_GLOBAL_DEBUG = true;
 sqlite3 *ali__log__db;
 
     void open_sqlite(std::string db_name) {
@@ -106,6 +106,7 @@ sqlite3 *ali__log__db;
                     unique_special_id << "[" << c.line_num << "," << c.start_loc << "," << c.end_loc << ",\"" << c.value << "\", \""<< c.type_of_var << "\"]";
                     
                     tim = c.time_of_change;
+                std::cout << unique_special_id.str();
                 
                 if ( map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end() ) {
                     // not found so add to db
