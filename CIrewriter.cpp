@@ -141,16 +141,21 @@ void setup_header_info(CompilerInstance& compiler) {
                                 false,
                                 true);
     
-  headerSearchOptions.AddPath("/usr/include/c++/4.2.1", //was 4.6
+    headerSearchOptions.AddPath("/Applications/Xcode5-DP3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/c++/v1", //added by me
+                                clang::frontend::Angled,
+                                false,
+                                false);
+    
+  /*headerSearchOptions.AddPath("/usr/include/c++/4.2.1", //was 4.6
           clang::frontend::Angled,
           false,
-          false);
+          false);*/
     
   
-  headerSearchOptions.AddPath("/usr/include/c++/4.2.1/backward", //was 4.6
+  /*headerSearchOptions.AddPath("/usr/include/c++/4.2.1/backward", //was 4.6
           clang::frontend::Angled,
           false,
-          false);
+          false);*/
   /*headerSearchOptions.AddPath("/usr/local/include",
           clang::frontend::Angled,
           false,
@@ -178,15 +183,16 @@ void setup_header_info(CompilerInstance& compiler) {
 void setup_language_options_cxx(CompilerInvocation* Invocation) {
   // Allow C++ code to get rewritten
     LangOptions langOpts;
-    langOpts.GNUMode = 1; 
-    langOpts.CXXExceptions = 1; 
+    //langOpts.GNUMode = 1;
+    //langOpts.CXXExceptions = 1;
     langOpts.RTTI = 1; 
     langOpts.Bool = 1; 
     langOpts.CPlusPlus = 1;
-    //langOpts.CPlusPlus11 = 1;
+    langOpts.CPlusPlus11 = 1;
+    
     Invocation->setLangDefaults(langOpts,
                                 clang::IK_CXX,
-                                clang::LangStandard::lang_cxx0x);
+                                clang::LangStandard::lang_c11);
     clang::HeaderSearchOptions hso = Invocation->getHeaderSearchOpts();
     //hso.UseStandardCXXIncludes = 1;
     //hso.UseBuiltinIncludes = 1;
@@ -237,7 +243,13 @@ int run_proper_clang(int argc, char **argv, bool link) {
         //replaceAll(argument,".o",".o.debug");
         oss << argument << " ";
     }
-//oss << "2>fakeclang_output.txt";
+    
+    if (link) {
+        int compile_status = system("clang++ -c \"/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/log_functions.cpp\" -o \"/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/log_functions.o\"");
+        compile_status = system("clang -c \"/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/sqlite3.c\"");
+        oss << " /Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/log_functions.o /Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/sqlite3.o";
+    }
+
     
     llvm::errs() << "about to run clang :" << oss.str().c_str() << "\n";
     int compile_status = system(oss.str().c_str());
@@ -291,6 +303,7 @@ int main(int argc, char **argv)
   Rewrite.setSourceMgr(compiler.getSourceManager(), compiler.getLangOpts());
     
     clang::FrontendOptions fo = compiler.getFrontendOpts();
+    
     std::string fileName = fo.Inputs[0].getFile(); //could loop over multiple input files
     fo.FixAndRecompile = 1;
     

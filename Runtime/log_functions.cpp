@@ -21,7 +21,7 @@ sqlite3 *ali__log__db;
         int rc = sqlite3_open(db_name.c_str(), &ali__log__db);
         if( rc ){
             fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(ali__log__db));
-            exit(0);
+            //exit(0);
         }
     }
     
@@ -33,15 +33,17 @@ sqlite3 *ali__log__db;
         sqlite3_exec(ali__log__db, oss.str().c_str(), NULL, NULL, &sErrMsg);
     }
     
+    //#define BUFFER_SIZE 256
     sqlite3_stmt * start_insert(std::string table_name, std::string table_name_suffix, std::string schema) {
-        char sSQL_all [BUFFER_SIZE] = "\0";
+        //char sSQL_all [BUFFER_SIZE] = "\0";
         sqlite3_stmt * stmt;
         const char * tail = 0;
         
         std::ostringstream oss;
         oss << "INSERT INTO \"" << table_name << table_name_suffix  << "\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)";
-        sprintf(sSQL_all, oss.str().c_str());
-        sqlite3_prepare_v2(ali__log__db,  sSQL_all, BUFFER_SIZE, &stmt, &tail);
+        //sprintf(sSQL_all, oss.str().c_str());
+        //sqlite3_prepare_v2(ali__log__db,  sSQL_all, BUFFER_SIZE, &stmt, &tail);
+        sqlite3_prepare_v2(ali__log__db,  oss.str().c_str(), oss.str().length(), &stmt, &tail);
         return stmt;
     }
     
@@ -73,7 +75,6 @@ sqlite3 *ali__log__db;
         char * sErrMsg = 0;
         sqlite3_stmt *stmt_unique , *stmt_ex_unique, *stmt_ex_all;
         
-        create_tables();
         
         //stmt_all = start_insert(func_name,"_changes_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
         stmt_unique = start_insert(func_name,"_changes_unique"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
@@ -106,7 +107,7 @@ sqlite3 *ali__log__db;
                     unique_special_id << "[" << c.line_num << "," << c.start_loc << "," << c.end_loc << ",\"" << c.value << "\", \""<< c.type_of_var << "\"]";
                     
                     tim = c.time_of_change;
-                std::cout << unique_special_id.str();
+                //std::cout << unique_special_id.str();
                 
                 if ( map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end() ) {
                     // not found so add to db

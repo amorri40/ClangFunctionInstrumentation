@@ -277,6 +277,12 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
             return true; //we are not in the main cpp file
         }
         
+        if (f->isImplicit()) return true;
+        if (f->isOverloadedOperator()) return true;
+        if (f->isTrivial()) return true;
+        if (isa<CXXDestructorDecl>(f)) return true;
+        if (isa<CXXConstructorDecl>(f)) return true;
+        
         
         // get the body of this function so we can modify it
         Stmt *s = f->getBody();
