@@ -151,7 +151,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
         else if (isa<CXXOperatorCallExpr>(*statement_from_it)) {
             CXXOperatorCallExpr *dre = cast<CXXOperatorCallExpr>(statement_from_it);
             
-            
+            return;
             for (int i=0; i<dre->getNumArgs(); i++) {
                 Expr* arg = dre->getArg(i);
             if (isa<CXXNewExpr>(arg)) return;
@@ -282,6 +282,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         if (f->isTrivial()) return true;
         if (isa<CXXDestructorDecl>(f)) return true;
         if (isa<CXXConstructorDecl>(f)) return true;
+        
         
         
         // get the body of this function so we can modify it

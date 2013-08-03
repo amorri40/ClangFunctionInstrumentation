@@ -40,13 +40,14 @@
 #define OPERATOR_RHS_ARG_NOTCANONICAL(line,beg,end,arg) (inst_func_db.log_change(line,beg,end,(arg)))
 #define OPERATOR_LHS_ARG(line,beg,end,arg) (arg)
 #define CALL(arg) (arg)
-#define CALLR(line,beg,end,arg) (inst_func_db.log_change(line,beg,end,(arg)))
+#define CALLR(line,beg,end,arg) (arg)
+//#define CALLR(line,beg,end,arg) (inst_func_db.log_change(line,beg,end,(arg)))
 
 /*
  Main defines
  */
 #define ali_clang_add_to_map(type,val) line_data.push_back((Change){CHANGE_RHS,type,line_num, start_loc,end_loc,val,clock()});
-#define FLUSH_DB_FOR_EACH_CHANGE true 
+#define FLUSH_DB_FOR_EACH_CHANGE false 
 #define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(); line_data.clear();}}
 //slower but effective for segfaults
 
@@ -78,8 +79,6 @@ namespace ali_clang_plugin_runtime {
     void segfault_handler(int sig);
     void install_handlers();
 
-    #define BUFFER_SIZE 256
-
     struct StaticFunctionData {
         std::string func_name, file_name;
         //function_line_data lines[];
@@ -91,6 +90,7 @@ namespace ali_clang_plugin_runtime {
             //possibly take in number of lines
             //possibly create sqlite db
            // SEGFAULTHANDLE //temp for library
+            create_tables();
         }
         
         void create_tables();
@@ -98,7 +98,7 @@ namespace ali_clang_plugin_runtime {
         void flush_to_db();
         
         ~StaticFunctionData() {
-            flush_to_db();
+            //flush_to_db();
         }
         
     };
@@ -171,39 +171,39 @@ namespace ali_clang_plugin_runtime {
          constant overloads
          */
         
-        const long double& log_change(int line_num, int start_loc, int end_loc, const long double& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+        const long double log_change(int line_num, int start_loc, int end_loc, const long double& val) { std::ostringstream value; value << val; ali_clang_add_to_map("long double",value.str())
             return val;
         }
         
-        const long int& log_change(int line_num, int start_loc, int end_loc, const long int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+        const long int log_change(int line_num, int start_loc, int end_loc, const long int& val) { std::ostringstream value; value << val; ali_clang_add_to_map("long int",value.str())
             return val;
         }
         
-        const int& log_change(int line_num, int start_loc, int end_loc, const int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+        const int log_change(int line_num, int start_loc, int end_loc, const int& val) { std::ostringstream value; value << val; ali_clang_add_to_map("int",value.str())
             return val;
         }
         
-        const unsigned int& log_change(int line_num, int start_loc, int end_loc, const unsigned int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+        const unsigned int log_change(int line_num, int start_loc, int end_loc, const unsigned int& val) { std::ostringstream value; value << val; ali_clang_add_to_map("unsigned int",value.str())
             return val;
         }
         
-        const double& log_change(int line_num, int start_loc, int end_loc, const double& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+        const double log_change(int line_num, int start_loc, int end_loc, const double& val) { std::ostringstream value; value << val; ali_clang_add_to_map("double",value.str())
             return val;
         }
         
-        const char& log_change(int line_num, int start_loc, int end_loc, const char& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        const char log_change(int line_num, int start_loc, int end_loc, const char& val) { std::ostringstream value; value << val; ali_clang_add_to_map("char",value.str()) return val;
         }
         
-        const float& log_change(int line_num, int start_loc, int end_loc, const float& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        const float log_change(int line_num, int start_loc, int end_loc, const float& val) { std::ostringstream value; value << val; ali_clang_add_to_map("float",value.str()) return val;
         }
         
-        const size_t& log_change(int line_num, int start_loc, int end_loc, const size_t& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        const size_t log_change(int line_num, int start_loc, int end_loc, const size_t& val) { std::ostringstream value; value << val; ali_clang_add_to_map("size_t",value.str()) return val;
         }
         
-        const std::string& log_change(int line_num, int start_loc, int end_loc, const std::string& val) { ali_clang_add_to_map(typeid(val).name(),val) return val;
+        const std::string log_change(int line_num, int start_loc, int end_loc, const std::string& val) { ali_clang_add_to_map("string",val) return val;
         }
         
-        const char*& log_change(int line_num, int start_loc, int end_loc, const char*& val) { ali_clang_add_to_map(typeid(val).name(),val) return val;
+        const char* log_change(int line_num, int start_loc, int end_loc, const char* val) { ali_clang_add_to_map("char*",val) return val;
         }
         
         
@@ -211,46 +211,46 @@ namespace ali_clang_plugin_runtime {
          Non constant overloads
          */
         
-        long double& log_change(int line_num, int start_loc, int end_loc, long double& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+        long double log_change(int line_num, int start_loc, int end_loc, long double& val) { std::ostringstream value; value << val; ali_clang_add_to_map("long double",value.str())
             return val;
         }
         
-        long int& log_change(int line_num, int start_loc, int end_loc, long int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+        long int log_change(int line_num, int start_loc, int end_loc, long int& val) { std::ostringstream value; value << val; ali_clang_add_to_map("long int",value.str())
             return val;
         }
         
-        int& log_change(int line_num, int start_loc, int end_loc, int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+        int log_change(int line_num, int start_loc, int end_loc, int& val) { std::ostringstream value; value << val; ali_clang_add_to_map("int",value.str())
             return val;
         }
         
-        unsigned int& log_change(int line_num, int start_loc, int end_loc, unsigned int& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+        unsigned int log_change(int line_num, int start_loc, int end_loc, unsigned int& val) { std::ostringstream value; value << val; ali_clang_add_to_map("unsigned int",value.str())
             return val;
         }
         
-        double& log_change(int line_num, int start_loc, int end_loc, double& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str())
+        double log_change(int line_num, int start_loc, int end_loc, double& val) { std::ostringstream value; value << val; ali_clang_add_to_map("double",value.str())
             return val;
         }
         
-        char& log_change(int line_num, int start_loc, int end_loc, char& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        char log_change(int line_num, int start_loc, int end_loc, char& val) { std::ostringstream value; value << val; ali_clang_add_to_map("char",value.str()) return val;
         }
         
-        float& log_change(int line_num, int start_loc, int end_loc, float& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        float log_change(int line_num, int start_loc, int end_loc, float& val) { std::ostringstream value; value << val; ali_clang_add_to_map("float",value.str()) return val;
         }
         
-        size_t& log_change(int line_num, int start_loc, int end_loc, size_t& val) { std::ostringstream value; value << val; ali_clang_add_to_map(typeid(val).name(),value.str()) return val;
+        size_t log_change(int line_num, int start_loc, int end_loc, size_t& val) { std::ostringstream value; value << val; ali_clang_add_to_map("size_t",value.str()) return val;
         }
         
-        std::string& log_change(int line_num, int start_loc, int end_loc, std::string& val) { ali_clang_add_to_map(typeid(val).name(),val) return val;
+        std::string log_change(int line_num, int start_loc, int end_loc, std::string& val) { ali_clang_add_to_map("string",val) return val;
         }
         
-        char*& log_change(int line_num, int start_loc, int end_loc, char*& val) { ali_clang_add_to_map(typeid(val).name(),val) return val;
+        char* log_change(int line_num, int start_loc, int end_loc, char* val) { ali_clang_add_to_map("char*",val) return val;
         }
         
         /*
          Templates to catch the rest
          */
         
-        template <typename T> const T& log_change(int line_num, int start_loc, int end_loc, const T& val) {
+        template <typename T> const T log_change(int line_num, int start_loc, int end_loc, const T& val) {
             std::string value;
             if (is_iterator<T>::value) {
                 std::ostringstream v;
@@ -258,19 +258,21 @@ namespace ali_clang_plugin_runtime {
                 value = v.str();
             }
             else
-            {value = "constT&";
-                std::cout << value;}
+            {
+                value = "constT&";
+                //std::cout << value;
+            }
             
-            ali_clang_add_to_map(typeid(val).name(),value)
+            ali_clang_add_to_map(typeid(T).name(),value)
             return val;//(T&)val;
         }
         
         
         
-        template <typename T> T& log_change(int line_num, int start_loc, int end_loc, T& val) {
-            std::cout << "T&";
+        template <typename T> T log_change(int line_num, int start_loc, int end_loc, T& val) {
+            //std::cout << "T&";
             std::string value = "T&";
-            ali_clang_add_to_map(typeid(val).name(),value)
+            ali_clang_add_to_map(typeid(T).name(),value)
             return val;
         }
         
@@ -281,14 +283,14 @@ namespace ali_clang_plugin_runtime {
         template <typename T> T* log_change(int line_num, int start_loc, int end_loc, T* val) {
             std::string value;
             if (val == NULL) value = "NULL"; else value = "VALID";
-            ali_clang_add_to_map(typeid(val).name(),value)
+            ali_clang_add_to_map(typeid(T).name(),value)
             return val;
         }
         
         template <typename T> const T* log_change(int line_num, int start_loc, int end_loc, const T* val) {
             std::string value;
             if (val == NULL) value = "cNULL"; else value = "cVALID";
-            ali_clang_add_to_map(typeid(val).name(),value)
+            ali_clang_add_to_map(typeid(T).name(),value)
             return val;
         }
         
@@ -296,9 +298,9 @@ namespace ali_clang_plugin_runtime {
          Special overloads
          */
         
-        template <class T, class T2> std::map<T,T2>& log_change(int line_num, int start_loc, int end_loc, std::map<T,T2>& val) {
+        template <class T, class T2> std::map<T,T2> log_change(int line_num, int start_loc, int end_loc, std::map<T,T2> val) {
             std::ostringstream value; value << " Map<" << typeid(T).name() << "," << typeid(T2).name() << "> (" << val.size() << ")";
-            ali_clang_add_to_map(typeid(val).name(),value.str())
+            ali_clang_add_to_map(typeid(T).name(),value.str())
             return val;
         }
         

@@ -245,7 +245,7 @@ int run_proper_clang(int argc, char **argv, bool link) {
     }
     
     if (link) {
-        int compile_status = system("clang++ -c \"/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/log_functions.cpp\" -o \"/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/log_functions.o\"");
+        int compile_status = system("clang++ -std=c++11 -c \"/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/log_functions.cpp\" -o \"/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/log_functions.o\"");
         compile_status = system("clang -c \"/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/sqlite3.c\"");
         oss << " /Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/log_functions.o /Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/sqlite3.o";
     }
