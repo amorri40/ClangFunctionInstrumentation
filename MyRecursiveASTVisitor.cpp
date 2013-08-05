@@ -83,8 +83,10 @@ inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name
 void handle_call_argument(Expr* arg, Rewriter* rewriter) {
     if (arg == NULL) return;
     
-    if (arg->getType()->hasIntegerRepresentation()) {
-    insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
+    if (arg->isLValue())
+        insert_before_after(arg, rewriter, " CALL_LVALUE_ARG((", ")) ", true);
+    else if (arg->getType()->hasIntegerRepresentation()) {
+        insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
     } else if (arg->getType()->isBuiltinType()) {
         insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
     } else if (arg->getType()->isPointerType()) {
@@ -94,7 +96,7 @@ void handle_call_argument(Expr* arg, Rewriter* rewriter) {
             insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
     }
     else if (arg->getType()->hasPointerRepresentation()) {
-        insert_before_after(arg, rewriter, " CALL_ARG(( (void *) ", ")) ", true);
+        //insert_before_after(arg, rewriter, " CALL_ARG(( (void *) ", ")) ", true);
     } else {
         insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
     }
@@ -115,16 +117,42 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             modify_statements(rewriter,caseStatement->getSubStmt(),f);
             return;
         }
-//        else if (isa<ImplicitCastExpr>(*statement_from_it)) {
-//            ImplicitCastExpr *declStatement = cast<ImplicitCastExpr>(statement_from_it);
-//            insert_before_after(declStatement, rewriter, " /*ImplicitCastExpr*/ ", " /*end ImplicitCastExpr*/ ",false);
-//            return; //don't get the children of an implicit cast atm (TODO FIX)
-//        }
+        else if (isa<CXXDeleteExpr>(*statement_from_it) || isa<CXXNewExpr>(*statement_from_it) || isa<CXXTemporaryObjectExpr>(*s)) return;
+        else if (isa<ImplicitCastExpr>(*statement_from_it)) {
+            ImplicitCastExpr *implicitcast = cast<ImplicitCastExpr>(statement_from_it);
+            //wrap_with_macro(implicitcast, rewriter, implicitcast->getCastKindName(), true);
+            std::ostringstream stringstr;
+            
+            if (implicitcast->getSubExpr()->isCXX11ConstantExpr(f->getASTContext())) return; //static constant data can be optimised out
+            
+            if (implicitcast->getCastKind()== CK_LValueToRValue) {
+                stringstr << " /*(" << implicitcast->getType().getAsString() << ")*/ " << implicitcast->getCastKindName();
+            }
+            else {
+            stringstr << " /*(" << implicitcast->getType().getAsString() << ")*/ " << implicitcast->getCastKindName();
+            }
+            wrap_with_macro(implicitcast, rewriter, stringstr.str(), true);
+            
+            
+        }
+        else if (isa<IfStmt>(*statement_from_it)) {
+            IfStmt *ifStatement = cast<IfStmt>(statement_from_it);
+            //wrap_with_macro(ifStatement->getCond(), rewriter, " /*If*/ BOOLEXP", true);
+        }
+        else if (isa<ParenExpr>(*statement_from_it)) {
+            ParenExpr *paren = cast<ParenExpr>(statement_from_it);
+            if (paren->isLValue())
+                wrap_with_macro(paren, rewriter, " LVALUE_PAREN", true);
+            else
+                wrap_with_macro(paren, rewriter, " RVALUE_PAREN", true);
+        }
          else if (isa<DeclStmt>(*statement_from_it)) {
             DeclStmt *declStatement = cast<DeclStmt>(statement_from_it);
+             
              //declStatement->getDeclGroup().
             if (declStatement->isSingleDecl()) {
                 Decl* d = declStatement->getSingleDecl();
+                
                 //d
                 d->getDeclKindName();
                 //rewriter->InsertTextAfter(d->getLocStart(), " /*DECL*/ ");
@@ -216,10 +244,15 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
     
         else if (isa<CallExpr>(*statement_from_it) || isa<CXXMemberCallExpr>(*statement_from_it)) {
             CallExpr *dre = cast<CallExpr>(statement_from_it);
-            if (/*dre->isRValue() &&*/ !(dre->getCallReturnType()->isVoidType()))
+            if (!(dre->getCallReturnType()->isVoidType()) && !dre->isBuiltinCall())
             {
-                //insert_before_after(dre,rewriter," CALLR(( "," )) ",false);
-                wrap_with_macro(dre, rewriter, " CALLR", false);
+                if (dre->getCallReturnType()->isAtomicType())
+                    wrap_with_macro(dre, rewriter, " CALL_R_ATOMIC", false);
+                else if (dre->isXValue())
+                    wrap_with_macro(dre, rewriter, " CALLX", false);
+                else
+                    wrap_with_macro(dre, rewriter, " CALLR", false);
+                
             }
             else
             insert_before_after(dre,rewriter," CALL(( "," )) ",false);
@@ -235,6 +268,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             
             //insert_before_after(dre,rewriter," MEMBER_EXPR(( "," )) ",false);
             return;
+            
         }
         else {
 //            std::ostringstream class_name;
@@ -282,6 +316,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         if (f->isTrivial()) return true;
         if (isa<CXXDestructorDecl>(f)) return true;
         if (isa<CXXConstructorDecl>(f)) return true;
+        if (f->isInlined()) return true;
         
         
         
@@ -348,9 +383,9 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         std::string proper_filename = rewriter.getSourceMgr().getFilename(f->getLocation());
         
         std::ostringstream debug_version_of_function;
-        debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT) \n #endif \n";
+        debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__);  if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT || ali_function_db.execution_number > ali_clang_plugin_runtime::ALI_GLOBAL_MAX_EX) \n #endif \n";
         debug_version_of_function << " " << whole_func;
-        debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__); ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); \n";
+        debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); \n";
         debug_version_of_function << params_to_log.str();
         
         

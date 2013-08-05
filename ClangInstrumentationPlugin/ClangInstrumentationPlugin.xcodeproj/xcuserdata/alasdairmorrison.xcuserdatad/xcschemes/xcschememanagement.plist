@@ -12,9 +12,9 @@
 		<key>ClangPlugin.xcscheme</key>
 		<dict>
 			<key>isShown</key>
-			<false/>
+			<true/>
 			<key>orderHint</key>
-			<integer>2</integer>
+			<integer>1</integer>
 		</dict>
 		<key>PrintFuncNamesPlugin.xcscheme</key>
 		<dict>
@@ -26,9 +26,9 @@
 		<key>TestOutput.xcscheme</key>
 		<dict>
 			<key>isShown</key>
-			<false/>
+			<true/>
 			<key>orderHint</key>
-			<integer>1</integer>
+			<integer>0</integer>
 		</dict>
 		<key>aliclang copy.xcscheme</key>
 		<dict>
@@ -36,6 +36,11 @@
 			<false/>
 			<key>orderHint</key>
 			<integer>4</integer>
+		</dict>
+		<key>aliclang.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
 		</dict>
 		<key>clang_test_dot_cpp.xcscheme</key>
 		<dict>

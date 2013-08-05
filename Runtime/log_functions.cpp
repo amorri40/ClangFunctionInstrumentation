@@ -14,6 +14,7 @@ namespace ali_clang_plugin_runtime {
 
     bool ALI_GLOBAL_DEBUG = true;
 sqlite3 *ali__log__db;
+    int ALI_GLOBAL_MAX_EX = 100;
 
     void open_sqlite(std::string db_name) {
         
@@ -33,21 +34,18 @@ sqlite3 *ali__log__db;
         sqlite3_exec(ali__log__db, oss.str().c_str(), NULL, NULL, &sErrMsg);
     }
     
-    //#define BUFFER_SIZE 256
+    
     sqlite3_stmt * start_insert(std::string table_name, std::string table_name_suffix, std::string schema) {
-        //char sSQL_all [BUFFER_SIZE] = "\0";
         sqlite3_stmt * stmt;
         const char * tail = 0;
         
         std::ostringstream oss;
         oss << "INSERT INTO \"" << table_name << table_name_suffix  << "\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)";
-        //sprintf(sSQL_all, oss.str().c_str());
-        //sqlite3_prepare_v2(ali__log__db,  sSQL_all, BUFFER_SIZE, &stmt, &tail);
         sqlite3_prepare_v2(ali__log__db,  oss.str().c_str(), oss.str().length(), &stmt, &tail);
         return stmt;
     }
     
-    void bind_change_sql(sqlite3_stmt * stmt, std::string unique_id, std::string types, std::string names, std::string values, int line_num, int tim ) {
+    int bind_change_sql(sqlite3_stmt * stmt, std::string unique_id, std::string types, std::string names, std::string values, int line_num, int tim ) {
         sqlite3_bind_text(stmt, 1, unique_id.c_str(), -1, SQLITE_TRANSIENT);
         sqlite3_bind_text(stmt, 2, types.c_str(), -1, SQLITE_TRANSIENT);
         sqlite3_bind_text(stmt, 3, names.c_str(), -1, SQLITE_TRANSIENT);
@@ -55,9 +53,10 @@ sqlite3 *ali__log__db;
         sqlite3_bind_int(stmt, 5, line_num);
         sqlite3_bind_int(stmt, 6, tim);
         
-        sqlite3_step(stmt);
+        int result = sqlite3_step(stmt);
         sqlite3_clear_bindings(stmt);
         sqlite3_reset(stmt);
+        return result;
     }
 
     void StaticFunctionData::create_tables() {
@@ -70,7 +69,8 @@ sqlite3 *ali__log__db;
     
     void StaticFunctionData::flush_to_db() {
         if (all_function_executions.empty()) return;
-        std::cout << "\n\n" << func_name << "\n";
+        this->execution_number++;
+        //std::cout << "\n\n" << func_name << "\n";
         
         char * sErrMsg = 0;
         sqlite3_stmt *stmt_unique , *stmt_ex_unique, *stmt_ex_all;
@@ -108,23 +108,31 @@ sqlite3 *ali__log__db;
                     
                     tim = c.time_of_change;
                 //std::cout << unique_special_id.str();
+                long long insert_row_id=-1;
                 
                 if ( map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end() ) {
                     // not found so add to db
-                    bind_change_sql(stmt_unique,unique_special_id.str(), current_line_types.str(), current_line_names.str(), current_line_values.str(), c.line_num, tim);
-                    long long last_row = sqlite3_last_insert_rowid(ali__log__db);
-                    if (last_row !=0)
-                    map_of_sqlrows[unique_special_id.str()] = last_row;
+                    int change_result = bind_change_sql(stmt_unique,unique_special_id.str(), current_line_types.str(), current_line_names.str(), current_line_values.str(), c.line_num, tim);
+                    long long last_row;
+                    if (change_result == SQLITE_DONE)
+                    last_row = sqlite3_last_insert_rowid(ali__log__db);
                     else
-                        map_of_sqlrows[unique_special_id.str()] = -1;
+                        last_row = -1;
+                    
+                    if (last_row !=-1) {
+                        map_of_sqlrows[unique_special_id.str()] = last_row; insert_row_id = last_row;}
+                    else
+                    {map_of_sqlrows[unique_special_id.str()] = -1; insert_row_id = -1;}
+                } else {
+                    insert_row_id = map_of_sqlrows[unique_special_id.str()];
                 }
                 
-                execution_id << map_of_sqlrows[unique_special_id.str()] << ","; //unique_special_id.str();
-                all_execution_id << "[" << map_of_sqlrows[unique_special_id.str()] << "," << tim << "]";
+                execution_id << insert_row_id << ","; //unique_special_id.str();
+                all_execution_id << "[" << insert_row_id << "," << tim << "]";
                     
                 }
                 all_execution_id << "]";
-                bind_change_sql(stmt_ex_all,all_execution_id.str(), "", "", "", 0, tim); //this is per line
+                int all_ex_result = bind_change_sql(stmt_ex_all,all_execution_id.str(), "", "", "", 0, tim); //this is per line
                 bind_change_sql(stmt_ex_unique,execution_id.str(), "", "", "", 0, tim);
             
                 
@@ -132,7 +140,7 @@ sqlite3 *ali__log__db;
         
         
         sqlite3_exec(ali__log__db, "END TRANSACTION", NULL, NULL, &sErrMsg);
-        sqlite3_close(ali__log__db);
+        //sqlite3_close(ali__log__db);
         all_function_executions.clear(); //now that they have been writtern destroy them
     }
     
