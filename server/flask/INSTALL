@@ -1,0 +1,3 @@
+pip install Flask
+mkdir projects
+ln -s ../../pocketCode/ static #create static folder for the css and js

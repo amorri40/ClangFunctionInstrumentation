@@ -6,3 +6,9 @@
 /test_out.c
 *.cpp_debug
 .DS_Store
+*.debug
+/frontend/projects
+
+Runtime/auto_generate.cpp
+
+*.sqlite

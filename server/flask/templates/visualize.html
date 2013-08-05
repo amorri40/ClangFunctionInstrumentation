@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<!--
+AliCPPVisualiser Based on: (same license)
+Online Python Tutor
+https://github.com/pgbovine/OnlinePythonTutor/
+
+Copyright (C) 2010-2013 Philip J. Guo (philip@pgbovine.net)
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+ -->
+
+<head>
+  <title>CPPVisualise - Visualize program execution</title>
+
+  <meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>
+
+<!-- requirements for pytutor.js -->
+<script type="text/javascript" src="{{ url_for('static', filename='js/d3.v2.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-1.8.2.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.ba-bbq.min.js') }}"></script> <!-- for handling back button and URL hashes -->
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.jsPlumb-1.3.10-all-min.js') }} "></script> <!-- for rendering SVG connectors
+                                                                                         DO NOT UPGRADE ABOVE 1.3.10 OR ELSE BREAKAGE WILL OCCUR -->
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui-1.8.24.custom.min.js') }}"></script> <!-- for sliders and other UI elements -->
+<link type="text/css" href="{{ url_for('static', filename='css/ui-lightness/jquery-ui-1.8.24.custom.css') }}" rel="stylesheet" />
+
+<!-- for annotation bubbles -->
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.qtip.min.js') }}"></script>
+<link type="text/css" href="{{ url_for('static', filename='css/jquery.qtip.css') }}" rel="stylesheet" />
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/pytutor.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pytutor.css') }}"/>
+
+
+<!-- requirements for opt-frontend.js -->
+
+<!-- codemirror.net online code editor -->
+<script type="text/javascript" src="{{ url_for('static', filename='js/codemirror/codemirror.js') }}"></script>
+<link type="text/css" href="{{ url_for('static', filename='css/codemirror.css') }}" rel="stylesheet" />
+<!-- <script type="text/javascript" src="js/codemirror/python.js"></script> -->
+ <script type="text/javascript" src="{{ url_for('static', filename='js/codemirror/clike.js') }}"></script>
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/opt-frontend.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/opt-frontend.css') }}"/>
+
+</head>
+
+<body>
+
+<div id="pyInputPane">
+
+Contents of the file:
+<br/>
+
+<div id="codeInputPane"></div> <!-- populate with a CodeMirror instance -->
+
+<!--<p style="margin-top: 10px; line-height: 200%;">
+Execute code using
+  <select id="pythonVersionSelector">
+    <option value="2">Python 2.7</option>
+    <option value="3">Python 3.3</option>
+    <option value="2crazy">Py 2.crazy</option>
+  </select>,
+  <select id="cumulativeModeSelector">
+    <option value="false">hide frames of exited functions</option>
+    <option value="true">show frames of exited functions</option>
+  </select>,
+  <select id="heapPrimitivesSelector">
+    <option value="false">inline primitives and nested objects</option>
+    <option value="true">render all objects on the heap</option>
+  </select>,
+  <select id="drawParentPointerSelector">
+    <option value="false">hide environment parent pointers</option>
+    <option value="true">show environment parent pointers</option>
+  </select>,
+  <select id="textualMemoryLabelsSelector">
+    <option value="false">draw references using arrows</option>
+    <option value="true">use text labels for references</option>
+  </select>, and
+  <select id="showOnlyOutputsSelector">
+    <option value="false">show everything</option>
+    <option value="true">show only outputs</option>
+  </select>.
+</p>-->
+
+<p>
+<button id="executeBtn" class="bigBtn" type="button">Visualize Execution</button>
+</p>
+
+<p style="margin-top: 25px;">CPP Examples:<br/>
+<a id="CPPExampleLink" href="#">This file</a>
+</p>
+
+</div>
+
+
+<div id="pyOutputPane">
+</div>
+
+<div id="footer">
+
+<p>
+  <button id="genUrlBtn" class="smallBtn" type="button">Generate URL</button> <input type="text" id="urlOutput" size="70"/>
+</p>
+
+<p>To share this visualization, click the 'Generate URL' button above
+and share that URL. To report a bug, paste the URL along with a brief
+error description in an email addressed to philip@pgbovine.net</p>
+
+<div id="embedLinkDiv">
+<p>
+  <button id="genEmbedBtn" class="smallBtn" type="button">Generate embed code</button> <input type="text" id="embedCodeOutput" size="70"/>
+</p>
+
+<p>To embed this visualization in your webpage, click the 'Generate
+embed code' button above and paste the resulting HTML code into your
+webpage. Adjust the height and width parameters as needed.</p>
+</div>
+
+<p style="margin-top: 8px;">
+AliCPPVisualiser is Based on the OnlinePythonTutor (https://github.com/pgbovine/OnlinePythonTutor) </br>
+OnlinePythonTutor is Copyright &copy; 2010-2013 <a href="http://www.pgbovine.net/">Philip Guo</a>.  All rights reserved.
+Changes and Backend is Copyright &copy; 2013 <a href="http://www.alasdairmorrison.com/">Alasdair Morrison</a>.  All rights reserved.
+</p>
+
+</div>
+
+</body>
+<script type="text/javascript">
+global_url = ("{{ url_for('static', filename='projects/'+fname) }}");
+$("#CPPExampleLink").click(function() {
+    $.get("{{ url_for('static', filename='projects/'+fname) }}", setCodeMirrorVal);
+    return false;
+  });
+  $("#CPPExampleLink").trigger('click');
+</script>
+</html>
+
