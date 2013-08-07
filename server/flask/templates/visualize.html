@@ -54,10 +54,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 <!-- requirements for opt-frontend.js -->
 
 <!-- codemirror.net online code editor -->
-<script type="text/javascript" src="{{ url_for('static', filename='js/codemirror/codemirror.js') }}"></script>
+<!--<script type="text/javascript" src="{{ url_for('static', filename='js/codemirror/codemirror.js') }}"></script>
 <link type="text/css" href="{{ url_for('static', filename='css/codemirror.css') }}" rel="stylesheet" />
-<!-- <script type="text/javascript" src="js/codemirror/python.js"></script> -->
- <script type="text/javascript" src="{{ url_for('static', filename='js/codemirror/clike.js') }}"></script>
+<! <script type="text/javascript" src="js/codemirror/python.js"></script> -->
+ <!--<script type="text/javascript" src="{{ url_for('static', filename='js/codemirror/clike.js') }}"></script>-->
+
+<link rel="stylesheet" href="{{ url_for('static', filename='lib/codemirror.css') }}">
+<script src="{{ url_for('static', filename='lib/codemirror.js') }}"></script>
+<script src="{{ url_for('static', filename='lib/util/runmode.js') }}"></script>
+<script src="{{ url_for('static', filename='lib/clike/clike.js') }}"></script>
+
 
 <script type="text/javascript" src="{{ url_for('static', filename='js/opt-frontend.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/opt-frontend.css') }}"/>

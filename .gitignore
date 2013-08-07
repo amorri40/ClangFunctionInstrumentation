@@ -12,3 +12,5 @@
 Runtime/auto_generate.cpp
 
 *.sqlite
+
+*.pyc

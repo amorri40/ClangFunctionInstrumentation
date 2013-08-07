@@ -371,7 +371,13 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
              ParmVarDecl *pvd = f->getParamDecl(argument);
             if (pvd->isInvalidDecl()) continue;
             if (pvd->getNameAsString() == "") continue;
-            params_to_log << " LOGPARAMETER(";
+            
+            
+            int line = rewriter.getSourceMgr().getPresumedLineNumber(pvd->getLocStart());
+            int beg = rewriter.getSourceMgr().getPresumedColumnNumber(pvd->getLocStart());
+            int e = rewriter.getSourceMgr().getPresumedColumnNumber(pvd->getLocEnd());
+            
+            params_to_log << " LOGPARAMETER(" << line << "," << beg << "," << e << ",";
             params_to_log << pvd->getNameAsString() << "); ";
         }
         params_to_log << "} ";

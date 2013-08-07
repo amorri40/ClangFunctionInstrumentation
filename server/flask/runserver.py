@@ -1,7 +1,7 @@
 #!/bin/python
 
 from flask import Flask,render_template,url_for,redirect,request
-import subprocess,os,datetime, shutil, aes, json
+import subprocess,os,datetime, shutil, aes, json, ali_vis
 app = Flask(__name__)
 app.debug = True
 password = "userpassword"
@@ -11,13 +11,13 @@ def printindex():
   return printfiles('.')
 
 def getJSON(fname):
-    output_trace=[]
-    output_trace.append({'func_name': '', 'event': 'step_line', 'stack_to_render': [], 'stdout': 'initial stdout', 'heap': {}, 'line': 2, 'ordered_globals': [], 'globals': {}})
-    output_trace.append({'func_name': '', 'event': 'step_line', 'stack_to_render': [], 'stdout': 'end stdout', 'heap': {1: ['FUNCTION', 'happy()', None]}, 'line': 2, 'ordered_globals': ['someglobal'], 'globals': {'someglobal':'somevalue'}})
-    output_trace.append({'func_name': '', 'event': 'step_line', 'stack_to_render': [], 'stdout': 'initial stdout', 'heap': {}, 'line': 2, 'ordered_globals': [], 'globals': {}})
-    output_trace.append({'func_name': '', 'event': 'step_line', 'stack_to_render': [], 'stdout': 'initial stdout', 'heap': {}, 'line': 2, 'ordered_globals': [], 'globals': {}})
-    output_trace.append({'func_name': '', 'event': 'step_line', 'stack_to_render': [], 'stdout': 'initial stdout', 'heap': {}, 'line': 2, 'ordered_globals': [], 'globals': {}})
-    ret = dict(code="blahhhh", trace=output_trace)
+    if request.args.get('unique', '') == 'true':
+        table_suffix="_unique"
+    else:
+      table_suffix="_all"
+    ex_id = int(request.args.get('exid', ''))
+    output_trace = ali_vis.get_trace_data(fname,table_suffix,ex_id)
+    ret = dict(code="", trace=output_trace)
     return json.dumps(ret, indent=None)
 
 @app.route('/files/<filename>',methods=['GET', 'POST'])
@@ -25,7 +25,6 @@ def printfiles(filename):
     returnstring=""
     fname=request.args.get('fname', '').replace('..','').replace('////','//')
     if (request.args.get('getJSON', '') == 'true') :
-      print "done"
       return getJSON(fname)
     if (request.args.get('save', '') == 'true') :
        

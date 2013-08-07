@@ -82,74 +82,18 @@ function setCodeMirrorVal(dat) {
   $(document).scrollTop(0);
 }
 
+function executeCodeFromScratch() {
+    // reset these globals
+    rawInputLst = [];
 
-$(document).ready(function() {
+    executeCode(0,0);
+  }
 
-  $("#embedLinkDiv").hide();
-
-  pyInputCodeMirror = CodeMirror(document.getElementById('codeInputPane'), {
-    mode: 'clike',
-    lineNumbers: true,
-    tabSize: 4,
-    indentUnit: 4,
-    // convert tab into four spaces:
-    extraKeys: {Tab: function(cm) {cm.replaceSelection("    ", "end");}}
-  });
-
-  pyInputCodeMirror.setSize(null, '420px');
-
-
-
-  // be friendly to the browser's forward and back buttons
-  // thanks to http://benalman.com/projects/jquery-bbq-plugin/
-  $(window).bind("hashchange", function(e) {
-    appMode = $.bbq.getState('mode'); // assign this to the GLOBAL appMode
-
-    if (appMode === undefined || appMode == 'edit') {
-      $("#pyInputPane").show();
-      $("#pyOutputPane").hide();
-      $("#embedLinkDiv").hide();
-
-      // destroy all annotation bubbles (NB: kludgy)
-      if (myVisualizer) {
-        myVisualizer.destroyAllAnnotationBubbles();
-      }
-    }
-    else if (appMode == 'display') {
-      $("#pyInputPane").hide();
-      $("#pyOutputPane").show();
-
-      $("#embedLinkDiv").show();
-
-      $('#executeBtn').html("Visualize execution");
-      $('#executeBtn').attr('disabled', false);
-
-
-      // do this AFTER making #pyOutputPane visible, or else
-      // jsPlumb connectors won't render properly
-      myVisualizer.updateOutput();
-
-      // customize edit button click functionality AFTER rendering (NB: awkward!)
-      $('#pyOutputPane #editCodeLinkDiv').show();
-      $('#pyOutputPane #editBtn').click(function() {
-        enterEditMode();
-      });
-    }
-    else if (appMode == 'display_no_frills') {
-      $("#pyInputPane").hide();
-      $("#pyOutputPane").show();
-      $("#embedLinkDiv").show();
-    }
-    else {
-      assert(false);
-    }
-
-    $('#urlOutput,#embedCodeOutput').val(''); // clear to avoid stale values
-  });
-
-
-  function executeCode(forceStartingInstr) {
+  function executeCode(forceStartingInstr,execution_id) {
       var backend_script = null;
+      console.log(forceStartingInstr);
+      //execution_id=0;
+      
       /*if ($('#pythonVersionSelector').val() == '2') {
           backend_script = python2_backend_script;
       }
@@ -177,8 +121,8 @@ $(document).ready(function() {
                      heap_primitives: ($('#heapPrimitivesSelector').val() == 'true'),
                      show_only_outputs: ($('#showOnlyOutputsSelector').val() == 'true'),
                      py_crazy_mode: ($('#pythonVersionSelector').val() == '2crazy')};
-
-      $.get( "/files/fname?fname="+global_url+"&getJSON=true",
+      
+      $.get( "/files/fname?fname="+global_url+"&getJSON=true&unique=true&exid="+execution_id,
         //backend_script,
             {
               //user_script : pyInputCodeMirror.getValue(),
@@ -247,7 +191,7 @@ $(document).ready(function() {
                                                         executeCodeWithRawInputFunc: executeCodeWithRawInput,
 
                                                         // undocumented experimental modes:
-                                                        pyCrazyMode: ($('#pythonVersionSelector').val() == '2crazy'),
+                                                        pyCrazyMode: true,//($('#pythonVersionSelector').val() == '2crazy'),
                                                         //allowEditAnnotations: true,
                                                        });
 
@@ -276,23 +220,88 @@ $(document).ready(function() {
               }
             }
             ,"json");
+$("#pyOutputPane").show();
   }
 
-  function executeCodeFromScratch() {
-    // reset these globals
-    rawInputLst = [];
-
-    executeCode();
-  }
-
-  function executeCodeWithRawInput(rawInputStr, curInstr) {
+    function executeCodeWithRawInput(rawInputStr, curInstr) {
     enterDisplayNoFrillsMode();
 
     // set some globals
     rawInputLst.push(rawInputStr);
 
-    executeCode(curInstr);
+    executeCode(curInstr,0);
   }
+
+
+$(document).ready(function() {
+
+  $("#embedLinkDiv").hide();
+
+  pyInputCodeMirror = CodeMirror(document.getElementById('codeInputPane'), {
+    mode: "text/x-c++src", //'clike',
+    lineNumbers: true,
+    tabSize: 4,
+    indentUnit: 4,
+    // convert tab into four spaces:
+    extraKeys: {Tab: function(cm) {cm.replaceSelection("    ", "end");}}
+  });
+
+  pyInputCodeMirror.setSize(null, '420px');
+
+
+
+  // be friendly to the browser's forward and back buttons
+  // thanks to http://benalman.com/projects/jquery-bbq-plugin/
+  $(window).bind("hashchange", function(e) {
+    appMode = $.bbq.getState('mode'); // assign this to the GLOBAL appMode
+
+    if (appMode === undefined || appMode == 'edit') {
+      $("#pyInputPane").show();
+      $("#pyOutputPane").hide();
+      $("#embedLinkDiv").hide();
+
+      // destroy all annotation bubbles (NB: kludgy)
+      if (myVisualizer) {
+        myVisualizer.destroyAllAnnotationBubbles();
+      }
+    }
+    else if (appMode == 'display') {
+      $("#pyInputPane").hide();
+      $("#pyOutputPane").show();
+
+      $("#embedLinkDiv").show();
+
+      $('#executeBtn').html("Visualize execution");
+      $('#executeBtn').attr('disabled', false);
+
+
+      // do this AFTER making #pyOutputPane visible, or else
+      // jsPlumb connectors won't render properly
+      myVisualizer.updateOutput();
+
+      // customize edit button click functionality AFTER rendering (NB: awkward!)
+      $('#pyOutputPane #editCodeLinkDiv').show();
+      $('#pyOutputPane #editBtn').click(function() {
+        enterEditMode();
+      });
+    }
+    else if (appMode == 'display_no_frills') {
+      $("#pyInputPane").hide();
+      $("#pyOutputPane").show();
+      $("#embedLinkDiv").show();
+    }
+    else {
+      assert(false);
+    }
+
+    $('#urlOutput,#embedCodeOutput').val(''); // clear to avoid stale values
+  });
+
+
+
+  
+
+
 
   $("#executeBtn").attr('disabled', false);
   $("#executeBtn").click(executeCodeFromScratch);

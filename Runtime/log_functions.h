@@ -28,7 +28,7 @@
 
 #define LHS(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define ARG_UNKNOWN(arg) (stdlogger, inst_func_db.log_change(0,0,0,(arg)))
-#define LOGPARAMETER(arg) (stdlogger, inst_func_db.log_change(0,0,0,(arg)))
+#define LOGPARAMETER(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define RHS(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define CALL_ARG(arg) (stdlogger,inst_func_db.log_change(0,0,0,(arg)))
 #define CALL_LVALUE_ARG(arg) (stdlogger,inst_func_db.log_lvalue(0,0,0,(arg))) //(std::cout << __PRETTY_FUNCTION__ << "\n",arg)
@@ -340,8 +340,15 @@ namespace ali_clang_plugin_runtime {
         template <typename T> T& log_change(int line_num, int start_loc, int end_loc, T& val) {
             stdlogger;
             std::string ali_clang_value = "T&";
+            if (sizeof(T) < 20) {
+                short buf[sizeof(T)];
+                memcpy(&buf,&val,sizeof(T)); //dest, source, size
+                std::ostringstream v;
+                v << buf;
+                ali_clang_value = v.str();
+            }
             ali_clang_add_to_map(typeid(T).name(),ali_clang_value)
-            //std::cout << "end of T&";
+            
             return val;
         }
         
@@ -349,8 +356,15 @@ namespace ali_clang_plugin_runtime {
         template <typename T> T& log_change(int line_num, int start_loc, int end_loc, T&& val) {
             stdlogger;
             std::string ali_clang_value = "T&&";
+            if (sizeof(T) < 20) {
+                short buf[sizeof(T)];
+                memcpy(&buf,&val,sizeof(T)); //dest, source, size
+            std::ostringstream v;
+                v << buf;
+                ali_clang_value = v.str();
+            }
             ali_clang_add_to_map(typeid(T).name(),ali_clang_value)
-            //std::cout << "end of T&&";
+            
             return val;
         }
         
