@@ -23,6 +23,7 @@ class MyRecursiveASTVisitor
     
 public:
     MyRecursiveASTVisitor(Rewriter &R, SourceManager* sm) : rewriter(R), sourceManager(sm) { }
+    bool VisitRecordDecl(clang::RecordDecl *D); //VisitTypeDecl(clang::TypeDecl *D);
     //void InstrumentStmt(Stmt *s);
     //bool VisitStmt(Stmt *s);
     bool VisitFunctionDecl(FunctionDecl *f);

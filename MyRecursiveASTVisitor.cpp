@@ -96,7 +96,7 @@ void handle_call_argument(Expr* arg, Rewriter* rewriter) {
             insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
     }
     else if (arg->getType()->hasPointerRepresentation()) {
-        //insert_before_after(arg, rewriter, " CALL_ARG(( (void *) ", ")) ", true);
+        insert_before_after(arg, rewriter, " CALL_ARG(( ", ")) ", true);
     } else {
         insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
     }
@@ -159,7 +159,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
                 //wrap_with_macro(d->, rewriter, "RHS", true);
             }
              return; //ignore decl children
-        } else if (isa<IntegerLiteral>(*statement_from_it) || isa<StringLiteral>(*statement_from_it)) {
+        } else if (isa<CharacterLiteral>(*statement_from_it) || isa<IntegerLiteral>(*statement_from_it) || isa<StringLiteral>(*statement_from_it) || isa<CXXBoolLiteralExpr>(*statement_from_it)) {
              return;
         }
         else if (isa<UnaryOperator>(*statement_from_it)) {
@@ -255,7 +255,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
                 
             }
             else
-            insert_before_after(dre,rewriter," CALL(( "," )) ",false);
+            insert_before_after(dre,rewriter," (CALL( ",")) ",true);
             
             for (int i=0; i<dre->getNumArgs(); i++) {
                 Expr* arg = dre->getArg(i);
@@ -263,12 +263,30 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             }
             return;
         }
+        else if (isa<ReturnStmt>(*statement_from_it)) {
+            //ReturnStmt *ret = cast<ReturnStmt>(statement_from_it);
+            //ret->getRetValue()->getStmtClassName();
+            //wrap_with_macro(cast<Expr>(*ret->child_begin()), rewriter, "RETURN_VAL", true);
+            return;
+        }
         else if (isa<MemberExpr>(*statement_from_it)) {
-            MemberExpr *dre = cast<MemberExpr>(statement_from_it);
+            //MemberExpr *dre = cast<MemberExpr>(statement_from_it);
             
             //insert_before_after(dre,rewriter," MEMBER_EXPR(( "," )) ",false);
             return;
             
+        }
+        else if (isa<ExprWithCleanups>(*statement_from_it)) {
+            ExprWithCleanups *dre = cast<ExprWithCleanups>(statement_from_it);
+            if (isa<CallExpr>(dre->getSubExpr()))
+                wrap_with_macro(dre->getSubExpr(), rewriter, "ExprWithCleanupsCall", false);
+            else wrap_with_macro(dre, rewriter, dre->getStmtClassName(), false);
+            
+        }
+        else if (isa<Expr>(*statement_from_it)) {
+            Expr *dre = cast<Expr>(statement_from_it);
+            
+        wrap_with_macro(dre, rewriter, dre->getStmtClassName(), false);
         }
         else {
 //            std::ostringstream class_name;
@@ -298,8 +316,14 @@ bool modify_main_function(Stmt *s, Rewriter* rewriter) {
     return true;
 }
 
+bool MyRecursiveASTVisitor::VisitRecordDecl(clang::RecordDecl *rd) {//::VisitTypeDecl(clang::TypeDecl *td){
+    //rd->dumpColor();
+    return true;
+}
+
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
 {
+    
     
     if (f->hasBody())
     {

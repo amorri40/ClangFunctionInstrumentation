@@ -36,22 +36,22 @@
 #define MEMBER_CALL(arg) (stdlogger,arg)
 #define MEMBER_EXPR(arg) (stdlogger,arg)
 #define OPERATOR_RHS_ARG_NOTCANONICAL(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
-#define OPERATOR_LHS_ARG(line,beg,end,arg) (stdlogger,arg)
-#define CALL(arg) (stdlogger,arg)
+#define OPERATOR_LHS_ARG(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg)))
+#define CALL(arg) (stdlogger,(arg),0)
 //#define CALLR(line,beg,end,arg) (arg)
 #define CALLR(line,beg,end,arg) (inst_func_db.log_change(line,beg,end,(arg)))
 #define BOOLEXP(line,beg,end,arg) (stdlogger,inst_func_db.log_boolexp(line,beg,end,(arg)))
 
-#define RVALUE_PAREN(line,beg,end,arg) (stdlogger,arg) //(stdlogger,inst_func_db.log_boolexp(line,beg,end,(arg)))
-#define LVALUE_PAREN(line,beg,end,arg) (stdlogger,arg)
+#define RVALUE_PAREN(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg))) //(stdlogger,inst_func_db.log_boolexp(line,beg,end,(arg)))
+#define LVALUE_PAREN(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg)))
 
-#define NoOp(line,beg,end,arg) (stdlogger,arg)
+#define NoOp(line,beg,end,arg) arg //(stdlogger,arg)
 #define IntegralCast(line,beg,end,arg) arg
-#define IntegralToBoolean(line,beg,end,arg) arg
+#define IntegralToBoolean(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg)))
 #define LValueToRValue(line,beg,end,arg) arg //(std::cout << __PRETTY_FUNCTION__ << "\n",stdlogger,arg, inst_func_db.log_change(line,beg,end,(arg)))
 #define PointerToBoolean(line,beg,end,arg) (stdlogger,arg)
-#define FloatingCast(line,beg,end,arg) (stdlogger,arg)
-#define IntegralToFloating(line,beg,end,arg) (stdlogger,arg)
+#define FloatingCast(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg)))
+#define IntegralToFloating(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg)))
 #define DerivedToBase(line,beg,end,arg) (stdlogger,arg)
 #define ConstructorConversion(line,beg,end,arg) (stdlogger,arg)
 #define ArrayToPointerDecay(line,beg,end,arg) (stdlogger,arg)
@@ -59,8 +59,23 @@
 #define UserDefinedConversion(line,beg,end,arg) (stdlogger,arg)
 #define FloatingToIntegral(line,beg,end,arg) (arg)//((int)(inst_func_db.log_change(line,beg,end,(arg))))
 
+#define ExprWithCleanupsCall(line,beg,end,arg) arg
+#define ExprWithCleanups(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg))) //(stdlogger,arg)
+#define ConditionalOperator(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg))) //(stdlogger,arg)
+#define CXXConstructExpr(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg))) //(stdlogger,arg)
+#define ArraySubscriptExpr(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg))) //(stdlogger,arg)
+#define CXXFunctionalCastExpr(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg)))  //(stdlogger,arg)
+#define CXXBindTemporaryExpr(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg)))  //(stdlogger,arg)
+#define MaterializeTemporaryExpr(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg))) //(stdlogger,arg)
+#define CStyleCastExpr(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg))) //(stdlogger,arg)
+#define CXXThisExpr(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg))) //(stdlogger,arg)
+#define RETURN_VAL(line,beg,end,arg) arg //(stdlogger,arg)
+
 #define stdlogger 0
 //#define stdlogger (std::cout << __FILE__ << ":" << __LINE__ << ":" << __PRETTY_FUNCTION__)
+
+#define STRING_STREAM( data )                                                  \
+((ostringstream&)( *( auto_ptr<ostringstream>(new ostringstream()) ) << data)).str()
 
 /*
  Main defines
@@ -69,6 +84,8 @@
 #define FLUSH_DB_FOR_EACH_CHANGE false 
 #define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(); line_data.clear();}}
 //slower but effective for segfaults
+
+//#include "auto_generate.h"
 
 namespace ali_clang_plugin_runtime {
     
@@ -106,13 +123,15 @@ namespace ali_clang_plugin_runtime {
         int start_of_function_line_number;
         std::vector<vector_of_change> all_function_executions;
         std::map<std::string, long long> map_of_sqlrows;
+        bool created_database;
         
         StaticFunctionData(std::string the_func_name, int the_line_number, std::string the_file_name) : func_name(the_func_name), start_of_function_line_number(the_line_number), file_name(the_file_name) {
             //possibly take in number of lines
             //possibly create sqlite db
            // SEGFAULTHANDLE //temp for library
             execution_number=0;
-            create_tables();
+            created_database=false;
+            
         }
         
         void create_tables();
@@ -238,36 +257,36 @@ namespace ali_clang_plugin_runtime {
          Non constant overloads
          */
         
-        long double log_change(int line_num, int start_loc, int end_loc, long double& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long double",ali_clang_value.str())
+        long double log_change(int line_num, int start_loc, int end_loc, long double&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long double",ali_clang_value.str())
             return val;
         }
         
-        long int log_change(int line_num, int start_loc, int end_loc, long int& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long int",ali_clang_value.str())
+        long int log_change(int line_num, int start_loc, int end_loc, long int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long int",ali_clang_value.str())
             return val;
         }
         
-        int log_change(int line_num, int start_loc, int end_loc, int& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("int",ali_clang_value.str())
+        int log_change(int line_num, int start_loc, int end_loc, int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("int",ali_clang_value.str())
             return val;
         }
         
-        unsigned int log_change(int line_num, int start_loc, int end_loc, unsigned int& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("unsigned int",ali_clang_value.str())
+        unsigned int log_change(int line_num, int start_loc, int end_loc, unsigned int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("unsigned int",ali_clang_value.str())
             return val;
         }
         
-        double log_change(int line_num, int start_loc, int end_loc, double& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("double",ali_clang_value.str())
+        double log_change(int line_num, int start_loc, int end_loc, double&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("double",ali_clang_value.str())
             return val;
         }
         
-        char log_change(int line_num, int start_loc, int end_loc, char& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("char",ali_clang_value.str()) return val;
+        char log_change(int line_num, int start_loc, int end_loc, char&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("char",ali_clang_value.str()) return val;
         }
         
-        float log_change(int line_num, int start_loc, int end_loc, float& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("float",ali_clang_value.str()) return val;
+        float log_change(int line_num, int start_loc, int end_loc, float&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("float",ali_clang_value.str()) return val;
         }
         
         /*size_t log_change(int line_num, int start_loc, int end_loc, size_t val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("size_t",ali_clang_value.str()) return val;
         }*/
         
-        bool log_change(int line_num, int start_loc, int end_loc, bool val) { stdlogger; std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("bool",ali_clang_value.str()) return val;
+        bool log_change(int line_num, int start_loc, int end_loc, bool&& val) { stdlogger; std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("bool",ali_clang_value.str()) return val;
         }
         
         /*std::string log_change(int line_num, int start_loc, int end_loc, std::string val) { ali_clang_add_to_map("string",val) return val;
@@ -314,6 +333,7 @@ namespace ali_clang_plugin_runtime {
         template <class T>
         const std::basic_ofstream<T>& log_change(int line_num, int start_loc, int end_loc, const std::basic_ofstream<T>& val) { ali_clang_add_to_map("std::ios","iostream") return val;
         }
+        
         
         /*
          Templates to catch the rest

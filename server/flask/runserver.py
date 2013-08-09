@@ -10,14 +10,17 @@ password = "userpassword"
 def printindex():
   return printfiles('.')
 
-def getJSON(fname):
+def getJSON(fname,data_type):
     if request.args.get('unique', '') == 'true':
         table_suffix="_unique"
     else:
       table_suffix="_all"
-    ex_id = int(request.args.get('exid', ''))
-    output_trace = ali_vis.get_trace_data(fname,table_suffix,ex_id)
-    ret = dict(code="", trace=output_trace)
+    if data_type == 'trace':
+        ex_id = int(request.args.get('exid', ''))
+        output_trace = ali_vis.get_trace_data(fname,table_suffix,ex_id)
+        ret = dict(code="", trace=output_trace)
+    else:
+        ret = ali_vis.get_timeline_data(fname,table_suffix)
     return json.dumps(ret, indent=None)
 
 @app.route('/files/<filename>',methods=['GET', 'POST'])
@@ -25,7 +28,9 @@ def printfiles(filename):
     returnstring=""
     fname=request.args.get('fname', '').replace('..','').replace('////','//')
     if (request.args.get('getJSON', '') == 'true') :
-      return getJSON(fname)
+      return getJSON(fname,'trace')
+    elif (request.args.get('getTimeline', '') == 'true') :
+      return getJSON(fname,'timeline')
     if (request.args.get('save', '') == 'true') :
        
        passcode=request.form['pass']

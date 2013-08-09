@@ -1,9 +1,10 @@
 import sqlite3 as lite
 import sys
 import json
+from datetime import datetime
 
 def get_functions_for_file(fname, suffix):
-    fname = fname.replace('/static/projects/CompilerSource/','')
+    fname = fname.replace('/static/projects/CompilerSource/','').replace('./CompilerSource/','')
     try:
         con = lite.connect('enigma_compiler.sqlite')
         cur = con.cursor()
@@ -18,6 +19,43 @@ def get_functions_for_file(fname, suffix):
         if con:
             con.close()
 
+def connect_to_db():
+    con = lite.connect('enigma_compiler.sqlite')
+    con.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
+    return con.cursor()
+
+def ms_to_string(miliseconds):
+    hours, milliseconds = divmod(miliseconds, 3600000)
+    minutes, milliseconds = divmod(miliseconds, 600000)
+    seconds = (miliseconds) / 100000
+    milliseconds = (miliseconds) / 1000000
+    l = (miliseconds) / 1000000
+    #s = "2013-%02i-%02i %02i:%02i:%02i" % (hours, minutes, seconds,(milliseconds),l)
+    val = divmod(miliseconds,10000)
+    val2 = divmod(val[1],1000)
+    val3 = divmod(val2[1],100)
+    val4 = divmod(val3[1],100)
+    s = str(val[0])+"-"+str(val2[0])+"-"+str(val3[0])+" "+str(val3[0])+":"+str(val4[1])+":01"
+    return s
+
+def get_timeline_data(fname,table_suffix):
+    all_events=[]
+
+    all_function_in_this_file = get_functions_for_file(fname,'_executions_unique')
+    cur = connect_to_db()
+    last_time=0
+    for funct in all_function_in_this_file:
+        print funct[1]
+        cur.execute("SELECT * FROM \""+funct[1]+"\"")
+        unique_executions = cur.fetchall()
+        for execution in unique_executions:
+            last_time = execution[4]
+            this_exec = {"id": execution[0], "description":funct[1].replace(fname,''), "startdate": ms_to_string(execution[4]), "enddate": ms_to_string(execution[5]), "modal_type":"full","importance": 50,"high_threshold":60,"date_display":"year","icon":"flag_yellow.png"}
+            all_events.append(this_exec)
+
+    all_data = [{"id":"js_history", "title":"Execution data for "+fname, "description":"<p>All the execution data for the functions in this file is displayed in this timeline</p>","focus_date":ms_to_string(last_time),"initial_zoom":"50", "image_lane_height":10, "events":all_events}]
+    return all_data
+
 def get_trace_data(fname,table_suffix, ex_id):
     print fname
     #first get the names of the tables
@@ -26,16 +64,14 @@ def get_trace_data(fname,table_suffix, ex_id):
     con = None
 
     try:
-        con = lite.connect('enigma_compiler.sqlite')
-        
-        cur = con.cursor()
+        cur = connect_to_db()
 
         cur.execute("SELECT * FROM \""+function_name_ex_all+"\"")
 
         all_executions = cur.fetchall()
 
         if len(all_executions) < ex_id:
-            return "{trace: {exception_msg:'Invalid execution id'}}"
+            return ["{trace: {exception_msg:'Invalid execution id'}}"]
         
         if table_suffix == "_unique":
             execution_json_string = '['+all_executions[ex_id][0]+'-1]'

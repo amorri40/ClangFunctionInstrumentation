@@ -14,7 +14,7 @@ namespace ali_clang_plugin_runtime {
 
     bool ALI_GLOBAL_DEBUG = true;
 sqlite3 *ali__log__db;
-    int ALI_GLOBAL_MAX_EX = 100;
+    int ALI_GLOBAL_MAX_EX = 300;
 
     void open_sqlite(std::string db_name) {
         
@@ -63,12 +63,14 @@ sqlite3 *ali__log__db;
         open_sqlite("enigma_compiler.sqlite");
         create_table(func_name, "_changes_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ");
         //create_table(func_name, "_changes_unique", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
-        create_table(func_name, "_executions_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ");
-        create_table(func_name, "_executions_all", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
+        create_table(func_name, "_executions_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Start_Time INTEGER, End_Time INTEGER) ");
+        create_table(func_name, "_executions_all", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Start_Time INTEGER, End_Time INTEGER PRIMARY KEY)");
+        created_database=true;
     }
     
     void StaticFunctionData::flush_to_db() {
         if (all_function_executions.empty()) return;
+        if (!created_database) create_tables();
         this->execution_number++;
         //std::cout << "\n\n" << func_name << "\n";
         
@@ -87,12 +89,13 @@ sqlite3 *ali__log__db;
             vector_of_change line_data = all_function_executions[execution];
             std::ostringstream special_id;
             std::ostringstream execution_id, all_execution_id;
-            all_execution_id << "[";
-            int tim=0;
+            
+            unsigned long start_time=0,end_time=0;
             for(vector_of_change::iterator it2 = line_data.begin(); it2 != line_data.end(); ++it2) { //
-               
+               Change c = *it2;
                 
-                if (it2 != line_data.begin()) all_execution_id << ",";
+                if (it2 == line_data.begin())
+                start_time=c.time_of_change;
                 
                 std::ostringstream current_line_names;
                 std::ostringstream current_line_values;
@@ -102,17 +105,17 @@ sqlite3 *ali__log__db;
                      All the changes that happened on this line during 1 execution of the function
                      */
                     
-                    Change c = *it2;
+                
                     
                     unique_special_id << "[" << c.line_num << "," << c.start_loc << "," << c.end_loc << ",\"" << c.value << "\", \""<< c.type_of_var << "\"]";
                     
-                    tim = c.time_of_change;
+                    end_time = c.time_of_change;
                 //std::cout << unique_special_id.str();
                 long long insert_row_id=-1;
                 
                 if ( map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end() ) {
                     // not found so add to db
-                    int change_result = bind_change_sql(stmt_unique,unique_special_id.str(), current_line_types.str(), current_line_names.str(), current_line_values.str(), c.line_num, tim);
+                    int change_result = bind_change_sql(stmt_unique,unique_special_id.str(), current_line_types.str(), current_line_names.str(), current_line_values.str(), c.line_num, end_time);
                     long long last_row;
                     if (change_result == SQLITE_DONE)
                     last_row = sqlite3_last_insert_rowid(ali__log__db);
@@ -128,12 +131,15 @@ sqlite3 *ali__log__db;
                 }
                 
                 execution_id << insert_row_id << ","; //unique_special_id.str();
-                all_execution_id << "[" << insert_row_id << "," << tim << "]";
                     
                 }
-                all_execution_id << "]";
-                int all_ex_result = bind_change_sql(stmt_ex_all,all_execution_id.str(), "", "", "", 0, tim); //this is per line
-                bind_change_sql(stmt_ex_unique,execution_id.str(), "", "", "", 0, tim);
+            
+                int unique_ex_result = bind_change_sql(stmt_ex_unique,execution_id.str(), "", "", "", start_time, end_time);
+           
+                unsigned long unique_that_was_just_inserted = sqlite3_last_insert_rowid(ali__log__db);
+                //all_execution_id << unique_that_was_just_inserted;
+                bind_change_sql(stmt_ex_all,execution_id.str()/*all_execution_id.str()*/, "", "", "", start_time, end_time);
+            
             
                 
             }
