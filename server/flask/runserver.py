@@ -17,7 +17,8 @@ def getJSON(fname,data_type):
       table_suffix="_all"
     if data_type == 'trace':
         ex_id = int(request.args.get('exid', ''))
-        output_trace = ali_vis.get_trace_data(fname,table_suffix,ex_id)
+        functionname = request.args.get('funcname', '')
+        output_trace = ali_vis.get_trace_data(fname,table_suffix,ex_id,functionname)
         ret = dict(code="", trace=output_trace)
     else:
         ret = ali_vis.get_timeline_data(fname,table_suffix)
@@ -66,7 +67,7 @@ def printfiles(filename):
      for filename in filenames:
         returnstring+="<br><a href='/files/fname?fname="+ os.path.join(fname, filename)+"'>"+filename+"</a>"
 
-     return '<html><body>'+returnstring+'</body></html>'
+     return render_template('visualize.html',extension='folder',content='folder',fname=fname,contents=returnstring)#return '<html><body>'+returnstring+'</body></html>'
 
 if __name__ == '__main__':
      app.run(host='0.0.0.0')

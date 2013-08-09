@@ -40,6 +40,9 @@ def ms_to_string(miliseconds):
 
 def get_timeline_data(fname,table_suffix):
     all_events=[]
+    print "fname:"+fname
+    cpp_file_name = fname.split('.cpp',1)[0]
+    
 
     all_function_in_this_file = get_functions_for_file(fname,'_executions_unique')
     cur = connect_to_db()
@@ -48,19 +51,27 @@ def get_timeline_data(fname,table_suffix):
         print funct[1]
         cur.execute("SELECT * FROM \""+funct[1]+"\"")
         unique_executions = cur.fetchall()
+
+        path_to_file = './CompilerSource/'+funct[1].split('.cpp_',1)[0]+'.cpp'
+        print "path_to_file:"+path_to_file
+        funcname = funct[1].split('.cpp_',1)[1].replace('_executions_unique','')
+        print "funcname"+funcname
+        execution_id = 0
         for execution in unique_executions:
             last_time = execution[4]
-            this_exec = {"id": execution[0], "description":funct[1].replace(fname,''), "startdate": ms_to_string(execution[4]), "enddate": ms_to_string(execution[5]), "modal_type":"full","importance": 50,"high_threshold":60,"date_display":"year","icon":"flag_yellow.png"}
+            this_exec = {"id": funcname+str(execution_id), "funcname":funcname, "exid":execution_id, "title":funcname, "description":funct[1].replace(fname,''), "link":path_to_file, "startdate": ms_to_string(execution[4]), "enddate": ms_to_string(execution[5]), "modal_type":"full","importance": 50,"high_threshold":60,"date_display":"year","icon":"flag_yellow.png"}
             all_events.append(this_exec)
+            execution_id+=1
 
     all_data = [{"id":"js_history", "title":"Execution data for "+fname, "description":"<p>All the execution data for the functions in this file is displayed in this timeline</p>","focus_date":ms_to_string(last_time),"initial_zoom":"50", "image_lane_height":10, "events":all_events}]
     return all_data
 
-def get_trace_data(fname,table_suffix, ex_id):
-    print fname
+def get_trace_data(fname,table_suffix, ex_id, function_name):
+    print "fname:"+fname+" exid:"+str(ex_id)
     #first get the names of the tables
-    function_name_ex_all=get_functions_for_file(fname,'_executions'+table_suffix)[0][1]
-    function_name_changes_unique=get_functions_for_file(fname,'_changes_unique')[0][1]
+    function_name_ex_all=get_functions_for_file(fname,function_name+'_executions_unique')[0][1]
+    
+    function_name_changes_unique=get_functions_for_file(fname,function_name+'_changes_unique')[0][1]
     con = None
 
     try:
@@ -98,7 +109,7 @@ def get_trace_data(fname,table_suffix, ex_id):
                 change_data_string = changes_array[exe_change-1][0]
             else:
                 change_data_string = changes_array[exe_change[0]][0]
-            change_data = json.loads(change_data_string)
+            change_data = json.loads(change_data_string,strict=False)
             print change_data
             line_num = change_data[0]
             line_start_col = change_data[1]

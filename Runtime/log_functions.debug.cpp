@@ -233,15 +233,11 @@ sqlite3 *ali__log__db;
                 }
             
                 int unique_ex_result = bind_change_sql(stmt_ex_unique,execution_id.str(), "", "", "", start_time, end_time);
-            if (unique_ex_result == SQLITE_DONE) {
+           
                 unsigned long unique_that_was_just_inserted = sqlite3_last_insert_rowid(ali__log__db);
                 //all_execution_id << unique_that_was_just_inserted;
                 bind_change_sql(stmt_ex_all,execution_id.str()/*all_execution_id.str()*/, "", "", "", start_time, end_time);
-            } else {
-            //TODO query the database
-               // sqlite3_exec(ali__log__db,"SELECT id FROM  WHERE data =",NULL,0,&sErrMsg);
-                
-            }
+            
             
                 
             }
@@ -320,21 +316,17 @@ sqlite3 *ali__log__db;
                 }
             
                 int unique_ex_result = bind_change_sql(stmt_ex_unique,execution_id.str(), "", "", "", start_time, end_time);
-            if ( /*BinaryOp*/ LHS (138, 17, 33,  (unique_ex_result))  == SQLITE_DONE) {
+           
                 unsigned long unique_that_was_just_inserted = sqlite3_last_insert_rowid(ali__log__db);
                 //all_execution_id << unique_that_was_just_inserted;
                  CALLR (141, 17, 124,  (ExprWithCleanupsCall (141, 17, 124,  (bind_change_sql( ARG_UNKNOWN((stmt_ex_all)) , ARG_UNKNOWN((execution_id.str())) /*all_execution_id.str()*/,  ARG_UNKNOWN(("")) ,  ARG_UNKNOWN(("")) ,  ARG_UNKNOWN(("")) ,  CALL_ARG((start_time)) ,  CALL_ARG((end_time)) ))) )) ;
-            } else {
-            //TODO query the database
-               // sqlite3_exec(ali__log__db,"SELECT id FROM  WHERE data =",NULL,0,&sErrMsg);
-                
-            }
+            
             
                 
             }
         
         
-         CALLR (152, 9, 76,  (sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  CALL_ARG(("END TRANSACTION")) , NULL, NULL,  CALL_ARG((&sErrMsg)) ))) ;
+         CALLR (148, 9, 76,  (sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  CALL_ARG(("END TRANSACTION")) , NULL, NULL,  CALL_ARG((&sErrMsg)) ))) ;
         //sqlite3_close(ali__log__db);
          (CALL( all_function_executions.clear())) ; //now that they have been writtern destroy them
     }
@@ -355,9 +347,9 @@ template <class T> std::string TToStr(T& t)
 }
  #if NO_INSTRUMENT == false 
  else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
-{ LOGPARAMETER(158,39,42,t); } {
+{ LOGPARAMETER(154,39,42,t); } {
     std::ostringstream oss;
-     /*BinaryOp*/ LHS (161, 5, 8,  (oss))  << t;
+     /*BinaryOp*/ LHS (157, 5, 8,  (oss))  << t;
     return oss.str();
 }
 }
@@ -376,9 +368,9 @@ template <class T> std::string TToStr(T* t)
 }
  #if NO_INSTRUMENT == false 
  else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
-{ LOGPARAMETER(165,39,42,t); } {
+{ LOGPARAMETER(161,39,42,t); } {
     std::ostringstream oss;
-     /*BinaryOp*/ LHS (168, 5, 8,  (oss))  << t;
+     /*BinaryOp*/ LHS (164, 5, 8,  (oss))  << t;
     return oss.str();
 }
 }
@@ -413,7 +405,7 @@ unsigned long report_memory(void) {
                                    TASK_BASIC_INFO,
                                    (task_info_t)&info,
                                    &size);
-    if(  /*BinaryOp*/ LHS (179, 9, 13,  (kerr))  == KERN_SUCCESS ) {
+    if(  /*BinaryOp*/ LHS (175, 9, 13,  (kerr))  == KERN_SUCCESS ) {
         //printf("Memory in use (in bytes): %u", info.resident_size);
         return info.resident_size;
     } else {
@@ -444,12 +436,12 @@ void segfault_handler(int sig) {
 }
  #if NO_INSTRUMENT == false 
  else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
-{ LOGPARAMETER(189,23,27,sig); } {
+{ LOGPARAMETER(185,23,27,sig); } {
     void *array[10];
     size_t size;
     
     // get void*'s for all entries on the stack
-    size =  CALLR (194, 12, 32,  ( /*(size_t)*/ IntegralCast (194, 12, 32,  (backtrace( CALL_ARG((array)) ,  CALL_ARG((10)) ))) )) ;
+    size =  CALLR (190, 12, 32,  ( /*(size_t)*/ IntegralCast (190, 12, 32,  (backtrace( CALL_ARG((array)) ,  CALL_ARG((10)) ))) )) ;
     
     // print out all the frames to stderr
      (CALL( fprintf(stderr,  CALL_ARG(("Error: signal %d:\n")) ,  CALL_ARG((sig)) ))) ;
@@ -469,7 +461,7 @@ void segfault_handler(int sig) {
  #if NO_INSTRUMENT == false 
  else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 {} {
-         CALLR (202, 9, 42,  (signal(SIGSEGV,  CALL_ARG((segfault_handler)) ))) ;
+         CALLR (198, 9, 42,  (signal(SIGSEGV,  CALL_ARG((segfault_handler)) ))) ;
     }
 }
 #endif 

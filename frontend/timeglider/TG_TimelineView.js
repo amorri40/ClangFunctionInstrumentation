@@ -161,10 +161,10 @@ tg.TG_TimelinePlayer = function (widget, mediator) {
 		+ "<div class='tg-full_modal_panel'>"
 		+ "<div class='tg-full_modal_content'>"
 		+ "<div class='tg-close-button tg-full_modal_close'></div>"
-		+ "<div class='dateline'>{{html dateline}}</div>"
+		//+ "<div class='dateline'>{{html dateline}}</div>"
 		+ "<h4>${title}</h4>"
 		+ "<div class='tg-full_modal-body'>"
-		+ "{{html image}}{{html description}}"
+		//+ "{{html image}}{{html description}}"
 		// + "<div id='insert'></div>"
 		+ "</div>"
 		+ "<div class='tg-full_modal-links'><ul>{{html links}}</ul></div>"
@@ -3551,6 +3551,7 @@ tg.TG_TimelinePlayer.prototype = {
 		var me = this,
 			map_view = false, 
 			video_view=false, 
+			cpp_view=true,
 			map = "", map_options = {}, $modal, llar=[], mapZoom = 0,
 			
 			ev = MED.eventCollection.get(eid).attributes,
@@ -3675,6 +3676,15 @@ tg.TG_TimelinePlayer.prototype = {
       	  				$vid.find("iframe").css("height", $vid.width() * .66)
       	  				
       	  				
+      	  			} else if(cpp_view == true) {
+      	  				$cpp = $("<div id=\"pyOutputPane\"></div>").prependTo(".tg-full_modal-body");
+      	  				$cpp.find("#pyOutputPane").css({"height": "100%", "overflow-y":"scroll"})
+      	  				console.log(ev.link)
+      	  				//global_url = ev.link;
+      	  				$.get(global_url+ev.link, setCodeMirrorVal);
+      	  				global_file_url=ev.link+"&funcname="+ev.funcname
+      	  				rawInputLst = [];
+					    executeCode(0,ev.exid);
       	  			}
       	  			
       	  		

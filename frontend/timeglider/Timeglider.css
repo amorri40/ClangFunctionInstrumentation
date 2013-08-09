@@ -682,7 +682,7 @@
 	position:absolute;
 	/* background-color:white; */
 	padding:0px;
-	font-size:1em;
+	font-size:2em;
 	cursor:pointer;
 	z-index:100;
 }
@@ -1142,7 +1142,7 @@
 
 .timeglider-event-spanner {
   position:absolute;
-  background-color:#ccc;
+  background-color:#BBB; /* #ccc;*/
 	height:16px;
 	z-index:1;
 	padding:2px;

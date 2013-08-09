@@ -230,27 +230,28 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 <body>
 
 <div id='p1'></div> <!-- timeline -->
-
+{% if content == 'folder' %}
+{{ contents|safe() }}
+{% else %}
 <div id="pyInputPane">
 
 Contents of the file:
 <br/>
 
-<div id="codeInputPane"></div> <!-- populate with a CodeMirror instance -->
+
 
 <p>
 <button id="executeBtn" class="bigBtn" type="button">Visualize Execution</button>
 </p>
 
-<p style="margin-top: 25px;">CPP Examples:<br/>
-<a id="CPPExampleLink" href="#">This file</a>
-</p>
 
 </div>
 
 
-<div id="pyOutputPane">
-</div>
+<!--<div id="pyOutputPane">
+</div>-->
+{% endif %}
+<div id="codeInputPane"></div> <!-- populate with a CodeMirror instance -->
 
 <div id="footer">
 
@@ -535,12 +536,13 @@ Changes and Backend is Copyright &copy; 2013 <a href="http://www.alasdairmorriso
 
 </body>
 <script type="text/javascript">
-global_url = ("{{ url_for('static', filename='projects/'+fname) }}");
-$("#CPPExampleLink").click(function() {
-    $.get("{{ url_for('static', filename='projects/'+fname) }}", setCodeMirrorVal);
-    return false;
-  });
-  $("#CPPExampleLink").trigger('click');
+global_url = "{{ url_for('static', filename='projects/')}}";//("{{ url_for('static', filename='projects/'+fname) }}");
+global_file_url=""
+//$("#CPPExampleLink").click(function() {
+   // $.get("{{ url_for('static', filename='projects/'+fname) }}", setCodeMirrorVal);
+//    return false;
+//  });
+//  $("#CPPExampleLink").trigger('click');
 </script>
 </html>
 

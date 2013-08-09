@@ -275,8 +275,6 @@ ExecutionVisualizer.prototype.render = function() {
 
   var codeDisplayHTML =
     '<div id="codeDisplayDiv">\
-       <div id="pyCodeOutputDiv"/>\
-       <div id="editCodeLinkDiv"><a id="editBtn">Edit code</a></div>\
        <div id="executionSlider"/>\
        <div id="vcrControls">\
          <button id="jmpFirstInstr", type="button">&lt;&lt; First</button>\
@@ -285,8 +283,9 @@ ExecutionVisualizer.prototype.render = function() {
          <button id="jmpStepFwd", type="button">Forward &gt;</button>\
          <button id="jmpLastInstr", type="button">Last &gt;&gt;</button>\
        </div>\
-       <div id="errorOutput"/>\
+       <div id="pyCodeOutputDiv"/>\
        <div id="legendDiv"/>\
+       <div id="errorOutput"/>\
        <div id="stepAnnotationDiv">\
          <textarea class="annotationText" id="stepAnnotationEditor" cols="60" rows="3"></textarea>\
          <div class="annotationText" id="stepAnnotationViewer"></div>\
@@ -376,8 +375,8 @@ ExecutionVisualizer.prototype.render = function() {
   }
   else if (this.params.pyCrazyMode) {
       myViz.domRoot.find('#legendDiv')
-          .append('<a href="https://github.com/pgbovine/Py2crazy">Py2crazy</a> mode!')
-          .append(' Stepping through (roughly) each executed expression. Color codes:<p/>')
+          //.append('<a href="https://github.com/pgbovine/Py2crazy">Py2crazy</a> mode!')
+          //.append(' Stepping through (roughly) each executed expression. Color codes:<p/>')
           .append('<span class="pycrazy-highlight-prev">expression that just executed</span><br/>')
           .append('<span class="pycrazy-highlight-cur">next expression to execute</span>');
   }

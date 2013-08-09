@@ -217,36 +217,36 @@ namespace ali_clang_plugin_runtime {
          constant overloads
          */
         
-        const long double log_change(int line_num, int start_loc, int end_loc, const long double& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long double",ali_clang_value.str())
+        const long double log_change(int line_num, int start_loc, int end_loc, const long double&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long double",ali_clang_value.str())
             return val;
         }
         
-        const long int log_change(int line_num, int start_loc, int end_loc, const long int& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long int",ali_clang_value.str())
+        const long int log_change(int line_num, int start_loc, int end_loc, const long int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long int",ali_clang_value.str())
             return val;
         }
         
-        const int log_change(int line_num, int start_loc, int end_loc, const int& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("int",ali_clang_value.str())
+        const int log_change(int line_num, int start_loc, int end_loc, const int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("int",ali_clang_value.str())
             return val;
         }
         
-        const unsigned int log_change(int line_num, int start_loc, int end_loc, const unsigned int& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("unsigned int",ali_clang_value.str())
+        const unsigned int log_change(int line_num, int start_loc, int end_loc, const unsigned int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("unsigned int",ali_clang_value.str())
             return val;
         }
         
-        const double log_change(int line_num, int start_loc, int end_loc, const double& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("double",ali_clang_value.str())
+        const double log_change(int line_num, int start_loc, int end_loc, const double&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("double",ali_clang_value.str())
             return val;
         }
         
-        const char log_change(int line_num, int start_loc, int end_loc, const char& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("char",ali_clang_value.str()) return val;
+        const char log_change(int line_num, int start_loc, int end_loc, const char&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("char",ali_clang_value.str()) return val;
         }
         
-        const float log_change(int line_num, int start_loc, int end_loc, const float& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("float",ali_clang_value.str()) return val;
+        const float log_change(int line_num, int start_loc, int end_loc, const float&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("float",ali_clang_value.str()) return val;
         }
         
-        const size_t log_change(int line_num, int start_loc, int end_loc, const size_t val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("size_t",ali_clang_value.str()) return val;
+        const size_t log_change(int line_num, int start_loc, int end_loc, const size_t&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("size_t",ali_clang_value.str()) return val;
         }
         
-        const std::string log_change(int line_num, int start_loc, int end_loc, const std::string val) { stdlogger;ali_clang_add_to_map("string",val) return val;
+        const std::string log_change(int line_num, int start_loc, int end_loc, const std::string&& val) { stdlogger;ali_clang_add_to_map("string",val) return val;
         }
         
         const char* log_change(int line_num, int start_loc, int end_loc, const char* val) { stdlogger; ali_clang_add_to_map("char*",val) return val;
