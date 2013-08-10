@@ -1,6 +1,54 @@
 //Debug file auto generated from clanginstrumentation 
 extern void start_log_function(); extern void end_log_function(); 
 #include <log_functions.h> 
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Typedef 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Typedef 0
+
+#define PrintIntegralOrEnumType_Typedef 0
+
+#define PrintIntegralOrEnumType_Typedef 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
+
+#define PrintIntegralOrEnumType_Builtin 0
 //
 //  log_functions.cpp
 //  EnigmaCompiler
@@ -38,7 +86,7 @@ sqlite3 *ali__log__db;
         
         /* Open database */
         int rc = sqlite3_open(db_name.c_str(), &ali__log__db);
-        if(  /*(int)*/ LValueToRValue (23, 13, 15,  ( /*(_Bool)*/ IntegralToBoolean (23, 13, 15,  (rc)) ))  ){
+        if(   /*(int)*/ LValueToRValue (23, 13, 15,  (  /*(_Bool)*/ IntegralToBoolean (23, 13, 15,  (rc)) ))  ){
              (CALL( fprintf(stderr,  CALL_ARG(("Can't open database: %s\n")) ,  CALL_ARG((sqlite3_errmsg(ali__log__db))) ))) ;
             //exit(0);
         }
@@ -65,7 +113,7 @@ sqlite3 *ali__log__db;
         std::ostringstream oss;
         oss << "CREATE TABLE IF NOT EXISTS \"" << table_name << table_name_suffix  << "\" "<< schema;
         char * sErrMsg = 0;
-         CALLR (34, 9, 76,  (ExprWithCleanupsCall (34, 9, 76,  (sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  ARG_UNKNOWN((oss.str().c_str())) , NULL, NULL,  CALL_ARG((&sErrMsg)) ))) )) ;
+         IntegralOrEnumType (34, 9, 76,  ( IntegralOrEnumType (34, 9, 76,  (sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  ARG_UNKNOWN((oss.str().c_str())) , NULL, NULL,  CALL_ARG((&sErrMsg)) ))) )) ;
     }
 }
 #endif 
@@ -93,7 +141,7 @@ sqlite3 *ali__log__db;
         
         std::ostringstream oss;
         oss << "INSERT INTO \"" << table_name << table_name_suffix  << "\" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)";
-         CALLR (44, 9, 95,  (ExprWithCleanupsCall (44, 9, 95,  (sqlite3_prepare_v2( ARG_UNKNOWN((ali__log__db)) ,   ARG_UNKNOWN((oss.str().c_str())) ,  CALL_ARG((oss.str().length())) ,  ARG_UNKNOWN((&stmt)) ,  CALL_ARG((&tail)) ))) )) ;
+         IntegralOrEnumType (44, 9, 95,  ( IntegralOrEnumType (44, 9, 95,  (sqlite3_prepare_v2( ARG_UNKNOWN((ali__log__db)) ,   ARG_UNKNOWN((oss.str().c_str())) ,  CALL_ARG((oss.str().length())) ,  ARG_UNKNOWN((&stmt)) ,  CALL_ARG((&tail)) ))) )) ;
         return stmt;
     }
 }
@@ -120,16 +168,16 @@ sqlite3 *ali__log__db;
  #if NO_INSTRUMENT == false 
  else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 { LOGPARAMETER(48,25,40,stmt);  LOGPARAMETER(48,46,58,unique_id);  LOGPARAMETER(48,69,81,types);  LOGPARAMETER(48,88,100,names);  LOGPARAMETER(48,107,119,values);  LOGPARAMETER(48,127,131,line_num);  LOGPARAMETER(48,141,145,tim); } {
-         CALLR (49, 9, 76,  (sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((1)) ,  ARG_UNKNOWN((unique_id.c_str())) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT))) ;
-         CALLR (50, 9, 72,  (sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((2)) ,  ARG_UNKNOWN((types.c_str())) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT))) ;
-         CALLR (51, 9, 72,  (sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((3)) ,  ARG_UNKNOWN((names.c_str())) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT))) ;
-         CALLR (52, 9, 73,  (sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((4)) ,  ARG_UNKNOWN((values.c_str())) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT))) ;
-         CALLR (53, 9, 44,  (sqlite3_bind_int( ARG_UNKNOWN((stmt)) ,  CALL_ARG((5)) ,  CALL_ARG((line_num)) ))) ;
-         CALLR (54, 9, 39,  (sqlite3_bind_int( ARG_UNKNOWN((stmt)) ,  CALL_ARG((6)) ,  CALL_ARG((tim)) ))) ;
+         IntegralOrEnumType (49, 9, 76,  (sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((1)) ,  ARG_UNKNOWN((unique_id.c_str())) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT))) ;
+         IntegralOrEnumType (50, 9, 72,  (sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((2)) ,  ARG_UNKNOWN((types.c_str())) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT))) ;
+         IntegralOrEnumType (51, 9, 72,  (sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((3)) ,  ARG_UNKNOWN((names.c_str())) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT))) ;
+         IntegralOrEnumType (52, 9, 73,  (sqlite3_bind_text( ARG_UNKNOWN((stmt)) ,  CALL_ARG((4)) ,  ARG_UNKNOWN((values.c_str())) ,  CALL_ARG((-1)) , SQLITE_TRANSIENT))) ;
+         IntegralOrEnumType (53, 9, 44,  (sqlite3_bind_int( ARG_UNKNOWN((stmt)) ,  CALL_ARG((5)) ,  CALL_ARG((line_num)) ))) ;
+         IntegralOrEnumType (54, 9, 39,  (sqlite3_bind_int( ARG_UNKNOWN((stmt)) ,  CALL_ARG((6)) ,  CALL_ARG((tim)) ))) ;
         
         int result = sqlite3_step(stmt);
-         CALLR (57, 9, 37,  (sqlite3_clear_bindings( ARG_UNKNOWN((stmt)) ))) ;
-         CALLR (58, 9, 28,  (sqlite3_reset( ARG_UNKNOWN((stmt)) ))) ;
+         IntegralOrEnumType (57, 9, 37,  (sqlite3_clear_bindings( ARG_UNKNOWN((stmt)) ))) ;
+         IntegralOrEnumType (58, 9, 28,  (sqlite3_reset( ARG_UNKNOWN((stmt)) ))) ;
         return result;
     }
 }
@@ -151,11 +199,11 @@ sqlite3 *ali__log__db;
  #if NO_INSTRUMENT == false 
  else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 {} {
-         (CALL( ExprWithCleanupsCall (63, 9, 46,  (open_sqlite( ARG_UNKNOWN(("enigma_compiler.sqlite")) ))) )) ;
-         (CALL( ExprWithCleanupsCall (64, 9, 176,  (create_table( ARG_UNKNOWN((func_name)) ,  ARG_UNKNOWN(("_changes_unique")) ,  ARG_UNKNOWN((" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ")) ))) )) ;
+         (CALL( open_sqlite( ARG_UNKNOWN(("enigma_compiler.sqlite")) ))) ;
+         (CALL( create_table( ARG_UNKNOWN((func_name)) ,  ARG_UNKNOWN(("_changes_unique")) ,  ARG_UNKNOWN((" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ")) ))) ;
         //create_table(func_name, "_changes_unique", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
-         (CALL( ExprWithCleanupsCall (66, 9, 182,  (create_table( ARG_UNKNOWN((func_name)) ,  ARG_UNKNOWN(("_executions_unique")) ,  ARG_UNKNOWN((" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Start_Time INTEGER, End_Time INTEGER) ")) ))) )) ;
-         (CALL( ExprWithCleanupsCall (67, 9, 178,  (create_table( ARG_UNKNOWN((func_name)) ,  ARG_UNKNOWN(("_executions_all")) ,  ARG_UNKNOWN((" (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Start_Time INTEGER, End_Time INTEGER PRIMARY KEY)")) ))) )) ;
+         (CALL( create_table( ARG_UNKNOWN((func_name)) ,  ARG_UNKNOWN(("_executions_unique")) ,  ARG_UNKNOWN((" (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Start_Time INTEGER, End_Time INTEGER) ")) ))) ;
+         (CALL( create_table( ARG_UNKNOWN((func_name)) ,  ARG_UNKNOWN(("_executions_all")) ,  ARG_UNKNOWN((" (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Start_Time INTEGER, End_Time INTEGER PRIMARY KEY)")) ))) ;
         created_database=true;
     }
 }
@@ -250,8 +298,8 @@ sqlite3 *ali__log__db;
  #if NO_INSTRUMENT == false 
  else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 {} {
-        if ( CALLR (72, 13, 44,  (all_function_executions.empty())) ) return;
-        if (! /*(_Bool)*/ LValueToRValue (73, 14, 30,  (created_database)) )  (CALL( create_tables())) ;
+        if ( IntegralOrEnumType (72, 13, 44,  (all_function_executions.empty())) ) return;
+        if (!  /*(_Bool)*/ LValueToRValue (73, 14, 30,  (created_database)) )  (CALL( create_tables())) ;
         this->execution_number++;
         //std::cout << "\n\n" << func_name << "\n";
         
@@ -260,13 +308,13 @@ sqlite3 *ali__log__db;
         
         
         //stmt_all = start_insert(func_name,"_changes_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
-        ExprWithCleanups (82, 9, 105,  (stmt_unique =  CALLR (82, 23, 105,  (start_insert( ARG_UNKNOWN((func_name)) , ARG_UNKNOWN(("_changes_unique")) , ARG_UNKNOWN((" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ))) )) ;
-        ExprWithCleanups (83, 9, 105,  (stmt_ex_all =  CALLR (83, 23, 105,  (start_insert( ARG_UNKNOWN((func_name)) , ARG_UNKNOWN(("_executions_all")) , ARG_UNKNOWN((" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ))) )) ;
-        ExprWithCleanups (84, 9, 111,  (stmt_ex_unique =  CALLR (84, 26, 111,  (start_insert( ARG_UNKNOWN((func_name)) , ARG_UNKNOWN(("_executions_unique")) , ARG_UNKNOWN((" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ))) )) ;
+         ExprWithCleanups (82, 9, 105,  (stmt_unique =   CALLR (82, 23, 105,  (start_insert( ARG_UNKNOWN((func_name)) , ARG_UNKNOWN(("_changes_unique")) , ARG_UNKNOWN((" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ))) )) ;
+         ExprWithCleanups (83, 9, 105,  (stmt_ex_all =   CALLR (83, 23, 105,  (start_insert( ARG_UNKNOWN((func_name)) , ARG_UNKNOWN(("_executions_all")) , ARG_UNKNOWN((" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ))) )) ;
+         ExprWithCleanups (84, 9, 111,  (stmt_ex_unique =   CALLR (84, 26, 111,  (start_insert( ARG_UNKNOWN((func_name)) , ARG_UNKNOWN(("_executions_unique")) , ARG_UNKNOWN((" VALUES (@SP, @TY, @NA, @VA, @LI, @TI)")) ))) )) ;
         
-         CALLR (86, 9, 78,  (sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  CALL_ARG(("BEGIN TRANSACTION")) , NULL, NULL,  CALL_ARG((&sErrMsg)) ))) ;
+         IntegralOrEnumType (86, 9, 78,  (sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  CALL_ARG(("BEGIN TRANSACTION")) , NULL, NULL,  CALL_ARG((&sErrMsg)) ))) ;
         
-        for(std::vector<vector_of_change>::size_type execution = 0;  /*BinaryOp*/ LHS (88, 69, 78,  (execution))  !=  CALLR (88, 82, 112,  (all_function_executions.size())) ; execution++) {
+        for(std::vector<vector_of_change>::size_type execution = 0;   /*BinaryOp*/ LHS (88, 69, 78,  (execution))  !=  IntegralOrEnumType (88, 82, 112,  (all_function_executions.size())) ; execution++) {
             vector_of_change line_data = all_function_executions[execution];
             std::ostringstream special_id;
             std::ostringstream execution_id, all_execution_id;
@@ -276,7 +324,7 @@ sqlite3 *ali__log__db;
                Change c = *it2;
                 
                 if (it2 == line_data.begin())
-                start_time= /*(unsigned long)*/ LValueToRValue (98, 28, 44,  (c.time_of_change)) ;
+                start_time=  /*(unsigned long)*/ LValueToRValue (98, 28, 44,  (c.time_of_change)) ;
                 
                 std::ostringstream current_line_names;
                 std::ostringstream current_line_values;
@@ -290,25 +338,25 @@ sqlite3 *ali__log__db;
                     
                     unique_special_id << "[" << c.line_num << "," << c.start_loc << "," << c.end_loc << ",\"" << c.value << "\", \""<< c.type_of_var << "\"]";
                     
-                    end_time =  /*(unsigned long)*/ LValueToRValue (112, 32, 48,  (c.time_of_change)) ;
+                    end_time =   /*(unsigned long)*/ LValueToRValue (112, 32, 48,  (c.time_of_change)) ;
                 //std::cout << unique_special_id.str();
                 long long insert_row_id=-1;
                 
-                if ( ExprWithCleanupsCall (116, 22, 90,  (map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end()))  ) {
+                if (  IntegralOrEnumType (116, 22, 90,  (map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end()))  ) {
                     // not found so add to db
                     int change_result = bind_change_sql(stmt_unique,unique_special_id.str(), current_line_types.str(), current_line_names.str(), current_line_values.str(), c.line_num, end_time);
                     long long last_row;
-                    if ( /*BinaryOp*/ LHS (120, 25, 38,  (change_result))  == SQLITE_DONE)
-                    last_row =  CALLR (121, 32, 71,  (sqlite3_last_insert_rowid( ARG_UNKNOWN((ali__log__db)) ))) ;
+                    if (  /*BinaryOp*/ LHS (120, 25, 38,  (change_result))  == SQLITE_DONE)
+                    last_row =  IntegralOrEnumType (121, 32, 71,  (sqlite3_last_insert_rowid( ARG_UNKNOWN((ali__log__db)) ))) ;
                     else
                         last_row = -1;
                     
-                    if ( /*BinaryOp*/ LHS (125, 25, 33,  (last_row))  !=-1) {
-                        ExprWithCleanups (126, 25, 75,  (map_of_sqlrows[unique_special_id.str()] =  /*(long long)*/ LValueToRValue (126, 67, 75,  (last_row)) )) ; insert_row_id =  /*(long long)*/ LValueToRValue (126, 93, 101,  (last_row)) ;}
+                    if (  /*BinaryOp*/ LHS (125, 25, 33,  (last_row))  !=-1) {
+                         IntegralOrEnumType (126, 25, 75,  (map_of_sqlrows[unique_special_id.str()] =   /*(long long)*/ LValueToRValue (126, 67, 75,  (last_row)) )) ; insert_row_id =   /*(long long)*/ LValueToRValue (126, 93, 101,  (last_row)) ;}
                     else
-                    {ExprWithCleanups (128, 22, 66,  (map_of_sqlrows[unique_special_id.str()] = -1)) ; insert_row_id = -1;}
+                    { IntegralOrEnumType (128, 22, 66,  (map_of_sqlrows[unique_special_id.str()] = -1)) ; insert_row_id = -1;}
                 } else {
-                    ExprWithCleanups (130, 21, 76,  (insert_row_id =  /*(mapped_type)*/ LValueToRValue (130, 37, 76,  (map_of_sqlrows[unique_special_id.str()])) )) ;
+                     IntegralOrEnumType (130, 21, 76,  (insert_row_id =   /*(mapped_type)*/ LValueToRValue (130, 37, 76,  (map_of_sqlrows[unique_special_id.str()])) )) ;
                 }
                 
                 execution_id << insert_row_id << ","; //unique_special_id.str();
@@ -319,14 +367,14 @@ sqlite3 *ali__log__db;
            
                 unsigned long unique_that_was_just_inserted = sqlite3_last_insert_rowid(ali__log__db);
                 //all_execution_id << unique_that_was_just_inserted;
-                 CALLR (141, 17, 124,  (ExprWithCleanupsCall (141, 17, 124,  (bind_change_sql( ARG_UNKNOWN((stmt_ex_all)) , ARG_UNKNOWN((execution_id.str())) /*all_execution_id.str()*/,  ARG_UNKNOWN(("")) ,  ARG_UNKNOWN(("")) ,  ARG_UNKNOWN(("")) ,  CALL_ARG((start_time)) ,  CALL_ARG((end_time)) ))) )) ;
+                 IntegralOrEnumType (141, 17, 124,  ( IntegralOrEnumType (141, 17, 124,  (bind_change_sql( ARG_UNKNOWN((stmt_ex_all)) , ARG_UNKNOWN((execution_id.str())) /*all_execution_id.str()*/,  ARG_UNKNOWN(("")) ,  ARG_UNKNOWN(("")) ,  ARG_UNKNOWN(("")) ,  CALL_ARG((start_time)) ,  CALL_ARG((end_time)) ))) )) ;
             
             
                 
             }
         
         
-         CALLR (148, 9, 76,  (sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  CALL_ARG(("END TRANSACTION")) , NULL, NULL,  CALL_ARG((&sErrMsg)) ))) ;
+         IntegralOrEnumType (148, 9, 76,  (sqlite3_exec( ARG_UNKNOWN((ali__log__db)) ,  CALL_ARG(("END TRANSACTION")) , NULL, NULL,  CALL_ARG((&sErrMsg)) ))) ;
         //sqlite3_close(ali__log__db);
          (CALL( all_function_executions.clear())) ; //now that they have been writtern destroy them
     }
@@ -349,7 +397,7 @@ template <class T> std::string TToStr(T& t)
  else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 { LOGPARAMETER(154,39,42,t); } {
     std::ostringstream oss;
-     /*BinaryOp*/ LHS (157, 5, 8,  (oss))  << t;
+      /*BinaryOp*/ LHS (157, 5, 8,  (oss))  << t;
     return oss.str();
 }
 }
@@ -370,7 +418,7 @@ template <class T> std::string TToStr(T* t)
  else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 { LOGPARAMETER(161,39,42,t); } {
     std::ostringstream oss;
-     /*BinaryOp*/ LHS (164, 5, 8,  (oss))  << t;
+      /*BinaryOp*/ LHS (164, 5, 8,  (oss))  << t;
     return oss.str();
 }
 }
@@ -405,7 +453,7 @@ unsigned long report_memory(void) {
                                    TASK_BASIC_INFO,
                                    (task_info_t)&info,
                                    &size);
-    if(  /*BinaryOp*/ LHS (175, 9, 13,  (kerr))  == KERN_SUCCESS ) {
+    if(   /*BinaryOp*/ LHS (175, 9, 13,  (kerr))  == KERN_SUCCESS ) {
         //printf("Memory in use (in bytes): %u", info.resident_size);
         return info.resident_size;
     } else {
@@ -441,7 +489,7 @@ void segfault_handler(int sig) {
     size_t size;
     
     // get void*'s for all entries on the stack
-    size =  CALLR (190, 12, 32,  ( /*(size_t)*/ IntegralCast (190, 12, 32,  (backtrace( CALL_ARG((array)) ,  CALL_ARG((10)) ))) )) ;
+    size =  IntegralOrEnumType (190, 12, 32,  (  /*(size_t)*/ IntegralCast (190, 12, 32,  (backtrace( CALL_ARG((array)) ,  CALL_ARG((10)) ))) )) ;
     
     // print out all the frames to stderr
      (CALL( fprintf(stderr,  CALL_ARG(("Error: signal %d:\n")) ,  CALL_ARG((sig)) ))) ;
@@ -461,9 +509,10 @@ void segfault_handler(int sig) {
  #if NO_INSTRUMENT == false 
  else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); 
 {} {
-         CALLR (198, 9, 42,  (signal(SIGSEGV,  CALL_ARG((segfault_handler)) ))) ;
+          CALLR (198, 9, 42,  (signal(SIGSEGV,  CALL_ARG((segfault_handler)) ))) ;
     }
 }
 #endif 
 }
 }
+

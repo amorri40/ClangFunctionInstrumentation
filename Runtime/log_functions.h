@@ -71,6 +71,11 @@
 #define CXXThisExpr(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg))) //(stdlogger,arg)
 #define RETURN_VAL(line,beg,end,arg) arg //(stdlogger,arg)
 
+#define Atomic(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
+#define Fundamental(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
+#define EnumLog(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
+#define IntegralOrEnumType(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
+
 #define stdlogger 0
 //#define stdlogger (std::cout << __FILE__ << ":" << __LINE__ << ":" << __PRETTY_FUNCTION__)
 
@@ -174,6 +179,19 @@ namespace ali_clang_plugin_runtime {
         static long test(U*);
         
         static const bool ali_clang_value = sizeof(test<T>(nullptr)) == 1;
+    };
+    
+    struct cout_redirect {
+        cout_redirect( std::streambuf * new_buffer )
+        : old( std::cout.rdbuf( new_buffer ) )
+        { }
+        
+        ~cout_redirect( ) {
+            std::cout.rdbuf( old );
+        }
+        
+    private:
+        std::streambuf * old;
     };
     
     
@@ -334,6 +352,27 @@ namespace ali_clang_plugin_runtime {
         const std::basic_ofstream<T>& log_change(int line_num, int start_loc, int end_loc, const std::basic_ofstream<T>& val) { ali_clang_add_to_map("std::ios","iostream") return val;
         }
         
+        
+        /*template <class T>
+        T log_builtin(int line_num, int start_loc, int end_loc, T val) {
+            std::ostringstream v;
+            v << val;
+            ali_clang_add_to_map(typeid(T).name(),v.str()) return val;
+        }*/
+        
+        template <class T>
+        const T& log_builtin(int line_num, int start_loc, int end_loc, const T& val) {
+            std::ostringstream v;
+            v << val;
+            ali_clang_add_to_map(typeid(T).name(),v.str()) return val;
+        }
+        
+        template <class T>
+        T& log_builtin(int line_num, int start_loc, int end_loc, T& val) {
+            std::ostringstream v;
+            v << val;
+            ali_clang_add_to_map(typeid(T).name(),v.str()) return val;
+        }
         
         /*
          Templates to catch the rest

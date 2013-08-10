@@ -63,8 +63,115 @@ inline void insert_before_after(Expr *st, Rewriter* rewriter, std::string before
         }
     }
 }
+std::ostringstream additional_file_content;
+inline std::string handle_type(Expr *st){
+    QualType qt = st->getType();
+    //ExprValueKind evk = st->getValueKind();
+    const Type* tp = qt.getTypePtr();
+    if (tp->isVoidType()) return "Void";
+    if (tp->isPointerType()) {
+        //tp=(tp->getPointeeCXXRecordDecl()->getTypeForDecl());
+        qt = tp->getPointeeType();
+        tp = qt.getTypePtr();
+        return "";
+    }
+    if (tp->hasPointerRepresentation()) {
+        //RecordDecl* rd = qt->getAsCXXRecordDecl();
+        
+        additional_file_content << "\n#define PrintPointerRepr_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";
+    }
+    if (tp->isDependentType()) {
+        //RecordDecl* rd = qt->getAsCXXRecordDecl();
+        additional_file_content << "\n#define PrintDependentType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";
+    }
+    if (tp->isVectorType()) {
+        additional_file_content << "\n#define PrintVectorType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";
+    }
+    if (tp->isAtomicType()) {//tp->isScalarType()) {
+        //ScalarTypeKind stk = tp->getScalarTypeKind();
+        //Type::STK_
+        
+        additional_file_content << "\n#define PrintAtomicType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "Atomic";
+    }
+    if (tp->isClassType()) {
+        CXXRecordDecl* rd = tp->getAsCXXRecordDecl();
+        additional_file_content << "\n#define PrintClassType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";
+    }
+    if (tp->isEnumeralType()) {
+        additional_file_content << "\n#define PrintEnumType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "EnumLog";
+    }
+    
+    if (tp->isStructureType()) {
+        additional_file_content << "\n#define PrintStructType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";//return "EnumLog";
+    }
+    
+    if (tp->isUnionType()) {
+        additional_file_content << "\n#define PrintUnionType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";//return "EnumLog";
+    }
+    if (tp->isReferenceType()) {
+        additional_file_content << "\n#define PrintReferenceType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";//return "EnumLog";
+    }
+    if (tp->isPlaceholderType()) {
+        additional_file_content << "\n#define PrintPlaceholderType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";
+    }
+    
+    /*if (tp->isArithmeticType()) {
+        additional_file_content << "\n#define PrintArithmeticType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";//return "EnumLog";
+    }*/
+    
+    if (tp->isIntegralOrEnumerationType()) {
+        
+        //additional_file_content << "\n#define PrintIntegralOrEnumType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "IntegralOrEnumType";//return "EnumLog";
+    }
+    
+    if (tp->isAggregateType()) {
+        additional_file_content << "\n#define PrintAggregateType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";//return "EnumLog";
+    }
+    
+    
+    if (tp->isRecordType()) {
+        //const RecordType* struc = tp->getAsStructureType();
+        //RecordDecl* rd = struc->getDecl();
+        //TagDecl* td = rd->getDefinition();
+        
+         additional_file_content << "\n#define Print_"<< /*rd->getQualifiedNameAsString() <<*/ " 0\n" ;
+        return "";
+    }
+    
+    if (tp->isObjectType()) {
+        additional_file_content << "\n#define PrintObjectType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "";
+    }
+    
+    if (tp->isFundamentalType()) {
+        additional_file_content << "\n#define PrintFundamentalType_"<< tp->getTypeClassName() << " 0\n" ;
+        return "Fundamental";
+    }
+    
+    //
+    if (tp->isAtomicType() || tp->isEnumeralType()) {//|| tp->hasIntegerRepresentation()) {
+        return "";//return "BuiltIn";
+    }
+    else {
+        //additional_file_content << "\n#define Print"<< qt->getTypeClassName() << " 0\n" ;
+    }
+    return "";
+}
 
-inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name, bool beforeEnd) {
+inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name, bool beforeEnd, bool checktype) {
     SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
     SourceLocation end = clang::Lexer::getLocForEndOfToken(st->getLocEnd(),0, rewriter->getSourceMgr(), rewriter->getLangOpts());
     
@@ -72,8 +179,14 @@ inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name
     int beg = rewriter->getSourceMgr().getPresumedColumnNumber(begining);
     int e = rewriter->getSourceMgr().getPresumedColumnNumber(end);
     
+    if (checktype) {
+    std::string typest = handle_type(st);
+    if (typest ==  "Void") return;
+    if (typest != "") macro_name = typest;
+    }
+    
     std::ostringstream macro_call;
-    macro_call << macro_name << " ("<< line << ", ";
+    macro_call << " " << macro_name << " ("<< line << ", ";
     macro_call << beg << ", " << e <<", ";
     macro_call << " (";
     
@@ -131,7 +244,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             else {
             stringstr << " /*(" << implicitcast->getType().getAsString() << ")*/ " << implicitcast->getCastKindName();
             }
-            wrap_with_macro(implicitcast, rewriter, stringstr.str(), true);
+            wrap_with_macro(implicitcast, rewriter, stringstr.str(), true,false);
             
             
         }
@@ -142,9 +255,9 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
         else if (isa<ParenExpr>(*statement_from_it)) {
             ParenExpr *paren = cast<ParenExpr>(statement_from_it);
             if (paren->isLValue())
-                wrap_with_macro(paren, rewriter, " LVALUE_PAREN", true);
+                wrap_with_macro(paren, rewriter, " LVALUE_PAREN", true,true);
             else
-                wrap_with_macro(paren, rewriter, " RVALUE_PAREN", true);
+                wrap_with_macro(paren, rewriter, " RVALUE_PAREN", true,true);
         }
          else if (isa<DeclStmt>(*statement_from_it)) {
             DeclStmt *declStatement = cast<DeclStmt>(statement_from_it);
@@ -172,7 +285,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             if (dre->getOpcodeStr() == ",") return; //ignore comma operator
             if (isa<CXXNewExpr>(dre->getRHS())) return; //don't handle initilisations
             if (!dre->isAssignmentOp())
-                 wrap_with_macro(dre->getLHS(), rewriter, " /*BinaryOp*/ LHS", true);
+                 wrap_with_macro(dre->getLHS(), rewriter, " /*BinaryOp*/ LHS", true,false);
             modify_statements(rewriter,dre->getRHS(),f);
             return;
         }
@@ -219,7 +332,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
         else if (isa<DeclRefExpr>(*statement_from_it)) {
            DeclRefExpr *dre = cast<DeclRefExpr>(statement_from_it);
             if (dre->isRValue()) {
-                wrap_with_macro(dre, rewriter, " RHS", true);
+                wrap_with_macro(dre, rewriter, " RHS", true,true);
                 
             } else if ( dre->isXValue()) {
                
@@ -247,11 +360,11 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             if (!(dre->getCallReturnType()->isVoidType()) && !dre->isBuiltinCall())
             {
                 if (dre->getCallReturnType()->isAtomicType())
-                    wrap_with_macro(dre, rewriter, " CALL_R_ATOMIC", false);
+                    wrap_with_macro(dre, rewriter, " CALL_R_ATOMIC", false,true);
                 else if (dre->isXValue())
-                    wrap_with_macro(dre, rewriter, " CALLX", false);
+                    wrap_with_macro(dre, rewriter, " CALLX", false,true);
                 else
-                    wrap_with_macro(dre, rewriter, " CALLR", false);
+                    wrap_with_macro(dre, rewriter, " CALLR", false,true);
                 
             }
             else
@@ -279,14 +392,14 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
         else if (isa<ExprWithCleanups>(*statement_from_it)) {
             ExprWithCleanups *dre = cast<ExprWithCleanups>(statement_from_it);
             if (isa<CallExpr>(dre->getSubExpr()))
-                wrap_with_macro(dre->getSubExpr(), rewriter, "ExprWithCleanupsCall", false);
-            else wrap_with_macro(dre, rewriter, dre->getStmtClassName(), false);
+                wrap_with_macro(dre->getSubExpr(), rewriter, "ExprWithCleanupsCall", false,true);
+            else wrap_with_macro(dre, rewriter, dre->getStmtClassName(), false,true);
             
         }
         else if (isa<Expr>(*statement_from_it)) {
             Expr *dre = cast<Expr>(statement_from_it);
             
-        wrap_with_macro(dre, rewriter, dre->getStmtClassName(), false);
+        wrap_with_macro(dre, rewriter, dre->getStmtClassName(), false,true);
         }
         else {
 //            std::ostringstream class_name;
@@ -316,8 +429,25 @@ bool modify_main_function(Stmt *s, Rewriter* rewriter) {
     return true;
 }
 
+
 bool MyRecursiveASTVisitor::VisitRecordDecl(clang::RecordDecl *rd) {//::VisitTypeDecl(clang::TypeDecl *td){
     //rd->dumpColor();
+    /*if (rd->isAnonymousStructOrUnion()) return true;
+    if (rd->isFromASTFile()) return true;
+    if (rd->isHidden()) return true;
+    if (rd->isImplicit()) return true;
+    
+    //if (!rd->isReferenced()) return true;
+    //if (!rd->isUsed()) return true;
+    if (rd->isCompleteDefinition() || rd->isBeingDefined()) {
+        if (rd->isFileContext()) {
+            additional_file_content << "\n#define Print"<< rd->getNameAsString() << " 0\n" ;
+        } else {
+            additional_file_content << "\n#define NotFilePrint_"<< rd->getNameAsString() << "_" << rd->getKindName() << "(arg) arg\n" ;
+        }
+    }
+    
+    */
     return true;
 }
 

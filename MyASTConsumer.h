@@ -14,7 +14,7 @@
 #include "clang/Rewrite/Frontend/Rewriters.h"
 #include "clang/Rewrite/Core/Rewriter.h"
 #include "MyRecursiveASTVisitor.h"
-
+extern std::ostringstream additional_file_content;
 /*
  Ast consumer loops over the AST and calls the RecursiveASTVisitor field for each declaration
  */
