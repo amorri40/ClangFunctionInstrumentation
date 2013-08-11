@@ -1,54 +1,6 @@
 //Debug file auto generated from clanginstrumentation 
 extern void start_log_function(); extern void end_log_function(); 
 #include <log_functions.h> 
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Typedef 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Typedef 0
-
-#define PrintIntegralOrEnumType_Typedef 0
-
-#define PrintIntegralOrEnumType_Typedef 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
-
-#define PrintIntegralOrEnumType_Builtin 0
 //
 //  log_functions.cpp
 //  EnigmaCompiler

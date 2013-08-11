@@ -75,6 +75,8 @@
 #define Fundamental(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
 #define EnumLog(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
 #define IntegralOrEnumType(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
+#define StringType(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
+#define ClassWithOperator(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
 
 #define stdlogger 0
 //#define stdlogger (std::cout << __FILE__ << ":" << __LINE__ << ":" << __PRETTY_FUNCTION__)
@@ -85,7 +87,7 @@
 /*
  Main defines
  */
-#define ali_clang_add_to_map(type,val) line_data.push_back((Change){CHANGE_RHS,type,line_num, start_loc,end_loc,(val),clock()});
+#define ali_clang_add_to_map(type,val) line_data.push_back((ali_clang_plugin_runtime::Change){ali_clang_plugin_runtime::CHANGE_RHS,type,line_num, start_loc,end_loc,(val),clock()});
 #define FLUSH_DB_FOR_EACH_CHANGE false 
 #define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(); line_data.clear();}}
 //slower but effective for segfaults
@@ -231,6 +233,10 @@ namespace ali_clang_plugin_runtime {
             //printf(" >> Log Destructor: %s Mem diff:%ld bytes Time:%f \n",ali_function_db->func_name.c_str(),mem_difference,time_difference);
         }
         
+        
+        void log_custom(int line_num, int start_loc, int end_loc, std::string ty,  std::string val) { ali_clang_add_to_map(ty,val)
+            ;
+        }
         /*
          constant overloads
          */

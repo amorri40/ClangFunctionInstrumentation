@@ -13,7 +13,7 @@
 #include <iostream>
 #include <sstream>
 
-
+FunctionDecl * current_function;
 /*
  Check it doesn't contain bad statements which would make the debug code not work
  */
@@ -64,7 +64,7 @@ inline void insert_before_after(Expr *st, Rewriter* rewriter, std::string before
     }
 }
 std::ostringstream additional_file_content;
-inline std::string handle_type(Expr *st){
+inline std::string handle_type(Expr *st,Rewriter* rewriter){
     QualType qt = st->getType();
     //ExprValueKind evk = st->getValueKind();
     const Type* tp = qt.getTypePtr();
@@ -97,9 +97,78 @@ inline std::string handle_type(Expr *st){
         additional_file_content << "\n#define PrintAtomicType_"<< tp->getTypeClassName() << " 0\n" ;
         return "Atomic";
     }
-    if (tp->isClassType()) {
+    if (tp->isClassType() || tp->isStructureType()) {
         CXXRecordDecl* rd = tp->getAsCXXRecordDecl();
-        additional_file_content << "\n#define PrintClassType_"<< tp->getTypeClassName() << " 0\n" ;
+        //rd->getTagKind()
+        NamedDecl* nd = rd->getUnderlyingDecl();
+        
+        
+        if (nd->getNameAsString() == "basic_string") {
+        return "StringType";
+        }
+        
+        if (rd->isDependentType()) return ""; //don't handle template classes yet
+        if (rd->isDependentContext()) return "";
+        if (rd->isTemplateDecl()) return "";
+        if (isa<ClassTemplateSpecializationDecl>(rd)) return "";
+        
+        
+        std::pair<  clang::CXXRecordDecl::conversion_iterator, clang::CXXRecordDecl::conversion_iterator > p = rd->getVisibleConversionFunctions();
+        for (CXXRecordDecl::conversion_iterator it=p.first; it!=p.second; it++) {
+            CXXConversionDecl* conver = cast<CXXConversionDecl>(*it);
+            //conver->getConversionType()
+            QualType q = conver->getResultType();
+            
+            //if (q.getTypePtr()->isAnyCharacterType()) {
+            //    additional_file_content << "\n// Conver:"+conver->getNameAsString()+"\n";
+            //}
+        }
+        
+        // loop through the methods
+        for (CXXRecordDecl::method_iterator it=rd->method_begin(); it!=rd->method_end(); it++) {
+            CXXMethodDecl* meth = cast<CXXMethodDecl>(*it);
+            //additional_file_content << "\n// Meth:"+meth->getNameAsString()+"\n";
+        }
+        
+        if (!rd->field_empty()) {
+            std::ostringstream log_method_body, whole_log_data;
+            
+            
+            
+            log_method_body <<"{ std::ostringstream v; v";
+            // loop through the fields
+            for (CXXRecordDecl::field_iterator it=rd->field_begin(); it!=rd->field_end(); it++) {
+                FieldDecl* fie = cast<FieldDecl>(*it);
+                
+                if (fie->getVisibility()== DefaultVisibility) {
+                    
+                    if (fie->getType()->isIntegralOrEnumerationType())
+                        log_method_body << " << val."+fie->getNameAsString();
+                    /*
+                     T& log_builtin(int line_num, int start_loc, int end_loc, T& val) {
+                     std::ostringstream v;
+                     v << val;
+                     ali_clang_add_to_map(typeid(T).name(),v.str()) return val;
+                     }
+                     */
+                }
+            }
+            log_method_body << "; inst_func_db.log_custom(line_num, start_loc, end_loc, typeid(val).name(),v.str()); return val;}\n";
+            
+            
+            whole_log_data << "#ifndef PrintClassType_"<<nd->getNameAsString()<<"\n";
+            whole_log_data << "__attribute__((weak)) std::ostream & operator<< (std::ostream &out, "<<nd->getQualifiedNameAsString()<<" const &t) {return out;}";
+            whole_log_data << "\ntemplate <class T> T& log_builtin"<< nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T& val) "<< log_method_body.str();
+            whole_log_data << "\ntemplate <class T> const T& log_builtin"<< nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, const T& val) "<< log_method_body.str();
+            whole_log_data << "#define PrintClassType_"<< nd->getNameAsString() << "(line,beg,end,arg) (stdlogger,log_builtin"<< nd->getNameAsString() << "(inst_func_db,line,beg,end,(arg)))\n";
+            whole_log_data << "\n#endif\n";
+            SourceLocation begining = clang::Lexer::GetBeginningOfToken(current_function->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
+            bool b = rewriter->InsertTextBefore(begining, whole_log_data.str());
+            
+            return "PrintClassType_"+ nd->getNameAsString();
+        }
+        
+        
         return "";
     }
     if (tp->isEnumeralType()) {
@@ -108,7 +177,11 @@ inline std::string handle_type(Expr *st){
     }
     
     if (tp->isStructureType()) {
-        additional_file_content << "\n#define PrintStructType_"<< tp->getTypeClassName() << " 0\n" ;
+        const RecordType* rt = tp->getAsStructureType();
+        RecordDecl* rd = rt->getDecl();
+        
+        
+        additional_file_content << "\n#define PrintStructType_"<< rd->getNameAsString() << " 0\n" ;
         return "";//return "EnumLog";
     }
     
@@ -180,7 +253,7 @@ inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name
     int e = rewriter->getSourceMgr().getPresumedColumnNumber(end);
     
     if (checktype) {
-    std::string typest = handle_type(st);
+    std::string typest = handle_type(st,rewriter);
     if (typest ==  "Void") return;
     if (typest != "") macro_name = typest;
     }
@@ -217,8 +290,7 @@ void handle_call_argument(Expr* arg, Rewriter* rewriter) {
 
 void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
     
-    
-    
+    current_function = f;
     
     Stmt* statement_from_it = s;//*it;
         
