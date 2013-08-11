@@ -20,6 +20,9 @@
 #include <execinfo.h>
 #include <signal.h>
 
+#define private public
+//#define class struct
+
 #define SSTR( x ) (dynamic_cast< std::ostringstream & >( \
 ( std::ostringstream() << std::dec << x ) ).str())
 
@@ -27,11 +30,11 @@
 #define SEGFAULTHANDLE ali_clang_plugin_runtime::install_handlers();
 
 #define LHS(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
-#define ARG_UNKNOWN(arg) (stdlogger, inst_func_db.log_change(0,0,0,(arg)))
+#define ARG_UNKNOWN(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define LOGPARAMETER(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define RHS(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define CALL_ARG(arg) (stdlogger,inst_func_db.log_change(0,0,0,(arg)))
-#define CALL_LVALUE_ARG(arg) (stdlogger,inst_func_db.log_lvalue(0,0,0,(arg))) //(std::cout << __PRETTY_FUNCTION__ << "\n",arg)
+#define CALL_LVALUE_ARG(line,beg,end,arg) (stdlogger,inst_func_db.log_lvalue(0,0,0,(arg))) //(std::cout << __PRETTY_FUNCTION__ << "\n",arg)
 #define OPERATOR_RHS_ARG_CANONICAL(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define MEMBER_CALL(arg) (stdlogger,arg)
 #define MEMBER_EXPR(arg) (stdlogger,arg)

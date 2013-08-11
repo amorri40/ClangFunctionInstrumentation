@@ -135,15 +135,18 @@ inline std::string handle_type(Expr *st,Rewriter* rewriter){
             
             
             
-            log_method_body <<"{ std::ostringstream v; v";
+            log_method_body <<"{ std::ostringstream v; v << \"{\"";
             // loop through the fields
             for (CXXRecordDecl::field_iterator it=rd->field_begin(); it!=rd->field_end(); it++) {
                 FieldDecl* fie = cast<FieldDecl>(*it);
                 
+                
+                
                 if (fie->getVisibility()== DefaultVisibility) {
                     
+                    
                     if (fie->getType()->isIntegralOrEnumerationType())
-                        log_method_body << " << val."+fie->getNameAsString();
+                        log_method_body << " << \"'"<<fie->getNameAsString()<<"':\" << val."+fie->getNameAsString()<<" << \", \"";
                     /*
                      T& log_builtin(int line_num, int start_loc, int end_loc, T& val) {
                      std::ostringstream v;
@@ -153,7 +156,7 @@ inline std::string handle_type(Expr *st,Rewriter* rewriter){
                      */
                 }
             }
-            log_method_body << "; inst_func_db.log_custom(line_num, start_loc, end_loc, typeid(val).name(),v.str()); return val;}\n";
+            log_method_body << "<< \"}\"; inst_func_db.log_custom(line_num, start_loc, end_loc, typeid(val).name(),v.str()); return val;}\n";
             
             
             whole_log_data << "#ifndef PrintClassType_"<<nd->getNameAsString()<<"\n";
@@ -172,18 +175,18 @@ inline std::string handle_type(Expr *st,Rewriter* rewriter){
         return "";
     }
     if (tp->isEnumeralType()) {
-        additional_file_content << "\n#define PrintEnumType_"<< tp->getTypeClassName() << " 0\n" ;
+        //additional_file_content << "\n#define PrintEnumType_"<< tp->getTypeClassName() << " 0\n" ;
         return "EnumLog";
     }
     
-    if (tp->isStructureType()) {
+    /*if (tp->isStructureType()) {
         const RecordType* rt = tp->getAsStructureType();
         RecordDecl* rd = rt->getDecl();
         
         
         additional_file_content << "\n#define PrintStructType_"<< rd->getNameAsString() << " 0\n" ;
         return "";//return "EnumLog";
-    }
+    }*/
     
     if (tp->isUnionType()) {
         additional_file_content << "\n#define PrintUnionType_"<< tp->getTypeClassName() << " 0\n" ;
@@ -270,21 +273,24 @@ void handle_call_argument(Expr* arg, Rewriter* rewriter) {
     if (arg == NULL) return;
     
     if (arg->isLValue())
-        insert_before_after(arg, rewriter, " CALL_LVALUE_ARG((", ")) ", true);
-    else if (arg->getType()->hasIntegerRepresentation()) {
+        //insert_before_after(arg, rewriter, " CALL_LVALUE_ARG((", ")) ", true);
+        wrap_with_macro(arg, rewriter, " CALL_LVALUE_ARG", true, true);
+    /*else if (arg->getType()->hasIntegerRepresentation()) {
         insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
     } else if (arg->getType()->isBuiltinType()) {
         insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
-    } else if (arg->getType()->isPointerType()) {
+    } /*else if (arg->getType()->isPointerType()) {
         if (arg->getType().isCanonical())
           insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
         else
             insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
-    }
-    else if (arg->getType()->hasPointerRepresentation()) {
-        insert_before_after(arg, rewriter, " CALL_ARG(( ", ")) ", true);
-    } else {
-        insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
+    }*/
+    /*else if (arg->getType()->hasPointerRepresentation()) {
+        //insert_before_after(arg, rewriter, " CALL_ARG(( ", ")) ", true);
+        wrap_with_macro(arg, rewriter, " CALL_ARG", true, true);
+    }*/ else {
+        //insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
+        wrap_with_macro(arg, rewriter, " ARG_UNKNOWN", true, true);
     }
 }
 
@@ -357,7 +363,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             if (dre->getOpcodeStr() == ",") return; //ignore comma operator
             if (isa<CXXNewExpr>(dre->getRHS())) return; //don't handle initilisations
             if (!dre->isAssignmentOp())
-                 wrap_with_macro(dre->getLHS(), rewriter, " /*BinaryOp*/ LHS", true,false);
+                 wrap_with_macro(dre->getLHS(), rewriter, " /*BinaryOp*/ LHS", true,true);
             modify_statements(rewriter,dre->getRHS(),f);
             return;
         }
