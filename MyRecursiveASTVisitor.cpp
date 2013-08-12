@@ -85,6 +85,7 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
     }
     
     if (tp->isPointerType()) {
+        additional_file_content << "\n#define WasPointerToPointer_"<< tp->getTypeClassName() << " 0\n" ;
     return ""; //still a pointer so just return
     }
     
@@ -114,8 +115,8 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
         return "StringType";
         }
         
-        if (rd->isDependentType()) return ""; //don't handle template classes yet
-        if (rd->isDependentContext()) return "";
+        //if (rd->isDependentType()) return ""; //don't handle template classes yet
+        //if (rd->isDependentContext()) return "";
         if (rd->isTemplateDecl()) return "";
         if (isa<ClassTemplateSpecializationDecl>(rd)) return "";
         
@@ -137,8 +138,6 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
             CXXMethodDecl* meth = cast<CXXMethodDecl>(*it);
             //additional_file_content << "\n// Meth:"+meth->getNameAsString()+"\n";
         }
-        
-        if (pointer_type && qt->isLValueReferenceType()) return "";
         
         std::string getMember = ".";
         std::string refchar = "&";
@@ -190,17 +189,11 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
             }
             
             if (pointer_type) {
-                //if (lvalue) return "";
                 
-            whole_log_data << "\ntemplate <class T> T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T"<< refchar <<" val) {return val;}\n";//<< log_method_body.str();
-                /*whole_log_data << "\ntemplate <class T> T*& log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T*& val) {return val;}\n";//<< log_method_body.str();
-                 */
-                whole_log_data << "\ntemplate <class T> const T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, const T"<< refchar <<" val) {return val;}\n";//<< log_method_body.str();
-                /*whole_log_data << "\ntemplate <class T> T& log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T& val) {return val;}\n";//<< log_method_body.str();
-                 */
-                /*whole_log_data << "\ntemplate <class T> const T& log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, const T& val) {return val;}\n";//<< log_method_body.str();
-                */
-                /*whole_log_data << "\ntemplate <class T> T*& log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T*&& val) {return val;}\n";*/
+            whole_log_data << "\ntemplate <class T> T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T"<< refchar <<" val) "<< log_method_body.str();
+                
+                whole_log_data << "\ntemplate <class T> const T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, const T"<< refchar <<" val) "<< log_method_body.str();
+                
                 
             }
             
@@ -215,10 +208,6 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
             additional_file_content << whole_log_data.str();
             
             //rewriter->InsertTextBefore(begining, whole_log_data.str());
-            
-           
-            
-            //if (pointer_type) return "";
             
             return "PrintClassType_"+log_prefix+nd->getNameAsString();
         }
@@ -659,8 +648,8 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
             int beg = rewriter.getSourceMgr().getPresumedColumnNumber(pvd->getLocStart());
             int e = rewriter.getSourceMgr().getPresumedColumnNumber(pvd->getLocEnd());
             
-            std::string log_param = handle_type(pvd->getType(), &rewriter,true);
-            if (log_param == "" || log_param == "Void") log_param = "LOGPARAMETER";
+            std::string log_param = handle_type(pvd->getType(), &rewriter,false);
+            if (log_param == "" || log_param == "Void") {log_param = "LOGPARAMETER";}
             
             params_to_log << " "<<log_param<<"(" << line << "," << beg << "," << e << ",";
             params_to_log << pvd->getNameAsString() << "); ";
