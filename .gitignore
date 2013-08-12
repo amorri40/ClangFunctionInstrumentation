@@ -14,3 +14,5 @@ Runtime/auto_generate.cpp
 *.sqlite
 
 *.pyc
+
+Runtime/log_functions.debug.cpp

@@ -29,12 +29,12 @@
 #define NO_INSTRUMENT false
 #define SEGFAULTHANDLE ali_clang_plugin_runtime::install_handlers();
 
-#define LHS(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
+#define LHS(line,beg,end,arg) (stdlogger,inst_func_db.log_lvalue(line,beg,end,(arg)))//(stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define ARG_UNKNOWN(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define LOGPARAMETER(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define RHS(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define CALL_ARG(arg) (stdlogger,inst_func_db.log_change(0,0,0,(arg)))
-#define CALL_LVALUE_ARG(line,beg,end,arg) (stdlogger,inst_func_db.log_lvalue(0,0,0,(arg))) //(std::cout << __PRETTY_FUNCTION__ << "\n",arg)
+#define CALL_LVALUE_ARG(line,beg,end,arg) (stdlogger,inst_func_db.log_lvalue(line,beg,end,(arg))) //(std::cout << __PRETTY_FUNCTION__ << "\n",arg)
 #define OPERATOR_RHS_ARG_CANONICAL(line,beg,end,arg) (stdlogger, inst_func_db.log_change(line,beg,end,(arg)))
 #define MEMBER_CALL(arg) (stdlogger,arg)
 #define MEMBER_EXPR(arg) (stdlogger,arg)
@@ -81,6 +81,8 @@
 #define StringType(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
 #define ClassWithOperator(line,beg,end,arg) (stdlogger,inst_func_db.log_builtin(line,beg,end,(arg)))
 
+#define TemporaryObjectExpr(line,beg,end,arg) (stdlogger,inst_func_db.log_change(line,beg,end,(arg)))
+
 #define stdlogger 0
 //#define stdlogger (std::cout << __FILE__ << ":" << __LINE__ << ":" << __PRETTY_FUNCTION__)
 
@@ -90,8 +92,8 @@
 /*
  Main defines
  */
-#define ali_clang_add_to_map(type,val) line_data.push_back((ali_clang_plugin_runtime::Change){ali_clang_plugin_runtime::CHANGE_RHS,type,line_num, start_loc,end_loc,(val),clock()});
-#define FLUSH_DB_FOR_EACH_CHANGE false 
+#define ali_clang_add_to_map(type,val) {line_data.push_back((ali_clang_plugin_runtime::Change){ali_clang_plugin_runtime::CHANGE_RHS,type,line_num, start_loc,end_loc,(val),clock()});}
+#define FLUSH_DB_FOR_EACH_CHANGE false
 #define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(); line_data.clear();}}
 //slower but effective for segfaults
 
@@ -276,7 +278,7 @@ namespace ali_clang_plugin_runtime {
         const std::string log_change(int line_num, int start_loc, int end_loc, const std::string&& val) { stdlogger;ali_clang_add_to_map("string",val) return val;
         }
         
-        const char* log_change(int line_num, int start_loc, int end_loc, const char* val) { stdlogger; ali_clang_add_to_map("char*",val) return val;
+        const char* log_change(int line_num, int start_loc, int end_loc, const char* val) { stdlogger; ali_clang_add_to_map("const char*",val) return val;
         }
         
         
@@ -486,7 +488,7 @@ namespace ali_clang_plugin_runtime {
          */
         template <typename T> T& log_lvalue(int line_num, int start_loc, int end_loc, T& val) {
             stdlogger;
-            std::string ali_clang_value = "LValueT&&";
+            std::string ali_clang_value = "LValueT&";
             ali_clang_add_to_map(typeid(T).name(),ali_clang_value)
             //std::cout << "end of T&";
             return val;
@@ -508,7 +510,7 @@ namespace ali_clang_plugin_runtime {
         
         template <typename T> T log_uvalue(int line_num, int start_loc, int end_loc, T& val) {
             stdlogger;
-            std::string ali_clang_value = "LValueT&&";
+            std::string ali_clang_value = "UValueT&";
             ali_clang_add_to_map(typeid(T).name(),ali_clang_value)
             //std::cout << "end of T&";
             return val;
@@ -516,7 +518,7 @@ namespace ali_clang_plugin_runtime {
         
         template <typename T> T log_uvalue(int line_num, int start_loc, int end_loc, T&& val) {
             stdlogger;
-            std::string ali_clang_value = "LValueT&&";
+            std::string ali_clang_value = "UValueT&&";
             ali_clang_add_to_map(typeid(T).name(),ali_clang_value)
             //std::cout << "end of T&";
             return val;

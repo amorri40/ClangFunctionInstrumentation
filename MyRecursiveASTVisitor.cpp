@@ -10,6 +10,8 @@
 #include "clang/Lex/Lexer.h"
 #include "ast_rewriting_functions.h"
 #include "clang/Basic/SourceManager.h"
+#include "clang/AST/Attr.h"
+#include "clang/Sema/DeclSpec.h"
 #include <iostream>
 #include <sstream>
 
@@ -63,24 +65,31 @@ inline void insert_before_after(Expr *st, Rewriter* rewriter, std::string before
         }
     }
 }
+
 std::ostringstream additional_file_content;
-inline std::string handle_type(Expr *st,Rewriter* rewriter){
-    QualType qt = st->getType();
+
+
+inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
+    
+    bool pointer_type=false;
     //ExprValueKind evk = st->getValueKind();
     const Type* tp = qt.getTypePtr();
-    if (tp->isVoidType()) return "Void";
+    
     if (tp->isPointerType()) {
-        //tp=(tp->getPointeeCXXRecordDecl()->getTypeForDecl());
+        
         qt = tp->getPointeeType();
         tp = qt.getTypePtr();
-        return "";
-    }
-    if (tp->hasPointerRepresentation()) {
-        //RecordDecl* rd = qt->getAsCXXRecordDecl();
+        pointer_type=true;
         
-        additional_file_content << "\n#define PrintPointerRepr_"<< tp->getTypeClassName() << " 0\n" ;
-        return "";
+        //return "";
     }
+    
+    if (tp->isPointerType()) {
+    return ""; //still a pointer so just return
+    }
+    
+    if (tp->isVoidType()) return "Void";
+    
     if (tp->isDependentType()) {
         //RecordDecl* rd = qt->getAsCXXRecordDecl();
         additional_file_content << "\n#define PrintDependentType_"<< tp->getTypeClassName() << " 0\n" ;
@@ -90,20 +99,18 @@ inline std::string handle_type(Expr *st,Rewriter* rewriter){
         additional_file_content << "\n#define PrintVectorType_"<< tp->getTypeClassName() << " 0\n" ;
         return "";
     }
-    if (tp->isAtomicType()) {//tp->isScalarType()) {
-        //ScalarTypeKind stk = tp->getScalarTypeKind();
-        //Type::STK_
-        
+    /*if (tp->isAtomicType()) {
         additional_file_content << "\n#define PrintAtomicType_"<< tp->getTypeClassName() << " 0\n" ;
         return "Atomic";
-    }
+    }*/
     if (tp->isClassType() || tp->isStructureType()) {
         CXXRecordDecl* rd = tp->getAsCXXRecordDecl();
         //rd->getTagKind()
         NamedDecl* nd = rd->getUnderlyingDecl();
+        if (rd->getAccess() == AS_private) return ""; //class isn't public
+        if (rd->isAnonymousStructOrUnion()) return "";
         
-        
-        if (nd->getNameAsString() == "basic_string") {
+        if (nd->getNameAsString() == "basic_string" && !pointer_type) {
         return "StringType";
         }
         
@@ -112,6 +119,7 @@ inline std::string handle_type(Expr *st,Rewriter* rewriter){
         if (rd->isTemplateDecl()) return "";
         if (isa<ClassTemplateSpecializationDecl>(rd)) return "";
         
+        //if (nd->isUnavailable()) return "";
         
         std::pair<  clang::CXXRecordDecl::conversion_iterator, clang::CXXRecordDecl::conversion_iterator > p = rd->getVisibleConversionFunctions();
         for (CXXRecordDecl::conversion_iterator it=p.first; it!=p.second; it++) {
@@ -130,50 +138,97 @@ inline std::string handle_type(Expr *st,Rewriter* rewriter){
             //additional_file_content << "\n// Meth:"+meth->getNameAsString()+"\n";
         }
         
+        if (pointer_type && qt->isLValueReferenceType()) return "";
+        
+        std::string getMember = ".";
+        std::string refchar = "&";
+        std::string log_prefix = "Norm";
+        if (pointer_type) {
+            getMember = "->"; refchar=" *"; log_prefix="Pointer";
+            if (lvalue) {log_prefix+="L"; }//refchar+="&";}
+        }
+        
+        
         if (!rd->field_empty()) {
             std::ostringstream log_method_body, whole_log_data;
             
-            
-            
-            log_method_body <<"{ std::ostringstream v; v << \"{\"";
+            //if (current_function->getLinkageAndVisibility().getLinkage() == ExternalLinkage && pointer_type) return ""; //dllexport temp fix
+            log_method_body << "{";
+            if (pointer_type)
+                log_method_body << "if (val==NULL) return val;";
+            log_method_body <<" std::ostringstream v; v ";
+            if (pointer_type) log_method_body << "<< \"Pointer to\" ";
+            log_method_body << "<< \"{\"";
             // loop through the fields
             for (CXXRecordDecl::field_iterator it=rd->field_begin(); it!=rd->field_end(); it++) {
                 FieldDecl* fie = cast<FieldDecl>(*it);
                 
-                
-                
-                if (fie->getVisibility()== DefaultVisibility) {
-                    
-                    
+                if (fie->getAccess() == AS_private || fie->getAccess() == AS_protected) continue;
+                if (fie->getAccess() == AS_public) {
                     if (fie->getType()->isIntegralOrEnumerationType())
-                        log_method_body << " << \"'"<<fie->getNameAsString()<<"':\" << val."+fie->getNameAsString()<<" << \", \"";
-                    /*
-                     T& log_builtin(int line_num, int start_loc, int end_loc, T& val) {
-                     std::ostringstream v;
-                     v << val;
-                     ali_clang_add_to_map(typeid(T).name(),v.str()) return val;
-                     }
-                     */
+                        log_method_body << " << \"'"<<fie->getNameAsString()<<"':\" << val"<< getMember <<fie->getNameAsString()<<" << \", \"";
                 }
             }
             log_method_body << "<< \"}\"; inst_func_db.log_custom(line_num, start_loc, end_loc, typeid(val).name(),v.str()); return val;}\n";
             
             
-            whole_log_data << "#ifndef PrintClassType_"<<nd->getNameAsString()<<"\n";
-            whole_log_data << "__attribute__((weak)) std::ostream & operator<< (std::ostream &out, "<<nd->getQualifiedNameAsString()<<" const &t) {return out;}";
-            whole_log_data << "\ntemplate <class T> T& log_builtin"<< nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T& val) "<< log_method_body.str();
-            whole_log_data << "\ntemplate <class T> const T& log_builtin"<< nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, const T& val) "<< log_method_body.str();
-            whole_log_data << "#define PrintClassType_"<< nd->getNameAsString() << "(line,beg,end,arg) (stdlogger,log_builtin"<< nd->getNameAsString() << "(inst_func_db,line,beg,end,(arg)))\n";
-            whole_log_data << "\n#endif\n";
-            SourceLocation begining = clang::Lexer::GetBeginningOfToken(current_function->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
-            bool b = rewriter->InsertTextBefore(begining, whole_log_data.str());
+            whole_log_data << "\n#ifndef PrintClassType_"<<log_prefix<<nd->getNameAsString()<<"\n ";
+            /*if (!pointer_type) {
+                whole_log_data << "__attribute__((weak)) std::ostream & operator<< (std::ostream &out, "<<nd->getQualifiedNameAsString();
+                whole_log_data << " const " << refchar;
+                whole_log_data << "t) {return out;}";
+            }*/
             
-            return "PrintClassType_"+ nd->getNameAsString();
+                
+            
+            
+            if (!pointer_type) {
+                
+                whole_log_data << "\ntemplate <class T> T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T"<< refchar <<" val) "<< log_method_body.str();
+                
+                whole_log_data << "\ntemplate <class T> const T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, const T"<< refchar <<" val) "<< log_method_body.str();
+            }
+            
+            if (pointer_type) {
+                //if (lvalue) return "";
+                
+            whole_log_data << "\ntemplate <class T> T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T"<< refchar <<" val) {return val;}\n";//<< log_method_body.str();
+                /*whole_log_data << "\ntemplate <class T> T*& log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T*& val) {return val;}\n";//<< log_method_body.str();
+                 */
+                whole_log_data << "\ntemplate <class T> const T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, const T"<< refchar <<" val) {return val;}\n";//<< log_method_body.str();
+                /*whole_log_data << "\ntemplate <class T> T& log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T& val) {return val;}\n";//<< log_method_body.str();
+                 */
+                /*whole_log_data << "\ntemplate <class T> const T& log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, const T& val) {return val;}\n";//<< log_method_body.str();
+                */
+                /*whole_log_data << "\ntemplate <class T> T*& log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T*&& val) {return val;}\n";*/
+                
+            }
+            
+            
+            whole_log_data << "\n#define PrintClassType_"<<log_prefix<< nd->getNameAsString() << "(line,beg,end,arg) (stdlogger,log_builtin"<< log_prefix << nd->getNameAsString() << "(inst_func_db,line,beg,end,(arg)))\n";
+            whole_log_data << "\n#endif\n";
+            
+            SourceLocation begining = clang::Lexer::GetBeginningOfToken(current_function->getOuterLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
+            
+            if (current_function->getUnderlyingDecl()->hasAttr<DLLExportAttr>()) return "";
+            
+            additional_file_content << whole_log_data.str();
+            
+            //rewriter->InsertTextBefore(begining, whole_log_data.str());
+            
+           
+            
+            //if (pointer_type) return "";
+            
+            return "PrintClassType_"+log_prefix+nd->getNameAsString();
         }
         
         
         return "";
     }
+    
+    if (pointer_type) return ""; //only handle pointers to classes atm
+    
     if (tp->isEnumeralType()) {
         //additional_file_content << "\n#define PrintEnumType_"<< tp->getTypeClassName() << " 0\n" ;
         return "EnumLog";
@@ -192,19 +247,14 @@ inline std::string handle_type(Expr *st,Rewriter* rewriter){
         additional_file_content << "\n#define PrintUnionType_"<< tp->getTypeClassName() << " 0\n" ;
         return "";//return "EnumLog";
     }
-    if (tp->isReferenceType()) {
+    /*if (tp->isReferenceType()) {
         additional_file_content << "\n#define PrintReferenceType_"<< tp->getTypeClassName() << " 0\n" ;
         return "";//return "EnumLog";
-    }
+    }*/
     if (tp->isPlaceholderType()) {
         additional_file_content << "\n#define PrintPlaceholderType_"<< tp->getTypeClassName() << " 0\n" ;
         return "";
     }
-    
-    /*if (tp->isArithmeticType()) {
-        additional_file_content << "\n#define PrintArithmeticType_"<< tp->getTypeClassName() << " 0\n" ;
-        return "";//return "EnumLog";
-    }*/
     
     if (tp->isIntegralOrEnumerationType()) {
         
@@ -214,7 +264,7 @@ inline std::string handle_type(Expr *st,Rewriter* rewriter){
     
     if (tp->isAggregateType()) {
         additional_file_content << "\n#define PrintAggregateType_"<< tp->getTypeClassName() << " 0\n" ;
-        return "";//return "EnumLog";
+        return "";
     }
     
     
@@ -247,6 +297,17 @@ inline std::string handle_type(Expr *st,Rewriter* rewriter){
     return "";
 }
 
+inline std::string handle_type(Expr *st,Rewriter* rewriter){
+    QualType qt = st->getType();
+    
+    if (st->isLValue()) {
+        return handle_type(qt,rewriter,true);
+        //return "";
+    }
+    //if (st->isLValue() && qt.getTypePtr()->isPointerType()) return "";
+    return handle_type(qt,rewriter,false);
+}
+
 inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name, bool beforeEnd, bool checktype) {
     SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
     SourceLocation end = clang::Lexer::getLocForEndOfToken(st->getLocEnd(),0, rewriter->getSourceMgr(), rewriter->getLangOpts());
@@ -255,9 +316,10 @@ inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name
     int beg = rewriter->getSourceMgr().getPresumedColumnNumber(begining);
     int e = rewriter->getSourceMgr().getPresumedColumnNumber(end);
     
-    if (checktype) {
+    
     std::string typest = handle_type(st,rewriter);
     if (typest ==  "Void") return;
+    if (checktype) {
     if (typest != "") macro_name = typest;
     }
     
@@ -266,37 +328,39 @@ inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name
     macro_call << beg << ", " << e <<", ";
     macro_call << " (";
     
+    /*if (!checktype && typest != "") {
+        macro_call << " " << typest << " ("<< line << ", ";
+        macro_call << beg << ", " << e <<", ";
+        macro_call << " (";
+        insert_before_after(st,rewriter,macro_call.str(),")))) ", beforeEnd);
+        return;
+    }*/
+    
     insert_before_after(st,rewriter,macro_call.str(),")) ", beforeEnd);
 }
+
 
 void handle_call_argument(Expr* arg, Rewriter* rewriter) {
     if (arg == NULL) return;
     
-    if (arg->isLValue())
+    if (arg->isLValue()) {
+        
         //insert_before_after(arg, rewriter, " CALL_LVALUE_ARG((", ")) ", true);
+        if (!arg->getType()->isPointerType()) {
+            wrap_with_macro(arg, rewriter, " CALL_LVALUE_ARG", true, true);
+            return;
+        }
+        if (!arg->getType()->canDecayToPointerType()) return;
         wrap_with_macro(arg, rewriter, " CALL_LVALUE_ARG", true, true);
-    /*else if (arg->getType()->hasIntegerRepresentation()) {
-        insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
-    } else if (arg->getType()->isBuiltinType()) {
-        insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
-    } /*else if (arg->getType()->isPointerType()) {
-        if (arg->getType().isCanonical())
-          insert_before_after(arg, rewriter, " CALL_ARG((", ")) ", true);
-        else
-            insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
-    }*/
-    /*else if (arg->getType()->hasPointerRepresentation()) {
-        //insert_before_after(arg, rewriter, " CALL_ARG(( ", ")) ", true);
-        wrap_with_macro(arg, rewriter, " CALL_ARG", true, true);
-    }*/ else {
-        //insert_before_after(arg, rewriter, " ARG_UNKNOWN((", ")) ", true);
+    }
+    else {
         wrap_with_macro(arg, rewriter, " ARG_UNKNOWN", true, true);
     }
 }
 
 void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
     
-    current_function = f;
+    
     
     Stmt* statement_from_it = s;//*it;
         
@@ -308,7 +372,12 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             modify_statements(rewriter,caseStatement->getSubStmt(),f);
             return;
         }
-        else if (isa<CXXDeleteExpr>(*statement_from_it) || isa<CXXNewExpr>(*statement_from_it) || isa<CXXTemporaryObjectExpr>(*s)) return;
+        else if (isa<CXXDeleteExpr>(*statement_from_it) || isa<CXXNewExpr>(*statement_from_it) /*|| isa<CXXTemporaryObjectExpr>(*s)*/) return;
+        else if (isa<CXXTemporaryObjectExpr>(*s)) {
+            CXXTemporaryObjectExpr *temp = cast<CXXTemporaryObjectExpr>(statement_from_it);
+            wrap_with_macro(temp, rewriter, "TemporaryObjectExpr", true,true);
+            return;
+        }
         else if (isa<ImplicitCastExpr>(*statement_from_it)) {
             ImplicitCastExpr *implicitcast = cast<ImplicitCastExpr>(statement_from_it);
             //wrap_with_macro(implicitcast, rewriter, implicitcast->getCastKindName(), true);
@@ -318,6 +387,15 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             
             if (implicitcast->getCastKind()== CK_LValueToRValue) {
                 stringstr << " /*(" << implicitcast->getType().getAsString() << ")*/ " << implicitcast->getCastKindName();
+                wrap_with_macro(implicitcast, rewriter, stringstr.str(), true,true);
+                return;
+            }
+            else if (implicitcast->getCastKind() == CK_UserDefinedConversion) {
+            stringstr << " (" << implicitcast->getType().getAsString() << ") " << implicitcast->getCastKindName();
+            }
+            else if (implicitcast->getCastKind() == CK_LValueBitCast) {
+                wrap_with_macro(implicitcast, rewriter, "LValueBitCast", true,false);
+                return;
             }
             else {
             stringstr << " /*(" << implicitcast->getType().getAsString() << ")*/ " << implicitcast->getCastKindName();
@@ -328,7 +406,12 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
         }
         else if (isa<IfStmt>(*statement_from_it)) {
             IfStmt *ifStatement = cast<IfStmt>(statement_from_it);
-            //wrap_with_macro(ifStatement->getCond(), rewriter, " /*If*/ BOOLEXP", true);
+            //loop over children THEN wrap with the macro...
+            for(StmtIterator it = s->child_begin(); it != s->child_end(); ++it) {
+                modify_statements(rewriter,*it,f);
+            }
+            wrap_with_macro(ifStatement->getCond(), rewriter, " /*If*/ BOOLEXP", false,false); //wrap around whole expressiom
+            return;
         }
         else if (isa<ParenExpr>(*statement_from_it)) {
             ParenExpr *paren = cast<ParenExpr>(statement_from_it);
@@ -347,23 +430,35 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
                 //d
                 d->getDeclKindName();
                 //rewriter->InsertTextAfter(d->getLocStart(), " /*DECL*/ ");
-                //wrap_with_macro(d->, rewriter, "RHS", true);
+                //wrap_with_macro(, rewriter, "RHS", true,true);
             }
+             
              return; //ignore decl children
         } else if (isa<CharacterLiteral>(*statement_from_it) || isa<IntegerLiteral>(*statement_from_it) || isa<StringLiteral>(*statement_from_it) || isa<CXXBoolLiteralExpr>(*statement_from_it)) {
              return;
         }
+        else if (isa<ConditionalOperator>(*statement_from_it)) {
+            ConditionalOperator *dre = cast<ConditionalOperator>(statement_from_it);
+            return; //ignore conditional operator (ternary)
+        }
         else if (isa<UnaryOperator>(*statement_from_it)) {
             UnaryOperator *dre = cast<UnaryOperator>(statement_from_it);
-           // wrap_with_macro(dre->getSubExpr(), rewriter, " /*Unary*/", false);
-           // return;
+            //wrap_with_macro(dre->getSubExpr(), rewriter, " /*Unary*/", true,false); //should be true,false?
+            if (dre->isArithmeticOp()) return;
+            
+            return;
         }
         else if (isa<BinaryOperator>(*statement_from_it)) {
             BinaryOperator *dre = cast<BinaryOperator>(statement_from_it);
             if (dre->getOpcodeStr() == ",") return; //ignore comma operator
             if (isa<CXXNewExpr>(dre->getRHS())) return; //don't handle initilisations
-            if (!dre->isAssignmentOp())
-                 wrap_with_macro(dre->getLHS(), rewriter, " /*BinaryOp*/ LHS", true,true);
+            if (!dre->isAssignmentOp()) {
+                wrap_with_macro(dre->getLHS(), rewriter, " /*BinaryOp*/ LHS", true,true);//false);
+            }
+            else {
+            //wrap whole assignment
+                wrap_with_macro(dre, rewriter, " /*Assignment*/", true,true);
+            }
             modify_statements(rewriter,dre->getRHS(),f);
             return;
         }
@@ -382,27 +477,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
                 Expr* arg = dre->getArg(i);
                 if (arg == NULL) continue;
                 modify_statements(rewriter,arg,f);
-                /*if (isa<IntegerLiteral>(arg) || isa<StringLiteral>(arg) || isa<ImplicitCastExpr>(arg)) {
-                    return;
-                }
                 
-                
-                if (arg->isLValue())
-                {
-                    if (dre->getOperator() == clang::OO_Equal) continue;
-                    if (dre->getOperator() == clang::OO_LessLess) continue;
-                   
-                }
-                
-                //else if (arg->isRValue()) {
-                //insert_before_after(dre,rewriter,arg->getStmtClassName(),arg->getStmtClassName(), true);
-                   
-                    if (arg->getType().isCanonical())
-                        wrap_with_macro(arg, rewriter, " OPERATOR_RHS_ARG_CANONICAL", true);
-                    else
-                        wrap_with_macro(arg, rewriter, " OPERATOR_RHS_ARG_NOTCANONICAL", true);
-                    */
-               // }
             }
             return;
             
@@ -415,47 +490,50 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             } else if ( dre->isXValue()) {
                
                 insert_before_after(dre,rewriter," /* x value declref! */ "," /* end x value*/ ", true);
+                wrap_with_macro(dre, rewriter, " RHS", true,true);
             } else if ( dre->isLValue()) {
                 std::ostringstream d;
                 d << " /* LValue " << dre->getStmtClassName() << " " << dre->getDecl()->getNameAsString() << "*/ ";
-                
+                wrap_with_macro(dre, rewriter, " LHS", true,true);//false);
             }
             return;
         }
-//        else if (isa<CXXMemberCallExpr>(*statement_from_it)) {
-//            CXXMemberCallExpr *dre = cast<CXXMemberCallExpr>(statement_from_it);
-//            
-//            insert_before_after(dre,rewriter," MEMBER_CALL(( "," )) ",false);
-//            for (int i=0; i<dre->getNumArgs(); i++) {
-//                Expr* arg = dre->getArg(i);
-//                handle_call_argument(arg,rewriter);
-//            }
-//            return; // don't want to parse the memberExpr!!
-//        }
     
         else if (isa<CallExpr>(*statement_from_it) || isa<CXXMemberCallExpr>(*statement_from_it)) {
             CallExpr *dre = cast<CallExpr>(statement_from_it);
-            if (!(dre->getCallReturnType()->isVoidType()) && !dre->isBuiltinCall())
+            if (!(dre->getCallReturnType()->isVoidType()))
             {
                 if (dre->getCallReturnType()->isAtomicType())
-                    wrap_with_macro(dre, rewriter, " CALL_R_ATOMIC", false,true);
+                    wrap_with_macro(dre, rewriter, " CALL_R_ATOMIC", true,true); //should be true,false?
                 else if (dre->isXValue())
-                    wrap_with_macro(dre, rewriter, " CALLX", false,true);
+                    wrap_with_macro(dre, rewriter, " CALLX", true,true); //should be true,false?
                 else
-                    wrap_with_macro(dre, rewriter, " CALLR", false,true);
+                    wrap_with_macro(dre, rewriter, " CALLR", true,true); //should be true,false?
                 
             }
             else
             insert_before_after(dre,rewriter," (CALL( ",")) ",true);
+            //if (dre->getDirectCallee()->getNameAsString() == "free") return;
+            
             
             for (int i=0; i<dre->getNumArgs(); i++) {
                 Expr* arg = dre->getArg(i);
+                
                 handle_call_argument(arg,rewriter);
             }
             return;
         }
         else if (isa<ReturnStmt>(*statement_from_it)) {
-            //ReturnStmt *ret = cast<ReturnStmt>(statement_from_it);
+            ReturnStmt *ret = cast<ReturnStmt>(statement_from_it);
+            
+            //
+            //modify_statements(rewriter,ret->getRetValue()->IgnoreImplicit(),f);
+            for(StmtIterator it = ret->child_begin(); it != ret->child_end(); ++it) {
+                if (it == ret->child_begin()) continue;
+                if (!isa<ImplicitCastExpr>(*it) && isa<Expr>(*it) )
+                //modify_statements(rewriter,*it,f);
+                handle_call_argument(cast<Expr>(*it),rewriter);
+            }
             //ret->getRetValue()->getStmtClassName();
             //wrap_with_macro(cast<Expr>(*ret->child_begin()), rewriter, "RETURN_VAL", true);
             return;
@@ -470,24 +548,17 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
         else if (isa<ExprWithCleanups>(*statement_from_it)) {
             ExprWithCleanups *dre = cast<ExprWithCleanups>(statement_from_it);
             if (isa<CallExpr>(dre->getSubExpr()))
-                wrap_with_macro(dre->getSubExpr(), rewriter, "ExprWithCleanupsCall", false,true);
-            else wrap_with_macro(dre, rewriter, dre->getStmtClassName(), false,true);
+                wrap_with_macro(dre->getSubExpr(), rewriter, "ExprWithCleanupsCall", true,true); //should be true,true?
+            else wrap_with_macro(dre, rewriter, dre->getStmtClassName(), true,true); //should be true,true?
             
         }
         else if (isa<Expr>(*statement_from_it)) {
             Expr *dre = cast<Expr>(statement_from_it);
             
-        wrap_with_macro(dre, rewriter, dre->getStmtClassName(), false,true);
+        wrap_with_macro(dre, rewriter, dre->getStmtClassName(), true,true); //should be true,true?
         }
         else {
-//            std::ostringstream class_name;
-//            class_name << " /*" << statement_from_it->getStmtClassName() << "*/ "; //should this not be statement_from_id
-//            std::string beg = class_name.str();
-//            class_name.str("");
-//            class_name << " /* END " << statement_from_it->getStmtClassName() << "*/ ";
-//            
-//            if (statement_from_it->getLocStart().isInvalid()) return;
-        
+            //not an expression so its an unhandled statement
         }
     
     
@@ -508,34 +579,13 @@ bool modify_main_function(Stmt *s, Rewriter* rewriter) {
 }
 
 
-bool MyRecursiveASTVisitor::VisitRecordDecl(clang::RecordDecl *rd) {//::VisitTypeDecl(clang::TypeDecl *td){
-    //rd->dumpColor();
-    /*if (rd->isAnonymousStructOrUnion()) return true;
-    if (rd->isFromASTFile()) return true;
-    if (rd->isHidden()) return true;
-    if (rd->isImplicit()) return true;
-    
-    //if (!rd->isReferenced()) return true;
-    //if (!rd->isUsed()) return true;
-    if (rd->isCompleteDefinition() || rd->isBeingDefined()) {
-        if (rd->isFileContext()) {
-            additional_file_content << "\n#define Print"<< rd->getNameAsString() << " 0\n" ;
-        } else {
-            additional_file_content << "\n#define NotFilePrint_"<< rd->getNameAsString() << "_" << rd->getKindName() << "(arg) arg\n" ;
-        }
-    }
-    
-    */
-    return true;
-}
-
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
 {
     
     
     if (f->hasBody())
     {
-        
+        current_function = f;
         // First check if we are in the cpp file passed to the compiler
         SourceLocation sl = f->getLocation();
         if (rewriter.getSourceMgr().getFileID(sl) !=
@@ -609,7 +659,10 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
             int beg = rewriter.getSourceMgr().getPresumedColumnNumber(pvd->getLocStart());
             int e = rewriter.getSourceMgr().getPresumedColumnNumber(pvd->getLocEnd());
             
-            params_to_log << " LOGPARAMETER(" << line << "," << beg << "," << e << ",";
+            std::string log_param = handle_type(pvd->getType(), &rewriter,true);
+            if (log_param == "" || log_param == "Void") log_param = "LOGPARAMETER";
+            
+            params_to_log << " "<<log_param<<"(" << line << "," << beg << "," << e << ",";
             params_to_log << pvd->getNameAsString() << "); ";
         }
         params_to_log << "} ";

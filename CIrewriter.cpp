@@ -346,7 +346,7 @@ int main(int argc, char **argv)
         std::string normal_file = compiler.getSourceManager().getMemoryBufferForFile(compiler.getSourceManager().getFileEntryForID(compiler.getSourceManager().getMainFileID()))->getBuffer();
         outFile << normal_file;
     }
-    else outFile << std::string(RewriteBuf->begin(), RewriteBuf->end()) << additional_file_content.str() <<"\n";
+    else outFile << additional_file_content.str() << std::string(RewriteBuf->begin(), RewriteBuf->end())  <<"\n";
       //printf("%s\n", "After getRewriteBufferFor");
     
     
