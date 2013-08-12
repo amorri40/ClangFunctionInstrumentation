@@ -567,10 +567,10 @@ bool modify_main_function(Stmt *s, Rewriter* rewriter) {
     return true;
 }
 
-
+extern bool c_file;
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
 {
-    
+    if (c_file) return true;
     
     if (f->hasBody())
     {

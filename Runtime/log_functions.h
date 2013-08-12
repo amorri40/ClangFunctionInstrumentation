@@ -5,6 +5,7 @@
 //  Created by Alasdair Morrison on 24/07/2013.
 //  Copyright (c) 2013 Alasdair Morrison. All rights reserved.
 //
+#ifdef __cplusplus
 #define _Bool bool
 #define size_type __size_type
 #include <vector>
@@ -531,3 +532,4 @@ namespace ali_clang_plugin_runtime {
 }
 
 #endif
+#endif //end if c++

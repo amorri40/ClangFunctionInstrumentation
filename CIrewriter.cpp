@@ -86,6 +86,8 @@ using namespace clang;
 
 #include "ast_rewriting_functions.h"
 
+bool c_file=false;
+
 /*
  Check if file of fileName exists and if not it exits this program
  */
@@ -117,6 +119,7 @@ void set_default_target(CompilerInstance& compiler) {
   llvm::IntrusiveRefCntPtr<TargetInfo>
      pti(TargetInfo::CreateTargetInfo(compiler.getDiagnostics(),
                                       pto.getPtr()));
+    
   compiler.setTarget(pti.getPtr());
 }
 #include "clang/Basic/Version.h"
@@ -186,18 +189,22 @@ void setup_language_options_cxx(CompilerInvocation* Invocation) {
     //langOpts.GNUMode = 1;
     //langOpts.CXXExceptions = 1;
     langOpts.RTTI = 1; 
-    langOpts.Bool = 1; 
+    langOpts.Bool = 1;
+    if (!c_file) {
     langOpts.CPlusPlus = 1;
     langOpts.CPlusPlus11 = 1;
-    
-    Invocation->setLangDefaults(langOpts,
-                                clang::IK_CXX,
-                                clang::LangStandard::lang_c11);
+        Invocation->setLangDefaults(langOpts,
+                                    clang::IK_CXX,
+                                    clang::LangStandard::lang_c11);
+    } else {
+        langOpts.C99=1;
+        Invocation->setLangDefaults(langOpts,
+                                    clang::IK_C,
+                                    clang::LangStandard::lang_c99);
+    }
+   
     clang::HeaderSearchOptions hso = Invocation->getHeaderSearchOpts();
-    //hso.UseStandardCXXIncludes = 1;
-    //hso.UseBuiltinIncludes = 1;
-    //hso.Verbose = 1;
-    //hso.AddPath(<#llvm::StringRef Path#>, <#frontend::IncludeDirGroup Group#>, <#bool IsFramework#>, <#bool IgnoreSysRoot#>)
+    
     std::cout << hso.Sysroot;
 }
 
@@ -226,22 +233,58 @@ std::string get_outputfilename_for_filename(std::string fileName) {
     if (ext == std::string::npos)
        ext = outName.length();
     //outName.insert(ext, "_out");
+    if (!c_file)
     outName.append(".debug");
+    else
+        replaceAll(outName, ".c", ".debug.c");
     return outName;
 }
 //
 
 int run_proper_clang(int argc, char **argv, bool link) {
     std::ostringstream oss;
-    if (!link)
-    oss << "clang++ -xc++ -I/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime ";
+    
+    if (!link) {
+    oss << "clang++ ";
+        if (c_file)
+            oss << "-xc";
+        else
+            oss << "-xc++";
+        oss <<" -I/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime ";
+    }
     else
         oss << "clang++ ";
+    
+    bool has_output_specified=false;
+    std::string source_file_name="";
     for (int i=1; i<argc; i++) { //don't include argument0 as it is aliclang executable path
         std::string argument = argv[i];
-        replaceAll(argument,".cpp",".cpp.debug");
+        
+        
+        if (argument.find("-o")!=std::string::npos)
+            has_output_specified = true;
+        
+        if (c_file) {
+            source_file_name = argument;
+            replaceAll(argument,".c",".debug.c");
+            //replaceAll(argument,".o",".debug.o");
+        }
+        else {
+            source_file_name = argument;
+            replaceAll(argument,".cpp",".cpp.debug");
+            
+        }
         //replaceAll(argument,".o",".o.debug");
         oss << argument << " ";
+    }
+    
+    if (!has_output_specified && source_file_name != "" && !link) {
+        oss << "-o";
+        if (c_file)
+        replaceAll(source_file_name,".c",".o");
+        else
+         replaceAll(source_file_name,".cpp",".o");
+        oss << source_file_name;
     }
     
     if (link) {
@@ -264,6 +307,8 @@ int run_proper_clang(int argc, char **argv, bool link) {
     
     //printf("%s %d\n", "Running proper clang: ", compile_status);
 }
+
+
 
 int main(int argc, char **argv)
 {
@@ -310,6 +355,7 @@ int main(int argc, char **argv)
     bool outputfile = fileName.substr(fileName.find_last_of(".") + 1) == "o";
     if (outputfile) return run_proper_clang(argc,argv, true); //link files
     
+    c_file = fileName.substr(fileName.find_last_of(".") + 1) == "c";
 
     make_sure_file_exists(fileName);
 
