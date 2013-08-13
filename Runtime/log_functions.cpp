@@ -10,6 +10,12 @@
 #define NO_INSTRUMENT true
 #include <sstream>
 
+extern "C" {
+    bool ALI_GLOBAL_DEBUG = true;
+    sqlite3 *ali__log__db;
+    int ALI_GLOBAL_MAX_EX = 300;
+}
+
 namespace ali_clang_plugin_runtime {
 
     bool ALI_GLOBAL_DEBUG = true;

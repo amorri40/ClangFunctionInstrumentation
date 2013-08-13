@@ -90,6 +90,7 @@
 /* Begin PBXFileReference section */
 		9C35386617AF1E41008E9A41 /* auto_cast.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = auto_cast.h; sourceTree = "<group>"; };
 		9C35386F17B2C1A0008E9A41 /* auto_generate.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = auto_generate.cpp; sourceTree = "<group>"; };
+		9C3538A017B98E29008E9A41 /* C_only_log_functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = C_only_log_functions.h; sourceTree = "<group>"; };
 		9C77573E176B6E9D005E57CC /* aliclang */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = aliclang; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C775743176B6E9D005E57CC /* ClangInstrumentationPlugin.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ClangInstrumentationPlugin.1; sourceTree = "<group>"; };
 		9C77574A176B6EDD005E57CC /* test_out.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = test_out.c; path = ../test_out.c; sourceTree = "<group>"; };
@@ -231,6 +232,7 @@
 				9C981CEB17A43D3F002DCDE9 /* log_functions.cpp */,
 				9C981CEC17A43D3F002DCDE9 /* log_functions.h */,
 				9C35386617AF1E41008E9A41 /* auto_cast.h */,
+				9C3538A017B98E29008E9A41 /* C_only_log_functions.h */,
 			);
 			name = Runtime;
 			path = ../Runtime;

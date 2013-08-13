@@ -532,4 +532,7 @@ namespace ali_clang_plugin_runtime {
 }
 
 #endif
+#else
+// we are in C-only code
+#include "C_only_log_functions.h"
 #endif //end if c++

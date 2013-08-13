@@ -16,6 +16,7 @@
 #include <sstream>
 
 FunctionDecl * current_function;
+extern bool c_file;
 /*
  Check it doesn't contain bad statements which would make the debug code not work
  */
@@ -105,6 +106,7 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
         return "Atomic";
     }*/
     if (tp->isClassType() || tp->isStructureType()) {
+        if (c_file) return "";
         CXXRecordDecl* rd = tp->getAsCXXRecordDecl();
         //rd->getTagKind()
         NamedDecl* nd = rd->getUnderlyingDecl();
@@ -372,6 +374,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             //wrap_with_macro(implicitcast, rewriter, implicitcast->getCastKindName(), true);
             std::ostringstream stringstr;
             
+            if (!c_file)
             if (implicitcast->getSubExpr()->isCXX11ConstantExpr(f->getASTContext())) return; //static constant data can be optimised out
             
             if (implicitcast->getCastKind()== CK_LValueToRValue) {
@@ -423,7 +426,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             }
              
              return; //ignore decl children
-        } else if (isa<CharacterLiteral>(*statement_from_it) || isa<IntegerLiteral>(*statement_from_it) || isa<StringLiteral>(*statement_from_it) || isa<CXXBoolLiteralExpr>(*statement_from_it)) {
+        } else if (isa<CharacterLiteral>(*statement_from_it) || isa<IntegerLiteral>(*statement_from_it) || isa<StringLiteral>(*statement_from_it) || isa<CXXBoolLiteralExpr>(*statement_from_it) || isa<FloatingLiteral>(*statement_from_it)) {
              return;
         }
         else if (isa<ConditionalOperator>(*statement_from_it)) {
@@ -557,20 +560,22 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
    
 }
 
+
 /*
  Add the segfault handler to the main method (this doesn't work for libraries (since they don't have a main method)
  */
 bool modify_main_function(Stmt *s, Rewriter* rewriter) {
+    if (c_file) return true;
     //Add the segfault handler to the start of the main function
     SourceLocation start_of_stmts = getBeginningOfStatement(s,rewriter);
     rewriter->InsertTextAfterToken(start_of_stmts, " SEGFAULTHANDLE ");
     return true;
 }
 
-extern bool c_file;
+
 bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
 {
-    if (c_file) return true;
+    
     
     if (f->hasBody())
     {
@@ -588,6 +593,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         if (isa<CXXDestructorDecl>(f)) return true;
         if (isa<CXXConstructorDecl>(f)) return true;
         if (f->isInlined()) return true;
+        
         
         
         
@@ -630,6 +636,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         
         std::string whole_func = get_location_to_string(rewriter, &rewriter.getSourceMgr(), start_of_stmts, END);
         
+        
         /*
          Do all modifications after this
          */
@@ -663,11 +670,24 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         std::string proper_filename = rewriter.getSourceMgr().getFilename(f->getLocation());
         
         std::ostringstream debug_version_of_function;
+        
+        if (c_file) {
+        //c version
+            
+            debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static struct StaticFunctionData ali_function_db = {0,\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__};  if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT || ali_function_db.execution_number > ALI_GLOBAL_MAX_EX) \n #endif \n";
+            debug_version_of_function << " " << whole_func; //non modified version
+            debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {/*ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db);*/ \n";
+            
+            
+        } else {
+        //cpp version
         debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__);  if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT || ali_function_db.execution_number > ali_clang_plugin_runtime::ALI_GLOBAL_MAX_EX) \n #endif \n";
         debug_version_of_function << " " << whole_func;
         debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); \n";
-        debug_version_of_function << params_to_log.str();
         
+        
+        }
+        debug_version_of_function << params_to_log.str();
         
         rewriter.InsertTextAfter(start_of_stmts, debug_version_of_function.str());
         //rewriter.InsertTextAfter(END, "\n #if NO_INSTRUMENT == false \n } \n #endif \n");
