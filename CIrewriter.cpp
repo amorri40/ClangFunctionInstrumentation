@@ -267,14 +267,12 @@ int run_proper_clang(int argc, char **argv, bool link) {
         if (c_file) {
             source_file_name = argument;
             replaceAll(argument,".c",".debug.c");
-            //replaceAll(argument,".o",".debug.o");
         }
         else {
             source_file_name = argument;
             replaceAll(argument,".cpp",".cpp.debug");
             
         }
-        //replaceAll(argument,".o",".o.debug");
         oss << argument << " ";
     }
     
@@ -292,20 +290,11 @@ int run_proper_clang(int argc, char **argv, bool link) {
         compile_status = system("clang -c \"/Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/sqlite3.c\"");
         oss << " /Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/log_functions.o /Users/alasdairmorrison/Dropbox/projects/clangparsing/ClangInstrumentationPlugin/Runtime/sqlite3.o";
     }
-
     
     llvm::errs() << "about to run clang :" << oss.str().c_str() << "\n";
     int compile_status = system(oss.str().c_str());
-    //int compile_status = execlp(oss.str().c_str(),NULL);
     llvm::errs() << "==================================== \n\n";
     return compile_status;
-    
-    //int compile_status = execv("clang", argv);
-    //char* arguments[] = {"-v"};
-    //int compile_status = execvp("clang", arguments);
-    
-    
-    //printf("%s %d\n", "Running proper clang: ", compile_status);
 }
 
 
@@ -316,6 +305,7 @@ int main(int argc, char **argv)
 
   if (argc < 2)
   {
+      run_proper_clang(argc, argv, false);
      llvm::errs() << "Usage: CIrewriter <options> <filename>\n";
      return 1;
   }

@@ -11,18 +11,24 @@
 
 #include <stdbool.h>
 
-struct StaticFunctionData {
+int alang_log_data(int line_num, int start_loc, int end_loc, int val);
+
+
+struct alang_StaticFunctionData {
     int execution_number;
     const char* the_func_name;
     int the_line_number;
     const char* the_file_name;
 };
 
+void alang_push_ex(struct alang_StaticFunctionData* sfd);
+void alang_pop_ex(struct alang_StaticFunctionData* sfd);
+
 struct InstrumentFunctionDB {
     double start_time, end_time, time_difference;
     long start_mem, end_mem, mem_difference;
     
-    struct StaticFunctionData* ali_function_db;
+    struct alang_StaticFunctionData* ali_function_db;
     //vector_of_change line_data;
     
     /*InstrumentFunctionDB( StaticFunctionData* the_db)  {
@@ -94,7 +100,7 @@ extern int ALI_GLOBAL_MAX_EX;
 #define Atomic(line,beg,end,arg) (arg)
 #define Fundamental(line,beg,end,arg) (arg)
 #define EnumLog(line,beg,end,arg) (arg)
-#define IntegralOrEnumType(line,beg,end,arg) (arg)
+#define IntegralOrEnumType(line,beg,end,arg) (alang_log_data(line,beg,end,(arg)))
 #define StringType(line,beg,end,arg) (arg)
 #define ClassWithOperator(line,beg,end,arg) (arg)
 

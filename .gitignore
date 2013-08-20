@@ -16,3 +16,4 @@ Runtime/auto_generate.cpp
 *.pyc
 
 Runtime/log_functions.debug.cpp
+/venv/

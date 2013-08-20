@@ -141,10 +141,10 @@ namespace ali_clang_plugin_runtime {
         StaticFunctionData(std::string the_func_name, int the_line_number, std::string the_file_name) : func_name(the_func_name), start_of_function_line_number(the_line_number), file_name(the_file_name) {
             //possibly take in number of lines
             //possibly create sqlite db
-           // SEGFAULTHANDLE //temp for library
+            //SEGFAULTHANDLE //temp for library
             execution_number=0;
             created_database=false;
-            
+            //created_segfault_handler=false;
         }
         
         void create_tables();

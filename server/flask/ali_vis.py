@@ -11,10 +11,7 @@ def get_functions_for_file(fname, suffix):
         cur.execute("SELECT * FROM sqlite_master WHERE type='table' AND name LIKE '"+fname+"%"+suffix+"';")
         return cur.fetchall()
     except lite.Error, e:
-        
         print "Error %s:" % e.args[0]
-        #sys.exit(1)
-        
     finally:
         if con:
             con.close()
@@ -42,7 +39,6 @@ def get_timeline_data(fname,table_suffix):
     all_events=[]
     print "fname:"+fname
     cpp_file_name = fname.split('.cpp',1)[0]
-    
 
     all_function_in_this_file = get_functions_for_file(fname,'_executions_unique')
     cur = connect_to_db()

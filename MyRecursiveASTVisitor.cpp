@@ -41,7 +41,7 @@ inline SourceLocation getBeginningOfStatement(Stmt *s, Rewriter* rewriter) {
     return clang::Lexer::GetBeginningOfToken(s->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
 }
 
-inline void insert_before_after(Expr *st, Rewriter* rewriter, std::string before, std::string after, bool beforeEnd) {
+inline void insert_before_after(Stmt *st, Rewriter* rewriter, std::string before, std::string after, bool beforeEnd) {
     if (st->getLocStart().isInvalid()) return;
     if (st->getLocEnd().isInvalid()) return;
     SourceLocation begining = clang::Lexer::GetBeginningOfToken(st->getLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
@@ -108,7 +108,7 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
     if (tp->isClassType() || tp->isStructureType()) {
         if (c_file) return "";
         CXXRecordDecl* rd = tp->getAsCXXRecordDecl();
-        //rd->getTagKind()
+        
         NamedDecl* nd = rd->getUnderlyingDecl();
         if (rd->getAccess() == AS_private) return ""; //class isn't public
         if (rd->isAnonymousStructOrUnion()) return "";
@@ -117,22 +117,14 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
         return "StringType";
         }
         
-        //if (rd->isDependentType()) return ""; //don't handle template classes yet
-        //if (rd->isDependentContext()) return "";
         if (rd->isTemplateDecl()) return "";
         if (isa<ClassTemplateSpecializationDecl>(rd)) return "";
         
-        //if (nd->isUnavailable()) return "";
         
         std::pair<  clang::CXXRecordDecl::conversion_iterator, clang::CXXRecordDecl::conversion_iterator > p = rd->getVisibleConversionFunctions();
         for (CXXRecordDecl::conversion_iterator it=p.first; it!=p.second; it++) {
             CXXConversionDecl* conver = cast<CXXConversionDecl>(*it);
-            //conver->getConversionType()
             QualType q = conver->getResultType();
-            
-            //if (q.getTypePtr()->isAnyCharacterType()) {
-            //    additional_file_content << "\n// Conver:"+conver->getNameAsString()+"\n";
-            //}
         }
         
         // loop through the methods
@@ -172,16 +164,7 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
             }
             log_method_body << "<< \"}\"; inst_func_db.log_custom(line_num, start_loc, end_loc, typeid(val).name(),v.str()); return val;}\n";
             
-            
             whole_log_data << "\n#ifndef PrintClassType_"<<log_prefix<<nd->getNameAsString()<<"\n ";
-            /*if (!pointer_type) {
-                whole_log_data << "__attribute__((weak)) std::ostream & operator<< (std::ostream &out, "<<nd->getQualifiedNameAsString();
-                whole_log_data << " const " << refchar;
-                whole_log_data << "t) {return out;}";
-            }*/
-            
-                
-            
             
             if (!pointer_type) {
                 
@@ -209,8 +192,6 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
             
             additional_file_content << whole_log_data.str();
             
-            //rewriter->InsertTextBefore(begining, whole_log_data.str());
-            
             return "PrintClassType_"+log_prefix+nd->getNameAsString();
         }
         
@@ -225,32 +206,18 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
         return "EnumLog";
     }
     
-    /*if (tp->isStructureType()) {
-        const RecordType* rt = tp->getAsStructureType();
-        RecordDecl* rd = rt->getDecl();
-        
-        
-        additional_file_content << "\n#define PrintStructType_"<< rd->getNameAsString() << " 0\n" ;
-        return "";//return "EnumLog";
-    }*/
-    
     if (tp->isUnionType()) {
         additional_file_content << "\n#define PrintUnionType_"<< tp->getTypeClassName() << " 0\n" ;
         return "";//return "EnumLog";
     }
-    /*if (tp->isReferenceType()) {
-        additional_file_content << "\n#define PrintReferenceType_"<< tp->getTypeClassName() << " 0\n" ;
-        return "";//return "EnumLog";
-    }*/
+    
     if (tp->isPlaceholderType()) {
         additional_file_content << "\n#define PrintPlaceholderType_"<< tp->getTypeClassName() << " 0\n" ;
         return "";
     }
     
     if (tp->isIntegralOrEnumerationType()) {
-        
-        //additional_file_content << "\n#define PrintIntegralOrEnumType_"<< tp->getTypeClassName() << " 0\n" ;
-        return "IntegralOrEnumType";//return "EnumLog";
+        return "IntegralOrEnumType";
     }
     
     if (tp->isAggregateType()) {
@@ -260,10 +227,6 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
     
     
     if (tp->isRecordType()) {
-        //const RecordType* struc = tp->getAsStructureType();
-        //RecordDecl* rd = struc->getDecl();
-        //TagDecl* td = rd->getDefinition();
-        
          additional_file_content << "\n#define Print_"<< /*rd->getQualifiedNameAsString() <<*/ " 0\n" ;
         return "";
     }
@@ -318,14 +281,6 @@ inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name
     macro_call << " " << macro_name << " ("<< line << ", ";
     macro_call << beg << ", " << e <<", ";
     macro_call << " (";
-    
-    /*if (!checktype && typest != "") {
-        macro_call << " " << typest << " ("<< line << ", ";
-        macro_call << beg << ", " << e <<", ";
-        macro_call << " (";
-        insert_before_after(st,rewriter,macro_call.str(),")))) ", beforeEnd);
-        return;
-    }*/
     
     insert_before_after(st,rewriter,macro_call.str(),")) ", beforeEnd);
 }
@@ -518,6 +473,8 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
         else if (isa<ReturnStmt>(*statement_from_it)) {
             ReturnStmt *ret = cast<ReturnStmt>(statement_from_it);
             
+            
+            
             //
             //modify_statements(rewriter,ret->getRetValue()->IgnoreImplicit(),f);
             for(StmtIterator it = ret->child_begin(); it != ret->child_end(); ++it) {
@@ -528,6 +485,20 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             }
             //ret->getRetValue()->getStmtClassName();
             //wrap_with_macro(cast<Expr>(*ret->child_begin()), rewriter, "RETURN_VAL", true);
+            
+            if (c_file) {
+                
+                if (ret->getLocEnd().isInvalid()) return;
+                
+                
+                insert_before_after(ret, rewriter, " {alang_pop_ex(&ali_function_db); ", "", true);
+                SourceLocation end = clang::Lexer::getLocForEndOfToken(ret->IgnoreImplicit()->getLocEnd(),0, rewriter->getSourceMgr(), rewriter->getLangOpts());
+                if (rewriter->isRewritable(end) && end.isValid() )
+                    rewriter->InsertTextAfterToken(end, "}");
+                else
+                    ret->dumpColor();
+            }
+            
             return;
         }
         else if (isa<MemberExpr>(*statement_from_it)) {
@@ -544,6 +515,11 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             else wrap_with_macro(dre, rewriter, dre->getStmtClassName(), true,true); //should be true,true?
             
         }
+        /*else if (isa<ForStmt>(*statement_from_it)) {
+            if (c_file) return; //skip for statements in c for now
+        }*/ /*else if (isa<WhileStmt>(*statement_from_it)) {
+            if (c_file) return; //skip while statements in c for now
+        }*/
         else if (isa<Expr>(*statement_from_it)) {
             Expr *dre = cast<Expr>(statement_from_it);
             
@@ -670,27 +646,21 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         std::string proper_filename = rewriter.getSourceMgr().getFilename(f->getLocation());
         
         std::ostringstream debug_version_of_function;
-        
         if (c_file) {
         //c version
             
-            debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static struct StaticFunctionData ali_function_db = {0,\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__};  if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT || ali_function_db.execution_number > ALI_GLOBAL_MAX_EX) \n #endif \n";
+            debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static struct alang_StaticFunctionData ali_function_db = {0,\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__};  if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT || ali_function_db.execution_number > ALI_GLOBAL_MAX_EX) \n #endif \n";
             debug_version_of_function << " " << whole_func; //non modified version
-            debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {/*ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db);*/ \n";
-            
-            
+            debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {alang_push_ex(&ali_function_db); \n";
         } else {
         //cpp version
         debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__);  if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT || ali_function_db.execution_number > ali_clang_plugin_runtime::ALI_GLOBAL_MAX_EX) \n #endif \n";
         debug_version_of_function << " " << whole_func;
         debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db); \n";
-        
-        
         }
         debug_version_of_function << params_to_log.str();
         
         rewriter.InsertTextAfter(start_of_stmts, debug_version_of_function.str());
-        //rewriter.InsertTextAfter(END, "\n #if NO_INSTRUMENT == false \n } \n #endif \n");
         rewriter.InsertTextAfter(END, "\n}\n#endif \n");
         rewriter.InsertTextAfter(END, "}");
         

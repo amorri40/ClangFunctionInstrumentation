@@ -13,7 +13,47 @@
 extern "C" {
     bool ALI_GLOBAL_DEBUG = true;
     sqlite3 *ali__log__db;
-    int ALI_GLOBAL_MAX_EX = 300;
+    int ALI_GLOBAL_MAX_EX = 200;
+    int ALI_GLOBAL_MAX_CHANGES = 2000; //per function changes (useful for big loops)
+    struct alang_StaticFunctionData {
+        int execution_number;
+        const char* the_func_name;
+        int the_line_number;
+        const char* the_file_name;
+    };
+    
+    struct alang_StaticFunctionData* g_sfd;
+    int g_current_change_number = 0;
+    int g_prev_change_number = 0;
+    
+    void alang_push_ex(struct alang_StaticFunctionData* sfd) {
+        //create a new object that gets deleted in the pop?
+        g_sfd=sfd;
+        sfd->execution_number++; //supposed to do in pop just a test
+        g_prev_change_number = g_current_change_number;
+        g_current_change_number = 0;
+        //ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db);
+        
+    }
+    
+    int alang_log_data(int line_num, int start_loc, int end_loc, int val) {
+        if (g_current_change_number > ALI_GLOBAL_MAX_CHANGES) return val;
+        g_current_change_number++;
+        //std::cerr << g_sfd->execution_number;
+        std::ostringstream v;
+        v << val;
+        //ali_clang_add_to_map(typeid(T).name(),v.str())
+        return val;
+    }
+    
+    void alang_pop_ex(struct alang_StaticFunctionData* sfd) {
+        g_current_change_number = g_prev_change_number;
+    }
+
+    
+    void alang_flush_to_db(alang_StaticFunctionData* sfd) {
+    
+    }
 }
 
 namespace ali_clang_plugin_runtime {
@@ -74,8 +114,11 @@ sqlite3 *ali__log__db;
         created_database=true;
     }
     
+    bool created_segfault_handler=false;
+    
     void StaticFunctionData::flush_to_db() {
         if (all_function_executions.empty()) return;
+        //if (!created_segfault_handler) {SEGFAULTHANDLE; created_segfault_handler=true;}
         if (!created_database) create_tables();
         this->execution_number++;
         //std::cout << "\n\n" << func_name << "\n";
@@ -107,16 +150,8 @@ sqlite3 *ali__log__db;
                 std::ostringstream current_line_values;
                 std::ostringstream current_line_types;
                 std::ostringstream unique_special_id;
-                    /*
-                     All the changes that happened on this line during 1 execution of the function
-                     */
-                    
-                
-                    
                     unique_special_id << "[" << c.line_num << "," << c.start_loc << "," << c.end_loc << ",\"" << c.value << "\", \""<< c.type_of_var << "\"]";
-                    
                     end_time = c.time_of_change;
-                //std::cout << unique_special_id.str();
                 long long insert_row_id=-1;
                 
                 if ( map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end() ) {
@@ -127,7 +162,6 @@ sqlite3 *ali__log__db;
                     last_row = sqlite3_last_insert_rowid(ali__log__db);
                     else
                         last_row = -1;
-                    
                     if (last_row !=-1) {
                         map_of_sqlrows[unique_special_id.str()] = last_row; insert_row_id = last_row;}
                     else
@@ -135,19 +169,11 @@ sqlite3 *ali__log__db;
                 } else {
                     insert_row_id = map_of_sqlrows[unique_special_id.str()];
                 }
-                
-                execution_id << insert_row_id << ","; //unique_special_id.str();
-                    
-                }
-            
+                execution_id << insert_row_id << ",";
+            }
                 int unique_ex_result = bind_change_sql(stmt_ex_unique,execution_id.str(), "", "", "", start_time, end_time);
-           
                 unsigned long unique_that_was_just_inserted = sqlite3_last_insert_rowid(ali__log__db);
-                //all_execution_id << unique_that_was_just_inserted;
-                bind_change_sql(stmt_ex_all,execution_id.str()/*all_execution_id.str()*/, "", "", "", start_time, end_time);
-            
-            
-                
+                bind_change_sql(stmt_ex_all,execution_id.str(), "", "", "", start_time, end_time);
             }
         
         
