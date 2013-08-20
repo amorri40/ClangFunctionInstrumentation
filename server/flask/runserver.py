@@ -55,13 +55,13 @@ def printfiles(filename):
        return "saved at: "+str(datetime.datetime.now())
     if fname == '':
      fname='.'
-    if (not os.path.isdir('static/projects/'+fname)):
+    if (not os.path.isdir('../../frontend/projects/'+fname)):
       extension = os.path.splitext(fname)[1]
-      with open('static/projects/'+fname, 'r') as content_file:
+      with open('../../frontend/projects/'+fname, 'r') as content_file:
          content = content_file.read()
       return render_template('visualize.html',extension=extension,content=content,fname=fname)
       #return render_template('syntaxEditor.html',extension=extension,content=content,fname=fname) #'<html><body><textarea>'+ content.replace('<','&lt;').replace('>','&gt;')+'</textarea></body></html>'
-    for dirname, dirnames, filenames in os.walk('static/projects/'+fname):
+    for dirname, dirnames, filenames in os.walk('../../frontend/projects/'+fname):
      for subdirname in dirnames:
         returnstring+="<br><a href='/files/fname?fname="+ os.path.join(fname, subdirname)+"'>"+subdirname+"</a>"
      for filename in filenames:
@@ -70,4 +70,5 @@ def printfiles(filename):
      return render_template('visualize.html',extension='folder',content='folder',fname=fname,contents=returnstring)#return '<html><body>'+returnstring+'</body></html>'
 
 if __name__ == '__main__':
+     os.chdir(os.path.dirname(sys.argv[0]))    
      app.run(host='0.0.0.0')

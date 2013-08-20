@@ -7,12 +7,12 @@
 *.cpp_debug
 .DS_Store
 *.debug
-/frontend/projects
 
 Runtime/auto_generate.cpp
 
 *.sqlite
-
+*.d
+*.o
 *.pyc
 
 Runtime/log_functions.debug.cpp
