@@ -10,7 +10,6 @@
 
 Runtime/auto_generate.cpp
 
-*.sqlite
 *.d
 *.o
 *.pyc
