@@ -69,6 +69,5 @@ def printfiles(filename):
 
      return render_template('visualize.html',extension='folder',content='folder',fname=fname,contents=returnstring)#return '<html><body>'+returnstring+'</body></html>'
 
-if __name__ == '__main__':
-     os.chdir(os.path.dirname(sys.argv[0]))    
+if __name__ == '__main__':  
      app.run(host='0.0.0.0')
