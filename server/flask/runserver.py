@@ -2,6 +2,7 @@
 
 from flask import Flask,render_template,url_for,redirect,request
 import subprocess,os,datetime, shutil, aes, json, ali_vis
+from StringIO import StringIO
 app = Flask(__name__)
 app.debug = True
 password = "userpassword"
@@ -26,6 +27,7 @@ def getJSON(fname,data_type):
 
 @app.route('/files/<filename>',methods=['GET', 'POST'])
 def printfiles(filename):
+    os.chdir(os.path.dirname(__file__))
     returnstring=""
     fname=request.args.get('fname', '').replace('..','').replace('////','//')
     if (request.args.get('getJSON', '') == 'true') :
@@ -68,6 +70,29 @@ def printfiles(filename):
         returnstring+="<br><a href='/files/fname?fname="+ os.path.join(fname, filename)+"'>"+filename+"</a>"
 
      return render_template('visualize.html',extension='folder',content='folder',fname=fname,contents=returnstring)#return '<html><body>'+returnstring+'</body></html>'
+
+@app.route("/upload", methods=['POST'])
+def upload():
+            print "upload called"
+            f = request.files['file']
+            print 'in upload handler'
+            print f
+            # Note I've monkeypatched werkzeug.datastructures.FileStorage 
+            # so it wont squash exceptions
+            f.close()
+            #f.stream.close()
+            return 'ok'
+
+@app.route("/test/")
+def test_server():
+    client = app.test_client()
+    resp = client.post(
+        '/upload',
+        data = {
+            'file': (StringIO('my file contents'), 'hello world.txt'),
+        }
+    )
+    return "done"
 
 if __name__ == '__main__':  
      app.run(host='0.0.0.0')
