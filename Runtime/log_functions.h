@@ -128,6 +128,8 @@ namespace ali_clang_plugin_runtime {
     unsigned long report_memory(void);
     void segfault_handler(int sig);
     void install_handlers();
+    
+   
 
     struct StaticFunctionData {
         std::string func_name, file_name;
@@ -152,9 +154,18 @@ namespace ali_clang_plugin_runtime {
         void flush_to_db();
         
         ~StaticFunctionData() {
-            //flush_to_db();
+            std::cout << "deallocating staticfunction data and writing to db";
+            flush_to_db();
         }
         
+    };
+    
+    struct AllExecutionData {
+        std::vector<StaticFunctionData*> allfunctionex;
+        
+        void write_database() {
+        //loop through and call flush_to_db
+        }
     };
     
     namespace has_insertion_operator_impl {
@@ -233,7 +244,8 @@ namespace ali_clang_plugin_runtime {
             
             if (! line_data.empty()) {
                 ali_function_db->all_function_executions.push_back(line_data);
-                ali_function_db->flush_to_db();
+                
+                //ali_function_db->flush_to_db();
             }
             
             

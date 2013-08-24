@@ -13,8 +13,38 @@
 extern "C" {
     bool ALI_GLOBAL_DEBUG = true;
     sqlite3 *ali__log__db;
-    int ALI_GLOBAL_MAX_EX = 2;
-    int ALI_GLOBAL_MAX_CHANGES = 20; //per function changes (useful for big loops)
+    int ALI_GLOBAL_MAX_EX = 5;
+    int ALI_GLOBAL_MAX_CHANGES = 200; //per function changes (useful for big loops)
+    int ALI_EXE_PER_FRAME = 30;
+    int ALI_MAX_PER_FRAME = 30;
+    
+    int alang_start_clock = clock();
+    
+    void alang_alter_logging() {
+        static int timeDemoFrames = 0;
+        timeDemoFrames++;
+        if (timeDemoFrames%30 == 0) {
+            //ALI_GLOBAL_MAX_EX++;
+            if (ALI_EXE_PER_FRAME == ALI_MAX_PER_FRAME) {
+                ALI_GLOBAL_MAX_EX++;
+                ALI_EXE_PER_FRAME+=2;
+            }
+            if (ALI_EXE_PER_FRAME == 0)
+            {ALI_GLOBAL_MAX_EX--;
+                ALI_EXE_PER_FRAME--;
+            }
+            std::cout << " " << ALI_EXE_PER_FRAME;
+            ALI_EXE_PER_FRAME = ALI_MAX_PER_FRAME;
+            
+            
+        } /*else if (timeDemoFrames > 400) {
+            timeDemoFrames=0;
+        }*/
+        //float	fps = timeDemoFrames * 1000.0f / ( clock() - alang_start_clock );
+        //std::cout << fps;
+        //ALI_GLOBAL_MAX_EX++;
+    }
+    
     struct alang_StaticFunctionData {
         int execution_number;
         const char* the_func_name;
@@ -26,6 +56,7 @@ extern "C" {
     
     
     void* new_CStaticFunctionData(const char* the_func_name, int the_line_number, const char* the_file_name) {
+        std::cout << the_func_name;
         return new ali_clang_plugin_runtime::StaticFunctionData(the_func_name, the_line_number, the_file_name);
     }
     
@@ -43,9 +74,9 @@ extern "C" {
         g_current_change_number = 0;
         //ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db);
          */
-        
-        InstrumentFunctionDB* inst_func_db = new InstrumentFunctionDB((StaticFunctionData*)sfd);
-        return inst_func_db;
+        //std::cout << "push_ex";
+        ALI_EXE_PER_FRAME--;
+        return new InstrumentFunctionDB((StaticFunctionData*)sfd);
     }
     
     int alang_log_data(void* inst, int line_num, int start_loc, int end_loc, int val) {
@@ -65,6 +96,7 @@ extern "C" {
     }
     
     void alang_pop_ex(void* inst) {
+        if (inst == NULL) return;
         InstrumentFunctionDB* inst_func_db = (InstrumentFunctionDB*)inst;
         delete inst_func_db;
         //g_current_change_number = g_prev_change_number;
@@ -77,10 +109,10 @@ extern "C" {
 }
 
 namespace ali_clang_plugin_runtime {
-
+/*
     bool ALI_GLOBAL_DEBUG = true;
 sqlite3 *ali__log__db;
-    int ALI_GLOBAL_MAX_EX = 300;
+    int ALI_GLOBAL_MAX_EX = 300;*/
 
     void open_sqlite(std::string db_name) {
 #ifdef IPHONE

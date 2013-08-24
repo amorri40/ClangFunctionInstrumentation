@@ -53,6 +53,7 @@ struct StaticFunctionData* create_StaticFunctionData(const char* the_func_name, 
 
 extern bool ALI_GLOBAL_DEBUG;
 extern int ALI_GLOBAL_MAX_EX;
+extern int ALI_EXE_PER_FRAME;
 
 //#define false 0
 
