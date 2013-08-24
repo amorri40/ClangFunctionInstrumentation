@@ -13,8 +13,8 @@
 extern "C" {
     bool ALI_GLOBAL_DEBUG = true;
     sqlite3 *ali__log__db;
-    int ALI_GLOBAL_MAX_EX = 200;
-    int ALI_GLOBAL_MAX_CHANGES = 2000; //per function changes (useful for big loops)
+    int ALI_GLOBAL_MAX_EX = 2;
+    int ALI_GLOBAL_MAX_CHANGES = 20; //per function changes (useful for big loops)
     struct alang_StaticFunctionData {
         int execution_number;
         const char* the_func_name;
@@ -22,32 +22,52 @@ extern "C" {
         const char* the_file_name;
     };
     
+    extern const char* get_dbpath_path();
+    
+    
+    void* new_CStaticFunctionData(const char* the_func_name, int the_line_number, const char* the_file_name) {
+        return new ali_clang_plugin_runtime::StaticFunctionData(the_func_name, the_line_number, the_file_name);
+    }
+    
     struct alang_StaticFunctionData* g_sfd;
     int g_current_change_number = 0;
     int g_prev_change_number = 0;
+    using namespace ali_clang_plugin_runtime;
     
-    void alang_push_ex(struct alang_StaticFunctionData* sfd) {
+    void* alang_push_ex(void* sfd) {
+        /*
         //create a new object that gets deleted in the pop?
         g_sfd=sfd;
-        sfd->execution_number++; //supposed to do in pop just a test
+        sfd->execution_number++;
         g_prev_change_number = g_current_change_number;
         g_current_change_number = 0;
         //ali_clang_plugin_runtime::InstrumentFunctionDB inst_func_db(&ali_function_db);
+         */
         
+        InstrumentFunctionDB* inst_func_db = new InstrumentFunctionDB((StaticFunctionData*)sfd);
+        return inst_func_db;
     }
     
-    int alang_log_data(int line_num, int start_loc, int end_loc, int val) {
-        if (g_current_change_number > ALI_GLOBAL_MAX_CHANGES) return val;
-        g_current_change_number++;
+    int alang_log_data(void* inst, int line_num, int start_loc, int end_loc, int val) {
+        InstrumentFunctionDB* inst_func_db = (InstrumentFunctionDB*)inst;
+        if (inst_func_db->change_count > ALI_GLOBAL_MAX_CHANGES) return val;
+        inst_func_db->change_count++;
+        inst_func_db->log_builtin(line_num,start_loc,end_loc,val);
+        //if (g_current_change_number > ALI_GLOBAL_MAX_CHANGES) return val;
+        //g_current_change_number++;
         //std::cerr << g_sfd->execution_number;
-        std::ostringstream v;
-        v << val;
+        //std::cout << "Logging:" << val;
+        //std::ostringstream v;
+        //v << val;
         //ali_clang_add_to_map(typeid(T).name(),v.str())
+        
         return val;
     }
     
-    void alang_pop_ex(struct alang_StaticFunctionData* sfd) {
-        g_current_change_number = g_prev_change_number;
+    void alang_pop_ex(void* inst) {
+        InstrumentFunctionDB* inst_func_db = (InstrumentFunctionDB*)inst;
+        delete inst_func_db;
+        //g_current_change_number = g_prev_change_number;
     }
 
     
@@ -63,7 +83,9 @@ sqlite3 *ali__log__db;
     int ALI_GLOBAL_MAX_EX = 300;
 
     void open_sqlite(std::string db_name) {
-        
+#ifdef IPHONE
+        db_name = get_dbpath_path();
+#endif
         /* Open database */
         int rc = sqlite3_open(db_name.c_str(), &ali__log__db);
         if( rc ){
@@ -106,7 +128,7 @@ sqlite3 *ali__log__db;
     }
 
     void StaticFunctionData::create_tables() {
-        open_sqlite("enigma_compiler.sqlite");
+        open_sqlite("./enigma_compiler.sqlite");
         create_table(func_name, "_changes_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER) ");
         //create_table(func_name, "_changes_unique", " (Special_id TEXT, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Line_Number INTEGER, Time INTEGER PRIMARY KEY)");
         create_table(func_name, "_executions_unique", " (Special_id TEXT PRIMARY KEY, Type_Of_Var TEXT, Name_Of_Var TEXT, Value_Of_Var TEXT, Start_Time INTEGER, End_Time INTEGER) ");
@@ -131,6 +153,8 @@ sqlite3 *ali__log__db;
         stmt_unique = start_insert(func_name,"_changes_unique"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
         stmt_ex_all = start_insert(func_name,"_executions_all"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
         stmt_ex_unique = start_insert(func_name,"_executions_unique"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
+        
+        if (ali__log__db == NULL) {std::cout << "ali__log_db was null"; return;}
         
         sqlite3_exec(ali__log__db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
         

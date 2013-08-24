@@ -10,8 +10,15 @@
 #define ClangInstrumentationPlugin_C_only_log_functions_h
 
 #include <stdbool.h>
+#include <stddef.h> // for NULL
 
-int alang_log_data(int line_num, int start_loc, int end_loc, int val);
+typedef void CStaticFunctionData;
+typedef void CExecutionData;
+
+
+int alang_log_data(void* inst_func_db, int line_num, int start_loc, int end_loc, int val);
+
+CStaticFunctionData* new_CStaticFunctionData(const char* the_func_name, int the_line_number, const char* the_file_name);
 
 
 struct alang_StaticFunctionData {
@@ -21,8 +28,8 @@ struct alang_StaticFunctionData {
     const char* the_file_name;
 };
 
-void alang_push_ex(struct alang_StaticFunctionData* sfd);
-void alang_pop_ex(struct alang_StaticFunctionData* sfd);
+void* alang_push_ex(CStaticFunctionData* sfd);
+void alang_pop_ex(CExecutionData* inst);
 
 struct InstrumentFunctionDB {
     double start_time, end_time, time_difference;
@@ -47,7 +54,7 @@ struct StaticFunctionData* create_StaticFunctionData(const char* the_func_name, 
 extern bool ALI_GLOBAL_DEBUG;
 extern int ALI_GLOBAL_MAX_EX;
 
-#define false 0
+//#define false 0
 
 #define NO_INSTRUMENT false
 #define SEGFAULTHANDLE ali_clang_plugin_runtime::install_handlers();
@@ -84,6 +91,8 @@ extern int ALI_GLOBAL_MAX_EX;
 #define NullToPointer(line,beg,end,arg) NULL
 #define UserDefinedConversion(line,beg,end,arg) (arg)
 #define FloatingToIntegral(line,beg,end,arg) (arg)
+#define FunctionToPointerDecay(line,beg,end,arg) arg
+#define BitCast(line,beg,end,arg) arg
 
 #define ExprWithCleanupsCall(line,beg,end,arg) arg
 #define ExprWithCleanups(line,beg,end,arg) (arg)
@@ -100,7 +109,7 @@ extern int ALI_GLOBAL_MAX_EX;
 #define Atomic(line,beg,end,arg) (arg)
 #define Fundamental(line,beg,end,arg) (arg)
 #define EnumLog(line,beg,end,arg) (arg)
-#define IntegralOrEnumType(line,beg,end,arg) (alang_log_data(line,beg,end,(arg)))
+#define IntegralOrEnumType(line,beg,end,arg) (alang_log_data(inst_func_db, line,beg,end,(arg)))
 #define StringType(line,beg,end,arg) (arg)
 #define ClassWithOperator(line,beg,end,arg) (arg)
 

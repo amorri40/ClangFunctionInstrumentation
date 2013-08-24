@@ -93,7 +93,7 @@
 /*
  Main defines
  */
-#define ali_clang_add_to_map(type,val) {line_data.push_back((ali_clang_plugin_runtime::Change){ali_clang_plugin_runtime::CHANGE_RHS,type,line_num, start_loc,end_loc,(val),clock()});}
+#define ali_clang_add_to_map(type,val) {line_data.push_back((ali_clang_plugin_runtime::Change){ali_clang_plugin_runtime::CHANGE_RHS,type,line_num, start_loc,end_loc,(val),clock()}); ali_clang_flush_db_on_each_change}
 #define FLUSH_DB_FOR_EACH_CHANGE false
 #define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(); line_data.clear();}}
 //slower but effective for segfaults
@@ -178,7 +178,7 @@ namespace ali_clang_plugin_runtime {
         };
     }
     
-    template <typename T>
+    /*template <typename T>
     struct is_iterator {
         template <typename U>
         static char test(typename std::iterator_traits<U>::pointer* x);
@@ -187,7 +187,7 @@ namespace ali_clang_plugin_runtime {
         static long test(U*);
         
         static const bool ali_clang_value = sizeof(test<T>(nullptr)) == 1;
-    };
+    };*/
     
     struct cout_redirect {
         cout_redirect( std::streambuf * new_buffer )
@@ -207,6 +207,7 @@ namespace ali_clang_plugin_runtime {
     struct InstrumentFunctionDB {
         double start_time, end_time, time_difference;
         long start_mem, end_mem, mem_difference;
+        int change_count = 0;
         
         StaticFunctionData* ali_function_db;
         vector_of_change line_data;
@@ -218,6 +219,7 @@ namespace ali_clang_plugin_runtime {
             //printf("\n >> Log Constructor: %s Mem:%ld bytes \n",the_db->func_name.c_str(),start_mem);
             //LOG_CONSTURCTOR
             //line_data.push_back((Change){CHANGE_RHS,"",ali_function_db->start_of_function_line_number,0,0,std::string("Function enter"),clock()});
+            line_data = vector_of_change();
             
         }
         ~InstrumentFunctionDB() {
@@ -393,12 +395,12 @@ namespace ali_clang_plugin_runtime {
         template <typename T> const T& log_change(int line_num, int start_loc, int end_loc, const T& val) {
             stdlogger;
             std::string ali_clang_value;
-            if (is_iterator<T>::ali_clang_value) {
+            /*if (is_iterator<T>::ali_clang_value) {
                 std::ostringstream v;
                 v<< "Iterator" << (*(int*)(&val));
                 ali_clang_value = v.str();
             }
-            else
+            else*/
             {
                 ali_clang_value = "constT&";
                 //std::cout << ali_clang_value;

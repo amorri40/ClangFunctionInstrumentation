@@ -491,7 +491,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
                 if (ret->getLocEnd().isInvalid()) return;
                 
                 
-                insert_before_after(ret, rewriter, " {alang_pop_ex(&ali_function_db); ", "", true);
+                insert_before_after(ret, rewriter, " {alang_pop_ex(inst_func_db); ", "", true);
                 SourceLocation end = clang::Lexer::getLocForEndOfToken(ret->IgnoreImplicit()->getLocEnd(),0, rewriter->getSourceMgr(), rewriter->getLangOpts());
                 if (rewriter->isRewritable(end) && end.isValid() )
                     rewriter->InsertTextAfterToken(end, "}");
@@ -569,7 +569,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         if (isa<CXXDestructorDecl>(f)) return true;
         if (isa<CXXConstructorDecl>(f)) return true;
         if (f->isInlined()) return true;
-        
+        if (f->hasAttrs()) return true; //ATTR SEGFAULTS due to length
         
         
         
@@ -597,6 +597,8 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         SourceLocation end_of_func_name = clang::Lexer::getLocForEndOfToken(dni.getEndLoc(), 0, rewriter.getSourceMgr(), rewriter.getLangOpts());
         SourceLocation start_of_stmts =clang::Lexer::GetBeginningOfToken(s->getLocStart(), rewriter.getSourceMgr(), rewriter.getLangOpts());
         
+        SourceLocation start_of_func_name = clang::Lexer::GetBeginningOfToken(dni.getLocStart(), rewriter.getSourceMgr(), rewriter.getLangOpts());
+        
         std::string func_args_string = get_location_to_string(rewriter, &rewriter.getSourceMgr(), end_of_func_name, start_of_stmts);
         
         rewriter.setSourceMgr(rewriter.getSourceMgr(), rewriter.getLangOpts());
@@ -604,14 +606,17 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         // Point to start of function name
         SourceLocation start_of_function_name_token = dni.getLoc();
         std::string new_function_name = fname+"_orig";
-        int length_of_function_name = get_length_of_token_at_location(start_of_function_name_token, this->rewriter);
+        llvm::errs() << fname << "\n";
+        //int length_of_function_name = get_length_of_token_at_location(start_of_function_name_token, this->rewriter);
         
-        std::string proper_func_name = get_location_to_string(rewriter, &rewriter.getSourceMgr(), sr.getBegin(), end_of_func_name);
+        std::string proper_func_name = get_location_to_string(rewriter, &rewriter.getSourceMgr(), /*sr.getBegin()*/start_of_func_name, end_of_func_name);
+        llvm::errs() << proper_func_name << "\n";
         
         SourceLocation END = s->getLocEnd().getLocWithOffset(1);
+        llvm::errs() << "END" << "\n";
         
         std::string whole_func = get_location_to_string(rewriter, &rewriter.getSourceMgr(), start_of_stmts, END);
-        
+        llvm::errs() << whole_func << "\n";
         
         /*
          Do all modifications after this
@@ -649,9 +654,9 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         if (c_file) {
         //c version
             
-            debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static struct alang_StaticFunctionData ali_function_db = {0,\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__};  if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT || ali_function_db.execution_number > ALI_GLOBAL_MAX_EX) \n #endif \n";
+            debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static int alang_execution_number=0;\n static CStaticFunctionData* ali_function_db = NULL; if (ali_function_db == NULL) ali_function_db = new_CStaticFunctionData(\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__);  if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT || alang_execution_number > ALI_GLOBAL_MAX_EX ) \n #endif \n";
             debug_version_of_function << " " << whole_func; //non modified version
-            debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {alang_push_ex(&ali_function_db); \n";
+            debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {void* inst_func_db = alang_push_ex(ali_function_db); alang_execution_number++; \n";
         } else {
         //cpp version
         debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static ali_clang_plugin_runtime::StaticFunctionData ali_function_db(\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__);  if (!ali_clang_plugin_runtime::ALI_GLOBAL_DEBUG || NO_INSTRUMENT || ali_function_db.execution_number > ali_clang_plugin_runtime::ALI_GLOBAL_MAX_EX) \n #endif \n";
