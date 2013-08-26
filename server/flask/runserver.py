@@ -12,8 +12,12 @@ def printindex():
   return printfiles('.')
 
 def getJSON(fname,data_type):
-    
-    print "database_name:"+str(request.args.get('dbname', ''))
+    print "getJSON database_name:"+request.args.get('dbname', '')
+    if request.args.get('dbname', '') != '':
+      database_name = str(request.args.get('dbname', ''))
+    else:
+      database_name =  'alang_ios.sqlite'
+    print "set database_name to:"+database_name
     if request.args.get('unique', '') == 'true':
         table_suffix="_unique"
     else:
@@ -21,10 +25,10 @@ def getJSON(fname,data_type):
     if data_type == 'trace':
         ex_id = int(request.args.get('exid', ''))
         functionname = request.args.get('funcname', '')
-        output_trace = ali_vis.get_trace_data(fname,table_suffix,ex_id,functionname,'alang_ios.sqlite')
+        output_trace = ali_vis.get_trace_data(fname,table_suffix,ex_id,functionname,database_name)
         ret = dict(code="", trace=output_trace)
     else:
-        ret = ali_vis.get_timeline_data(fname,table_suffix,'alang_ios.sqlite')
+        ret = ali_vis.get_timeline_data(fname,table_suffix,database_name)
     return json.dumps(ret, indent=None)
 
 @app.route('/files/<filename>',methods=['GET', 'POST'])
@@ -73,7 +77,7 @@ def printfiles(filename):
      for filename in filenames:
         returnstring+="<br><a href='/files/fname?fname="+ os.path.join(fname, filename)+"'>"+filename+"</a>"
 
-     return render_template('visualize.html',extension='folder',content='folder',fname=fname,contents=returnstring)#return '<html><body>'+returnstring+'</body></html>'
+     return render_template('visualize.html',extension='folder',content='folder',fname=fname,contents=returnstring,db_name=request.args.get('dbname', ''))#return '<html><body>'+returnstring+'</body></html>'
 
 @app.route("/upload", methods=['POST'])
 def upload():

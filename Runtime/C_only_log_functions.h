@@ -28,6 +28,8 @@ struct alang_StaticFunctionData {
     const char* the_file_name;
 };
 
+void alang_log_one_func_to_db();
+
 void* alang_push_ex(CStaticFunctionData* sfd);
 void alang_pop_ex(CExecutionData* inst);
 

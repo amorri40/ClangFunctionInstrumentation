@@ -129,6 +129,8 @@ namespace ali_clang_plugin_runtime {
     void segfault_handler(int sig);
     void install_handlers();
     
+    struct StaticFunctionData;
+    void alang_add_static_function_data(StaticFunctionData* sfd);
    
 
     struct StaticFunctionData {
@@ -147,6 +149,7 @@ namespace ali_clang_plugin_runtime {
             execution_number=0;
             created_database=false;
             //created_segfault_handler=false;
+            alang_add_static_function_data(this);
         }
         
         void create_tables();
@@ -162,11 +165,31 @@ namespace ali_clang_plugin_runtime {
     
     struct AllExecutionData {
         std::vector<StaticFunctionData*> allfunctionex;
-        
+        std::vector<StaticFunctionData*>::iterator it = allfunctionex.begin();
+        bool initilised = false;
+        int iiterator = 0;
         void write_database() {
+            std::cout << "write_to_database";
+            if (!initilised) {
+                it = allfunctionex.begin();
+                initilised=true;
+            }
+            if (it == allfunctionex.end())
+                it = allfunctionex.begin();
+            if (*it !=NULL)
+            (*it)->flush_to_db();
+            else
+               it = allfunctionex.begin();
+            it++;
+            iiterator++;
         //loop through and call flush_to_db
         }
     };
+    static AllExecutionData alang_all_ex_data;
+    void alang_add_static_function_data(StaticFunctionData* sfd) {
+        std::cout << "initialised static";
+        alang_all_ex_data.allfunctionex.push_back(sfd);
+    }
     
     namespace has_insertion_operator_impl {
         typedef char no;

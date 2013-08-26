@@ -122,7 +122,7 @@ function executeCodeFromScratch() {
                      show_only_outputs: ($('#showOnlyOutputsSelector').val() == 'true'),
                      py_crazy_mode: ($('#pythonVersionSelector').val() == '2crazy')};
       
-      $.get( "/files/fname?fname="+global_file_url+"&getJSON=true&unique=true&exid="+execution_id,
+      $.get( "/files/fname?fname="+global_file_url+"&getJSON=true&unique=true&exid="+execution_id+"&dbname="+alang_database_name,
         //backend_script,
             {
               //user_script : pyInputCodeMirror.getValue(),

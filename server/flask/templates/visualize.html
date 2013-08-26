@@ -234,12 +234,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 {{ contents|safe() }}
 {% else %}
 <div id="pyInputPane">
-
 Contents of the file:
 <br/>
-
-
-
 <p>
 <button id="executeBtn" class="bigBtn" type="button">Visualize Execution</button>
 </p>
@@ -352,7 +348,7 @@ Changes and Backend is Copyright &copy; 2013 <a href="http://www.alasdairmorriso
         "max_zoom":60, 
         "timezone":"-06:00",
         "icon_folder":"{{ url_for('static', filename='timeglider/icons/') }}",
-        "data_source":"/files/fname?fname={{ fname }}&getTimeline=true",
+        "data_source":"/files/fname?fname={{ fname }}&getTimeline=true&dbname={{db_name}}",
         "show_footer":true,
         "display_zoom_level":true,
         "mousewheel":"none", // zoom | pan | none
@@ -538,6 +534,7 @@ Changes and Backend is Copyright &copy; 2013 <a href="http://www.alasdairmorriso
 <script type="text/javascript">
 global_url = "{{ url_for('static', filename='projects/')}}";//("{{ url_for('static', filename='projects/'+fname) }}");
 global_file_url=""
+alang_database_name = "{{db_name}}";
 //$("#CPPExampleLink").click(function() {
    // $.get("{{ url_for('static', filename='projects/'+fname) }}", setCodeMirrorVal);
 //    return false;
