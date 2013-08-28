@@ -102,12 +102,29 @@
 
 extern "C" {
 extern int ALI_GLOBAL_MAX_CHANGES;
+    extern int ALI_GLOBAL_MIN_EX;
 }
 
 namespace ali_clang_plugin_runtime {
     
     enum ChangeTypes {
         CHANGE_RHS, CHANGE_LHS, CHANGE_FUNCTIONCALL};
+    
+    /*enum value_type {
+    ALANG_VALUE_INT, ALANG_VALUE_STRING
+    };*/
+    
+    struct VAROBJECT
+    {
+        enum o_t { Int, Double, String } objectType;
+        
+        union
+        {
+            int intValue;
+            double dblValue;
+            char *strValue;
+        } value;
+    } object;
     
     struct Change {
         ChangeTypes type;
@@ -117,6 +134,7 @@ namespace ali_clang_plugin_runtime {
         int end_loc;
         std::string value;
         unsigned long time_of_change;
+        //VAROBJECT valu;
         
         Change(ChangeTypes type, std::string type_of_var, int line_num,
                int start_loc,
@@ -193,6 +211,8 @@ namespace ali_clang_plugin_runtime {
     void alang_add_static_function_data(StaticFunctionData* sfd) {
         std::cout << "initialised static";
         alang_all_ex_data.allfunctionex.push_back(sfd);
+        //reset the max executions as this function could be called many times
+        ALI_GLOBAL_MAX_EX = ALI_GLOBAL_MIN_EX;
     }
     
     namespace has_insertion_operator_impl {
