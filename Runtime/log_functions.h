@@ -93,12 +93,16 @@
 /*
  Main defines
  */
-#define ali_clang_add_to_map(type,val) {line_data.push_back((ali_clang_plugin_runtime::Change){ali_clang_plugin_runtime::CHANGE_RHS,type,line_num, start_loc,end_loc,(val),clock()}); ali_clang_flush_db_on_each_change}
+#define ali_clang_add_to_map(type,val) {line_data.push_back(new ali_clang_plugin_runtime::Change(ali_clang_plugin_runtime::CHANGE_RHS,type,line_num, start_loc,end_loc,(val),clock())); ali_clang_flush_db_on_each_change}
 #define FLUSH_DB_FOR_EACH_CHANGE false
-#define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(); line_data.clear();}}
+#define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(ALI_GLOBAL_MAX_CHANGES); line_data.clear();}}
 //slower but effective for segfaults
 
 //#include "auto_generate.h"
+
+extern "C" {
+extern int ALI_GLOBAL_MAX_CHANGES;
+}
 
 namespace ali_clang_plugin_runtime {
     
@@ -113,17 +117,30 @@ namespace ali_clang_plugin_runtime {
         int end_loc;
         std::string value;
         unsigned long time_of_change;
+        
+        Change(ChangeTypes type, std::string type_of_var, int line_num,
+               int start_loc,
+               int end_loc,
+               std::string value,
+               unsigned long time_of_change) : type(type), type_of_var(type_of_var), line_num(line_num), start_loc(start_loc), end_loc(end_loc), value(value), time_of_change(time_of_change) {
+            //std::cout << "change constructor";
+        }
+        ~Change() {
+            //std::cout << "change destructor";
+        }
+        
     };
 
     //typedef std::vector<std::vector<std::string> > vector_of_vector_of_string;
     //typedef std::map<int, std::vector<Change> > map_of_vector_of_change;
-    typedef std::vector<Change> vector_of_change;
+    typedef std::vector<Change*> vector_of_change;
 
     extern sqlite3 *ali__log__db; //global statebase (sqlite)
 
 
     extern bool ALI_GLOBAL_DEBUG;
     extern int ALI_GLOBAL_MAX_EX;
+    
 
     unsigned long report_memory(void);
     void segfault_handler(int sig);
@@ -140,25 +157,27 @@ namespace ali_clang_plugin_runtime {
         int start_of_function_line_number;
         std::vector<vector_of_change> all_function_executions;
         std::map<std::string, long long> map_of_sqlrows;
-        bool created_database;
+        bool created_tables;
+        sqlite3_stmt *stmt_unique=0 , *stmt_ex_unique=0, *stmt_ex_all=0;
         
         StaticFunctionData(std::string the_func_name, int the_line_number, std::string the_file_name) : func_name(the_func_name), start_of_function_line_number(the_line_number), file_name(the_file_name) {
             //possibly take in number of lines
             //possibly create sqlite db
             //SEGFAULTHANDLE //temp for library
             execution_number=0;
-            created_database=false;
+            created_tables=false;
+            
             //created_segfault_handler=false;
             alang_add_static_function_data(this);
         }
         
         void create_tables();
         
-        void flush_to_db();
+        int flush_to_db(int change_limit);
         
         ~StaticFunctionData() {
             std::cout << "deallocating staticfunction data and writing to db";
-            flush_to_db();
+            flush_to_db(ALI_GLOBAL_MAX_CHANGES);
         }
         
     };
@@ -168,22 +187,7 @@ namespace ali_clang_plugin_runtime {
         std::vector<StaticFunctionData*>::iterator it = allfunctionex.begin();
         bool initilised = false;
         int iiterator = 0;
-        void write_database() {
-            std::cout << "write_to_database";
-            if (!initilised) {
-                it = allfunctionex.begin();
-                initilised=true;
-            }
-            if (it == allfunctionex.end())
-                it = allfunctionex.begin();
-            if (*it !=NULL)
-            (*it)->flush_to_db();
-            else
-               it = allfunctionex.begin();
-            it++;
-            iiterator++;
-        //loop through and call flush_to_db
-        }
+        void write_database(int change_limit);
     };
     static AllExecutionData alang_all_ex_data;
     void alang_add_static_function_data(StaticFunctionData* sfd) {

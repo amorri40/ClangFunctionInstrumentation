@@ -654,7 +654,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         if (c_file) {
         //c version
             
-            debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static int alang_execution_number=0;\n static CStaticFunctionData* ali_function_db = NULL; if (ali_function_db == NULL) ali_function_db = new_CStaticFunctionData(\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__);  if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT || alang_execution_number > ALI_GLOBAL_MAX_EX || ALI_EXE_PER_FRAME == 0 ) \n #endif \n";
+            debug_version_of_function << "{ \n #if NO_INSTRUMENT == false \n static int alang_execution_number=0;\n static CStaticFunctionData* ali_function_db = NULL; if (ali_function_db == NULL) ali_function_db = new_CStaticFunctionData(\"" << proper_filename << "_" << fname << "\", __LINE__, __FILE__);  if (!ALI_GLOBAL_DEBUG || NO_INSTRUMENT || alang_execution_number > ALI_GLOBAL_MAX_EX || (ALI_EXE_PER_FRAME <= 0 && alang_execution_number > ALI_GLOBAL_MIN_EX) ) \n #endif \n";
             debug_version_of_function << " " << whole_func; //non modified version
             debug_version_of_function << "\n #if NO_INSTRUMENT == false \n else {void* inst_func_db = alang_push_ex(ali_function_db); alang_execution_number++; \n";
         } else {
@@ -666,7 +666,7 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         debug_version_of_function << params_to_log.str();
         
         rewriter.InsertTextAfter(start_of_stmts, debug_version_of_function.str());
-        rewriter.InsertTextAfter(END, "\n}\n#endif \n");
+        rewriter.InsertTextAfter(END, "\n alang_pop_ex(inst_func_db);}\n#endif \n");
         rewriter.InsertTextAfter(END, "}");
         
     }

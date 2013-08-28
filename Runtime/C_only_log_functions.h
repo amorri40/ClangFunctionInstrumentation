@@ -16,17 +16,18 @@ typedef void CStaticFunctionData;
 typedef void CExecutionData;
 
 
-int alang_log_data(void* inst_func_db, int line_num, int start_loc, int end_loc, int val);
+//int alang_log_data(void* inst_func_db, int line_num, int start_loc, int end_loc, int val);
+long long alang_log_data(void* inst_func_db, int line_num, int start_loc, int end_loc, long long val);
 
 CStaticFunctionData* new_CStaticFunctionData(const char* the_func_name, int the_line_number, const char* the_file_name);
 
 
-struct alang_StaticFunctionData {
+/*struct alang_StaticFunctionData {
     int execution_number;
     const char* the_func_name;
     int the_line_number;
     const char* the_file_name;
-};
+};*/
 
 void alang_log_one_func_to_db();
 
@@ -37,7 +38,7 @@ struct InstrumentFunctionDB {
     double start_time, end_time, time_difference;
     long start_mem, end_mem, mem_difference;
     
-    struct alang_StaticFunctionData* ali_function_db;
+   // struct alang_StaticFunctionData* ali_function_db;
     //vector_of_change line_data;
     
     /*InstrumentFunctionDB( StaticFunctionData* the_db)  {
@@ -55,6 +56,7 @@ struct StaticFunctionData* create_StaticFunctionData(const char* the_func_name, 
 
 extern bool ALI_GLOBAL_DEBUG;
 extern int ALI_GLOBAL_MAX_EX;
+extern int ALI_GLOBAL_MIN_EX;
 extern int ALI_EXE_PER_FRAME;
 
 //#define false 0
