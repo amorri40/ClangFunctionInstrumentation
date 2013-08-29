@@ -98,11 +98,14 @@
 #define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(ALI_GLOBAL_MAX_CHANGES); line_data.clear();}}
 //slower but effective for segfaults
 
+#define ali_clang_add_to_map(val) {line_data.push_back(new ali_clang_plugin_runtime::Change(ali_clang_plugin_runtime::CHANGE_RHS,line_num, start_loc,end_loc,(val),clock())); ali_clang_flush_db_on_each_change}
+
 //#include "auto_generate.h"
 
 extern "C" {
 extern int ALI_GLOBAL_MAX_CHANGES;
     extern int ALI_GLOBAL_MIN_EX;
+    extern int TOTAL_CHANGE_COUNT;
 }
 
 namespace ali_clang_plugin_runtime {
@@ -120,30 +123,52 @@ namespace ali_clang_plugin_runtime {
         
         union
         {
-            int intValue;
+            long long intValue;
             double dblValue;
-            char *strValue;
-        } value;
-    } object;
+            const char *strValue;
+        };
+        
+        VAROBJECT(const char* str) {
+            strValue = str;
+            objectType=String;
+        }
+        VAROBJECT(std::string str) {
+            strValue = str.c_str();
+            objectType=String;
+        }
+        VAROBJECT(long long i) {
+            intValue=i;
+            objectType=Int;
+        }
+        VAROBJECT(double i) {
+            intValue=i;
+            objectType=Double;
+        }
+    };
+    std::ostream & operator<< ( std::ostream & os , const VAROBJECT & tk);
+    
     
     struct Change {
         ChangeTypes type;
-        std::string type_of_var;
-        int line_num;
-        int start_loc;
-        int end_loc;
-        std::string value;
+        //std::string type_of_var;
+        short line_num;
+        short start_loc;
+        short end_loc;
+        //std::string value;
         unsigned long time_of_change;
-        //VAROBJECT valu;
+        VAROBJECT value;
         
-        Change(ChangeTypes type, std::string type_of_var, int line_num,
+        
+        Change(ChangeTypes type, int line_num,
                int start_loc,
                int end_loc,
-               std::string value,
-               unsigned long time_of_change) : type(type), type_of_var(type_of_var), line_num(line_num), start_loc(start_loc), end_loc(end_loc), value(value), time_of_change(time_of_change) {
+               VAROBJECT value,
+               unsigned long time_of_change) : type(type), line_num(line_num), start_loc(start_loc), end_loc(end_loc), value(value), time_of_change(time_of_change) {
             //std::cout << "change constructor";
+            TOTAL_CHANGE_COUNT++;
         }
         ~Change() {
+            TOTAL_CHANGE_COUNT--;
             //std::cout << "change destructor";
         }
         
@@ -301,62 +326,62 @@ namespace ali_clang_plugin_runtime {
         }
         
         
-        void log_custom(int line_num, int start_loc, int end_loc, std::string ty,  std::string val) { ali_clang_add_to_map(ty,val)
+        void log_custom(int line_num, int start_loc, int end_loc, std::string ty,  std::string val) { ali_clang_add_to_map(val)
             ;
         }
         /*
          constant overloads
          */
         
-        const long double log_change(int line_num, int start_loc, int end_loc, const long double&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long double",ali_clang_value.str())
+        const long double log_change(int line_num, int start_loc, int end_loc, const long double&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str())
             return val;
         }
         
-        const long int log_change(int line_num, int start_loc, int end_loc, const long int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long int",ali_clang_value.str())
+        const long int log_change(int line_num, int start_loc, int end_loc, const long int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str())
             return val;
         }
         
-        const int log_change(int line_num, int start_loc, int end_loc, const int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("int",ali_clang_value.str())
+        const int log_change(int line_num, int start_loc, int end_loc, const int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str())
             return val;
         }
         
-        const unsigned int log_change(int line_num, int start_loc, int end_loc, const unsigned int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("unsigned int",ali_clang_value.str())
+        const unsigned int log_change(int line_num, int start_loc, int end_loc, const unsigned int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str())
             return val;
         }
         
-        const double log_change(int line_num, int start_loc, int end_loc, const double&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("double",ali_clang_value.str())
+        const double log_change(int line_num, int start_loc, int end_loc, const double&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str())
             return val;
         }
         
-        const char log_change(int line_num, int start_loc, int end_loc, const char&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("char",ali_clang_value.str()) return val;
+        const char log_change(int line_num, int start_loc, int end_loc, const char&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str()) return val;
         }
         
-        const float log_change(int line_num, int start_loc, int end_loc, const float&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("float",ali_clang_value.str()) return val;
+        const float log_change(int line_num, int start_loc, int end_loc, const float&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str()) return val;
         }
         
-        const size_t log_change(int line_num, int start_loc, int end_loc, const size_t&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("size_t",ali_clang_value.str()) return val;
+        const size_t log_change(int line_num, int start_loc, int end_loc, const size_t&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str()) return val;
         }
         
-        const std::string log_change(int line_num, int start_loc, int end_loc, const std::string&& val) { stdlogger;ali_clang_add_to_map("string",val) return val;
+        const std::string log_change(int line_num, int start_loc, int end_loc, const std::string&& val) { stdlogger;ali_clang_add_to_map(val) return val;
         }
         
-        const char* log_change(int line_num, int start_loc, int end_loc, const char* val) { stdlogger; ali_clang_add_to_map("const char*",val) return val;
+        const char* log_change(int line_num, int start_loc, int end_loc, const char* val) { stdlogger; ali_clang_add_to_map(val) return val;
         }
         
         
         /*
          Non constant overloads
          */
-        
-        long double log_change(int line_num, int start_loc, int end_loc, long double&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long double",ali_clang_value.str())
+        /*
+        long double log_change(int line_num, int start_loc, int end_loc, long double&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str())
             return val;
         }
         
-        long int log_change(int line_num, int start_loc, int end_loc, long int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("long int",ali_clang_value.str())
+        long int log_change(int line_num, int start_loc, int end_loc, long int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str())
             return val;
         }
         
-        int log_change(int line_num, int start_loc, int end_loc, int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("int",ali_clang_value.str())
+        int log_change(int line_num, int start_loc, int end_loc, int&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str())
             return val;
         }
         
@@ -373,11 +398,11 @@ namespace ali_clang_plugin_runtime {
         
         float log_change(int line_num, int start_loc, int end_loc, float&& val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("float",ali_clang_value.str()) return val;
         }
-        
+        */
         /*size_t log_change(int line_num, int start_loc, int end_loc, size_t val) { std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("size_t",ali_clang_value.str()) return val;
         }*/
         
-        bool log_change(int line_num, int start_loc, int end_loc, bool&& val) { stdlogger; std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("bool",ali_clang_value.str()) return val;
+        bool log_change(int line_num, int start_loc, int end_loc, bool&& val) { stdlogger; std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map(ali_clang_value.str()) return val;
         }
         
         /*std::string log_change(int line_num, int start_loc, int end_loc, std::string val) { ali_clang_add_to_map("string",val) return val;
@@ -388,11 +413,11 @@ namespace ali_clang_plugin_runtime {
             if (&val == NULL) return NULL;
             if (val == 0) return val;
             if(*val == '\0') return val;
-            ali_clang_add_to_map("char*",val)
+            ali_clang_add_to_map(val)
             
             return val;
         }
-        
+        /*
         template <class T>
         std::basic_ios<T>& log_change(int line_num, int start_loc, int end_loc, std::basic_ios<T>& val) { ali_clang_add_to_map("std::ios","iostream") return val;
         }
@@ -424,7 +449,7 @@ namespace ali_clang_plugin_runtime {
         template <class T>
         const std::basic_ofstream<T>& log_change(int line_num, int start_loc, int end_loc, const std::basic_ofstream<T>& val) { ali_clang_add_to_map("std::ios","iostream") return val;
         }
-        
+        */
         
         /*template <class T>
         T log_builtin(int line_num, int start_loc, int end_loc, T val) {
@@ -435,16 +460,13 @@ namespace ali_clang_plugin_runtime {
         
         template <class T>
         const T& log_builtin(int line_num, int start_loc, int end_loc, const T& val) {
-            std::ostringstream v;
-            v << val;
-            ali_clang_add_to_map(typeid(T).name(),v.str()) return val;
+            ali_clang_add_to_map(val) return val;
         }
         
         template <class T>
         T& log_builtin(int line_num, int start_loc, int end_loc, T& val) {
-            std::ostringstream v;
-            v << val;
-            ali_clang_add_to_map(typeid(T).name(),v.str()) return val;
+            
+            ali_clang_add_to_map(val) return val;
         }
         
         /*
@@ -465,11 +487,11 @@ namespace ali_clang_plugin_runtime {
                 //std::cout << ali_clang_value;
             }
             
-            ali_clang_add_to_map(typeid(T).name(),ali_clang_value)
+            ali_clang_add_to_map(ali_clang_value)
             return val;//(T&)val;
         }
         
-        template <typename T> T& log_change(int line_num, int start_loc, int end_loc, T& val) {
+       /* template <typename T> T& log_change(int line_num, int start_loc, int end_loc, T& val) {
             stdlogger;
             std::string ali_clang_value = "T&";
             if (sizeof(T) < 20) {
@@ -499,11 +521,11 @@ namespace ali_clang_plugin_runtime {
             
             return val;
         }
-        
+        */
         /*
          Pointer templates (just check if null or not for now
          */
-        
+        /*
         template <typename T> T* log_change(int line_num, int start_loc, int end_loc, T* val) {
             stdlogger;
             std::string ali_clang_value;
@@ -519,11 +541,11 @@ namespace ali_clang_plugin_runtime {
             ali_clang_add_to_map(typeid(T).name(),ali_clang_value)
             return val;
         }
-        
+        */
         /*
          Special overloads
          */
-        
+        /*
         template <class T, class T2> std::map<T,T2> log_change(int line_num, int start_loc, int end_loc, std::map<T,T2> val) {
             stdlogger;
             std::ostringstream ali_clang_value; ali_clang_value << " Map<" << typeid(T).name() << "," << typeid(T2).name() << "> (" << val.size() << ")";
@@ -544,11 +566,11 @@ namespace ali_clang_plugin_runtime {
             ali_clang_add_to_map(typeid(T).name(),ali_clang_value.str())
             return val;
         }
-        
+        */
         /*
          LValue
          */
-        template <typename T> T& log_lvalue(int line_num, int start_loc, int end_loc, T& val) {
+        /*template <typename T> T& log_lvalue(int line_num, int start_loc, int end_loc, T& val) {
             stdlogger;
             std::string ali_clang_value = "LValueT&";
             ali_clang_add_to_map(typeid(T).name(),ali_clang_value)
@@ -563,11 +585,11 @@ namespace ali_clang_plugin_runtime {
             //std::cout << "end of T&";
             return val;
         }
-        
+        */
         /*
          Boolean expressions
          */
-        bool log_boolexp(int line_num, int start_loc, int end_loc, bool val) { stdlogger; std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("bool",ali_clang_value.str()) return val;
+        /*bool log_boolexp(int line_num, int start_loc, int end_loc, bool val) { stdlogger; std::ostringstream ali_clang_value; ali_clang_value << val; ali_clang_add_to_map("bool",ali_clang_value.str()) return val;
         }
         
         template <typename T> T log_uvalue(int line_num, int start_loc, int end_loc, T& val) {
@@ -585,7 +607,7 @@ namespace ali_clang_plugin_runtime {
             //std::cout << "end of T&";
             return val;
         }
-        
+        */
         
     };
 

@@ -11,3 +11,5 @@
 @interface iOSLogger : NSObject
 
 @end
+
+void start_logging_thread();

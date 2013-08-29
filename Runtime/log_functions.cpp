@@ -20,6 +20,9 @@ extern "C" {
     int ALI_EXE_PER_FRAME = 50; //starting executions per sec
     int ALI_MAX_PER_FRAME = 50; //40 is good
     int WAIT_FOR_FRAMES = 0;
+    int TOTAL_CHANGE_COUNT = 0;
+    const char* database_name=0;
+    bool ALI_STARTED_THREAD=false;
     
     namespace ali_clang_plugin_runtime {
     extern ali_clang_plugin_runtime::AllExecutionData alang_all_ex_data;
@@ -33,16 +36,18 @@ extern "C" {
     }
     
     int alang_start_clock = clock();
+    extern void start_logging_thread();
     
     void alang_alter_logging() {
         if (!ALI_GLOBAL_DEBUG) return;
+        if (!ALI_STARTED_THREAD) {start_logging_thread();ALI_STARTED_THREAD=true;}
         static int timeDemoFrames = 0;
-        static long long time_last_sec = clock();
+        //static long long time_last_sec = clock();
         static struct timeval start, end;
         
-        timeDemoFrames++;
-        if (WAIT_FOR_FRAMES > 0) {WAIT_FOR_FRAMES--; gettimeofday(&start, NULL); return;}
         
+        if (WAIT_FOR_FRAMES > 0) {WAIT_FOR_FRAMES--; gettimeofday(&start, NULL); return;}
+        timeDemoFrames++;
         
         if (timeDemoFrames%1 == 0) { //every X frames
             long mtime, seconds, useconds;
@@ -77,23 +82,34 @@ extern "C" {
                 ALI_EXE_PER_FRAME = ALI_MAX_PER_FRAME; //needs to be reset
             }*/
             
+            if (timeDemoFrames%90 == 0) {
+                //log info
+                //std::cout << "exe_per_frame_leftover:" << ALI_EXE_PER_FRAME << " max_ex:" << ALI_GLOBAL_MAX_EX << "ALI_MAX_PER_FRAME:" << ALI_MAX_PER_FRAME << " Total_change:"<< TOTAL_CHANGE_COUNT << " time:" << mtime << "\n";
+            }
+            
             
             ALI_EXE_PER_FRAME = ALI_MAX_PER_FRAME;
             
             gettimeofday(&start, NULL);
             
-            if (timeDemoFrames%1 == 0) { //only log every second
+            /*if (timeDemoFrames%130 == 0) { //only log every second
                 //exections logged in this frame is neither all or none so lets log
-                alang_log_one_func_to_db(ALI_GLOBAL_MAX_CHANGES*2);
-                std::cout << "exe_per_frame_leftover:" << ALI_EXE_PER_FRAME << " max_ex:" << ALI_GLOBAL_MAX_EX << "ALI_MAX_PER_FRAME:" << ALI_MAX_PER_FRAME << " time:" << mtime << "\n";
+                //alang_log_one_func_to_db(ALI_MAX_PER_FRAME);
+                gettimeofday(&end, NULL);
+                seconds  = end.tv_sec  - start.tv_sec;
+                useconds = end.tv_usec - start.tv_usec;
+                mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+                //std::cout << "It took:" << (mtime/33)<<"\n";
                 //ALI_EXE_PER_FRAME =0;
                 //ALI_GLOBAL_MAX_EX--;
-                //WAIT_FOR_FRAMES=1;
+                WAIT_FOR_FRAMES+=(mtime/33)+0.5;
+            }*/
+            if (TOTAL_CHANGE_COUNT > 100000)  {
+                ALI_EXE_PER_FRAME =0;
+                ALI_MAX_PER_FRAME=1;
+                //sqlite3_close(ali__log__db);
+                //sqlite3_open(database_name, &ali__log__db);
             }
-            
-            
-            //ALI_EXE_PER_FRAME = ALI_MAX_PER_FRAME;
-            //time_last_sec = clock();
             
         }
         //float	fps = timeDemoFrames * 1000.0f / ( clock() - alang_start_clock );
@@ -152,19 +168,32 @@ extern "C" {
 
 namespace ali_clang_plugin_runtime {
     
+    std::ostream & operator<< ( std::ostream & os , const VAROBJECT & ty) {
+        switch (ty.objectType) {
+            case VAROBJECT::Int:
+                os << ty.intValue;
+                break;
+            case VAROBJECT::String:
+                os << ty.strValue;
+                break;
+            case VAROBJECT::Double:
+                os << ty.dblValue;
+                break;
+        }
+        return os;
+    }
     
-    
-    void AllExecutionData::write_database(int change_limit) {
+    void AllExecutionData::write_database(int exe_limit) {
         int current_logs=0;
         int number_logged = 0;
         int size = allfunctionex.size();
-        while (current_logs < change_limit && number_logged < size) {
+        while (current_logs < exe_limit && number_logged < size) {
             
             
             if (iiterator < size)
             {
                 //current_logs += allfunctionex[iiterator]->all_function_executions.size();
-                current_logs += allfunctionex[iiterator]->flush_to_db(change_limit);
+                current_logs += allfunctionex[iiterator]->flush_to_db(exe_limit);
             }
             else {
                 iiterator=0;
@@ -176,7 +205,7 @@ namespace ali_clang_plugin_runtime {
         
     }
     
-
+    
     bool ALI_GLOBAL_DEBUG = true;
 sqlite3 *ali__log__db;
     int ALI_GLOBAL_MAX_EX = 3;
@@ -186,6 +215,7 @@ sqlite3 *ali__log__db;
 #ifdef IPHONE
         db_name = get_dbpath_path();
 #endif
+        database_name = db_name.c_str();
         /* Open database */
         int rc = sqlite3_open(db_name.c_str(), &ali__log__db);
         if( rc ){
@@ -226,7 +256,7 @@ sqlite3 *ali__log__db;
         
         int result = sqlite3_step(stmt);
         sqlite3_clear_bindings(stmt);
-        //sqlite3_reset(stmt);
+        sqlite3_reset(stmt);
         return result;
     }
 
@@ -240,16 +270,16 @@ sqlite3 *ali__log__db;
         created_tables=true;
         
         
-        WAIT_FOR_FRAMES=1;
+        //WAIT_FOR_FRAMES=1;
     }
     
     bool created_segfault_handler=false;
     
-    int StaticFunctionData::flush_to_db(int change_limit) {
-        //all_function_executions.clear(); //debug remove
+    int StaticFunctionData::flush_to_db(int exe_limit) {
+        
         if (all_function_executions.empty()) return 0;
         
-        //if (!created_tables) {create_tables();return change_limit;}
+        if (!created_tables) {create_tables();}//return 2;}
         
         
         stmt_unique = start_insert(func_name,"_changes_unique"," VALUES (@SP, @TY, @NA, @VA, @LI, @TI)");
@@ -261,50 +291,50 @@ sqlite3 *ali__log__db;
         this->execution_number++;
         //std::cout << "\n\n" << func_name << "\n";
         
-        int changes_logged=0;
+        int executions_logged=0;
         
         for(std::vector<vector_of_change>::iterator execution = all_function_executions.begin(); execution != all_function_executions.end(); execution++) {
-            vector_of_change line_data = *execution;
+            if (execution->empty()) continue;
+            //vector_of_change* line_data = execution;
             //std::ostringstream special_id;
             std::ostringstream execution_id;//, all_execution_id;
             
             unsigned long start_time=0,end_time=0;
-            for(vector_of_change::iterator it2 = line_data.begin(); it2 != line_data.end(); ++it2) { //
+            for(vector_of_change::iterator it2 = execution->begin(); it2 != execution->end(); ++it2) { //
                Change* c = *it2;
-                if (c== NULL) {std::cout << "C is null"; all_function_executions.erase(execution); continue;}
+                if (c== NULL) {std::cout << "\n===C is null==="<<"\n\n\n"; continue;}
                 if (ali__log__db == NULL) { std::cout << "database is null"; delete c; all_function_executions.erase(execution); return 0;}
                 
-                if (it2 == line_data.begin())
+                if (it2 == execution->begin())
                     start_time=c->time_of_change;
                 
                 std::ostringstream unique_special_id;
-                    unique_special_id << "[" << c->line_num << "," << c->start_loc << "," << c->end_loc << ",\"" << c->value << "\", \""<< c->type_of_var << "\"]";
+                    unique_special_id << "[" << c->line_num << "," << c->start_loc << "," << c->end_loc << ",\"" << c->value << "\", \""<< c->value.objectType << "\"]";
                     end_time = c->time_of_change;
                 long long insert_row_id=-1;
                 
-               // if ( map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end() ) {
+                //if ( map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end() ) {
                     // not found so add to db
                 
                 
                 int change_result = bind_change_sql(stmt_unique,unique_special_id.str(), "", "", "", c->line_num, end_time);
-                    long long last_row=-1;
-                    if (change_result == SQLITE_DONE)
-                    last_row = sqlite3_last_insert_rowid(ali__log__db);
-                    insert_row_id = last_row;
+                long long last_row=-1;
+                if (change_result == SQLITE_DONE)
+                last_row = sqlite3_last_insert_rowid(ali__log__db);
+                insert_row_id = last_row;
                 
-                    /*if (last_row !=-1) {
-                        map_of_sqlrows[unique_special_id.str()] = last_row; insert_row_id = last_row;}
-                    else
-                    {map_of_sqlrows[unique_special_id.str()] = -1; insert_row_id = -1;}*/
-              //  } else {
-              //      insert_row_id = map_of_sqlrows[unique_special_id.str()];
-              //  }
+                     /*   if (last_row !=-1) {
+                            map_of_sqlrows[unique_special_id.str()] = last_row; insert_row_id = last_row;}
+                        else
+                        {map_of_sqlrows[unique_special_id.str()] = -1; insert_row_id = -1;}
+                    } else {
+                        insert_row_id = map_of_sqlrows[unique_special_id.str()];
+                    }*/
                 execution_id << insert_row_id << ",";
                 delete c;
-                changes_logged++;
                 
-                //if (changes_logged > change_limit) {all_function_executions.erase(execution); return changes_logged;}
             }
+            execution->clear();
             
             //all_function_executions.erase
             //line_data.clear();
@@ -312,7 +342,9 @@ sqlite3 *ali__log__db;
                 int unique_ex_result = bind_change_sql(stmt_ex_unique,execution_id.str(), "", "", "", start_time, end_time);
                 unsigned long unique_that_was_just_inserted = sqlite3_last_insert_rowid(ali__log__db);
                 bind_change_sql(stmt_ex_all,execution_id.str(), "", "", "", start_time, end_time);
-            all_function_executions.erase(execution);
+            //all_function_executions.erase(execution);
+            //executions_logged++;
+            //if (executions_logged > exe_limit) break;
             }
         
         sqlite3_exec(ali__log__db, "END TRANSACTION", NULL, NULL, &sErrMsg);
@@ -321,7 +353,7 @@ sqlite3 *ali__log__db;
         sqlite3_finalize(stmt_ex_unique);
         
         all_function_executions.clear(); //now that they have been writtern destroy them
-        return changes_logged;
+        return executions_logged;
     }
     
 
