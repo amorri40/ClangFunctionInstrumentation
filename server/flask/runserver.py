@@ -25,8 +25,8 @@ def getJSON(fname,data_type):
     if data_type == 'trace':
         ex_id = int(request.args.get('exid', ''))
         functionname = request.args.get('funcname', '')
-        output_trace = ali_vis.get_trace_data(fname,table_suffix,ex_id,functionname,database_name)
-        ret = dict(code="", trace=output_trace)
+        output_trace,changes_array = ali_vis.get_trace_data(fname,table_suffix,ex_id,functionname,database_name)
+        ret = dict(code="", trace=output_trace, changes=changes_array)
     else:
         ret = ali_vis.get_timeline_data(fname,table_suffix,database_name)
     return json.dumps(ret, indent=None)

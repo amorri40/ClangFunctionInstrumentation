@@ -107,6 +107,8 @@ var curVisualizerID = 1; // global to uniquely identify each ExecutionVisualizer
 function ExecutionVisualizer(domRootID, dat, params) {
   this.curInputCode = dat.code.rtrim(); // kill trailing spaces
   this.curTrace = dat.trace;
+  this.changes_array = dat.changes;
+
 
 
   // optional filtering to remove redundancy ...
@@ -300,7 +302,7 @@ ExecutionVisualizer.prototype.render = function() {
        <textarea id="pyStdout" cols="50" rows="10" wrap="off" readonly></textarea>\
      </div>';
 
-  var codeVizHTML =
+  var codeVizHTML = '<div id="globals_area"></div>'; /*
     '<div id="dataViz">\
        <table id="stackHeapTable">\
          <tr>\
@@ -317,7 +319,7 @@ ExecutionVisualizer.prototype.render = function() {
            </td>\
          </tr>\
        </table>\
-     </div>';
+     </div>';*/ //alang
 
   var vizHeaderHTML =
     '<div id="vizHeader">\
@@ -482,10 +484,18 @@ ExecutionVisualizer.prototype.render = function() {
 
   // create a persistent globals frame
   // (note that we need to keep #globals_area separate from #stack for d3 to work its magic)
-  this.domRoot.find("#globals_area").append('<div class="stackFrame" id="'
+  /*this.domRoot.find("#globals_area").append('<div class="stackFrame" id="'
     + myViz.generateID('globals') + '"><div id="' + myViz.generateID('globals_header')
-    + '" class="stackFrameHeader">Global variables</div><table class="stackFrameVarTable" id="'
-    + myViz.generateID('global_table') + '"></table></div>');
+    + '" class="stackFrameHeader">Current Value of the Expression</div><table class="stackFrameVarTable" id="'
+    + myViz.generateID('global_table') + '"></table><div class="stackFrameHeader"> Other values in this execution</div></div>');
+*/
+// Custom component for alang
+this.domRoot.find("#globals_area").html("<div id='current_value_of_exp' class=\"well\">Current value: 10</div><h5>All known values:</h5><div id='table_of_values'></div>");
+//function drawVisualization() {
+      // Create and populate the data table.
+      
+//    }
+    // end alang
 
 
   if (this.params.hideOutput) {
@@ -1276,6 +1286,28 @@ ExecutionVisualizer.prototype.updateOutput = function(smoothTransition) {
 
   var curEntry = this.curTrace[this.curInstr];
   var hasError = false;
+  
+  $('#current_value_of_exp').html("Current value: "+curEntry['exp_value']);//+"( type:"+curEntry['exp_val_type']+")");
+  var value_array = [['Value', 'Time']];
+  for (change_num in this.changes_array) {
+    change = this.changes_array[change_num];
+    //console.log(change);
+    if (change[1] == curEntry['col_start'] && change[2] == curEntry['col_end'] && change[3] == curEntry['line']) {
+      console.log("yay! change[0]:");
+      console.log(change[0]);
+      
+      var value_of_other_exp = jQuery.parseJSON(change[0]);
+      console.log(value_of_other_exp);
+      value_array.push([value_of_other_exp[3],change[4]]);
+    }
+  }
+  //google
+  var data = google.visualization.arrayToDataTable(value_array);
+    
+      // Create and draw the visualization.
+      visualization = new google.visualization.Table(document.getElementById('table_of_values'));
+      visualization.draw(data, null);
+
   // bnm  Render a question
   if (curEntry.question) {
       //alert(curEntry.question.text);
@@ -1909,7 +1941,7 @@ ExecutionVisualizer.prototype.precomputeCurTraceLayouts = function() {
 
 
     // iterate through all globals and ordered stack frames and call updateCurLayout
-    $.each(curEntry.ordered_globals, function(i, varname) {
+    /*$.each(curEntry.ordered_globals, function(i, varname) {
       var val = curEntry.globals[varname];
       if (val !== undefined) { // might not be defined at this line, which is OKAY!
         if (!isPrimitiveType(val)) {
@@ -1928,7 +1960,7 @@ ExecutionVisualizer.prototype.precomputeCurTraceLayouts = function() {
           updateCurLayout(id, null, []);
         }
       });
-    });
+    });*/
 
 
     // iterate through remaining elements of idsToRemove and REMOVE them from curLayout
@@ -2471,14 +2503,14 @@ ExecutionVisualizer.prototype.renderDataStructures = function() {
   // (Sometimes entries in curEntry.ordered_globals are undefined,
   // so filter those out.)
   var realGlobalsLst = [];
-  $.each(curEntry.ordered_globals, function(i, varname) {
+  /*$.each(curEntry.ordered_globals, function(i, varname) {
     var val = curEntry.globals[varname];
 
     // (use '!==' to do an EXACT match against undefined)
     if (val !== undefined) { // might not be defined at this line, which is OKAY!
       realGlobalsLst.push(varname);
     }
-  });
+  });*/
 
   var globalsID = myViz.generateID('globals');
   var globalTblID = myViz.generateID('global_table');
@@ -2584,12 +2616,12 @@ ExecutionVisualizer.prototype.renderDataStructures = function() {
 
 
   // for aesthetics, hide globals if there aren't any globals to display
-  if (curEntry.ordered_globals.length == 0) {
+  /*if (curEntry.ordered_globals.length == 0) {
     this.domRoot.find('#' + globalsID).hide();
   }
   else {
     this.domRoot.find('#' + globalsID).show();
-  }
+  }*/
 
 
   // holy cow, the d3 code for stack rendering is ABSOLUTELY NUTS!

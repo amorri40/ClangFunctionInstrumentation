@@ -64,8 +64,9 @@ def get_timeline_data(fname,table_suffix, database_name='enigma_compiler.sqlite'
         #print "path_to_file:"+path_to_file
         execution_id = 0
         for execution in unique_executions:
-            last_time = execution[4]
-            this_exec = {"id": funcname+str(execution_id), "funcname":funcname, "exid":execution_id, "title":funcname, "description":funct[1].replace(fname,''), "link":path_to_file, "startdate": ms_to_string(execution[4]), "enddate": ms_to_string(execution[5]), "modal_type":"full","importance": 50,"high_threshold":60,"date_display":"year","icon":"flag_yellow.png"}
+            last_time = execution[2] # this is used for all_data to focus on the last date
+            this_exec = {"id": funcname+str(execution_id), "funcname":funcname, "exid":execution_id, "title":funcname, "description":funct[1].replace(fname,''), "link":path_to_file, "startdate": ms_to_string(execution[1]), "enddate": ms_to_string(execution[2]), "modal_type":"full","importance": 50,"high_threshold":60,"date_display":"year","icon":"flag_yellow.png"}
+            print this_exec
             all_events.append(this_exec)
             execution_id+=1
 
@@ -116,15 +117,15 @@ def get_trace_data(fname,table_suffix, ex_id, function_name, database_name='enig
             else:
                 change_data_string = changes_array[exe_change[0]][0]
             change_data = json.loads(change_data_string,strict=False)
-            #print change_data
+            print change_data
             line_num = change_data[0]
             line_start_col = change_data[1]
             line_end_col = change_data[2]
             val = change_data[3]
-            val_type = change_data[4]
+            #val_type = change_data[4]
             #print val_type
-            output_trace.append({'func_name': fname, 'event': 'step_line', 'stack_to_render': [], 'stdout': '', 'heap': {1: ['Expression', 'happy()', None]}, 'line': line_num, 'column':(line_start_col-1), 'expr_width':(line_end_col-line_start_col), 'ordered_globals': [val], 'globals': {val:val_type}})             
-        return output_trace
+            output_trace.append({'exp_value':val, 'col_start' : line_start_col, 'col_end': line_end_col, 'func_name': fname, 'event': 'step_line', 'stack_to_render': [], 'stdout': '', 'heap': {}, 'line': line_num, 'column':(line_start_col-1), 'expr_width':(line_end_col-line_start_col)})             
+        return output_trace, changes_array
     except lite.Error, e:
         
         print "Error %s:" % e.args[0]

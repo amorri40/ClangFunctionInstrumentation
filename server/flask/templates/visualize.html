@@ -284,6 +284,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           </div><!--/.well -->
         </div><!--/span-->
   <div class="span9">
+    <!--<ul class="breadcrumb">
+      <li><a href="#">Home</a> <span class="divider">/</span></li>
+      <li><a href="#">Library</a> <span class="divider">/</span></li>
+      <li class="active">Data</li>
+    </ul>-->
     <div class="alert alert-info">
       <button type="button" class="close" data-dismiss="alert">&times;</button>
       <h4>General Information</h4>
@@ -343,7 +348,12 @@ Changes and Backend is Copyright &copy; 2013 <a href="http://www.alasdairmorriso
   
   <script src="{{ url_for('static', filename='js/jquery.jscrollpane.min.js') }}" type="text/javascript"></script>
 
-
+  <!-- google charts -->
+  <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+  <script type="text/javascript">
+      google.load('visualization', '1', {packages: ['table']});
+    </script>
+  <!-- end google charts -->
 
   <script type='text/javascript'>
   

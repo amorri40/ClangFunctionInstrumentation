@@ -209,7 +209,7 @@ namespace ali_clang_plugin_runtime {
         std::vector<vector_of_change> all_function_executions;
         std::map<std::string, long long> map_of_sqlrows;
         bool created_tables;
-        sqlite3_stmt *stmt_unique=0 , *stmt_ex_unique=0, *stmt_ex_all=0;
+        sqlite3_stmt *stmt_unique=0 , *stmt_ex_unique=0;//, *stmt_ex_all=0;
         
         StaticFunctionData(std::string the_func_name, int the_line_number, std::string the_file_name) : func_name(the_func_name), start_of_function_line_number(the_line_number), file_name(the_file_name) {
             //possibly take in number of lines

@@ -78,7 +78,7 @@ void getImage (bool isMainLoop) {
         UIImage *myImage = [UIImage imageWithCGImage:imageRef];
         
             
-            NSString *image_filename = [NSString stringWithFormat:@"%lld_screen.jpg",alang_screenshot_time_logged];//@"_screen.jpg";
+            NSString *image_filename = [NSString stringWithFormat:@"/Alang_Screenshots/%lld_screen.jpg",alang_screenshot_time_logged];//@"_screen.jpg";
         
         // Create path.
         NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -114,5 +114,12 @@ const char* get_dbpath_path() {
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString* documentsDirectory = [paths lastObject];
     NSString* databasePath = [documentsDirectory stringByAppendingPathComponent:@"alang_ios.sqlite"];
+    //delete the file
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager removeItemAtPath:databasePath error:NULL];
+    NSString* imageFolder = [documentsDirectory stringByAppendingPathComponent:@"/Alang_Screenshots"];
+    BOOL success = [[NSFileManager defaultManager] removeItemAtPath:imageFolder error:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:imageFolder withIntermediateDirectories:NO attributes:nil error:nil];
+    
     return [databasePath UTF8String];
 }
