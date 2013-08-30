@@ -10,6 +10,8 @@
 #import "EAGLView.h"
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES1/glext.h>
+//#include "log_functions.h"
+
 
 @implementation iOSLogger
 
@@ -23,6 +25,9 @@ GLint alang_screenshot_width=0;
 
 GLint alang_screenshot_height=0;
 long long alang_screenshot_time_logged;
+//extern sqlite3 *ali__log__db;
+
+extern void execute_query(const char* query);
 
 void getImage (bool isMainLoop) {
     
@@ -91,6 +96,11 @@ void getImage (bool isMainLoop) {
         CGColorSpaceRelease(colorSpaceRef);
         free(alang_screenshot_buffer);
         free(buffer2);
+        
+        char * sErrMsg = 0;
+        NSString *query = [NSString stringWithFormat:@"INSERT INTO alang_screenshots VALUES (%lld,'/Alang_Screenshots/%lld_screen.jpg')",alang_screenshot_time_logged,alang_screenshot_time_logged];
+        //sqlite3_exec(ali__log__db, [query UTF8String], NULL, NULL, &sErrMsg);
+        execute_query([query UTF8String]);
             alang_taken_screenshot=false;
             NSLog(@" written screen shot %d %d",alang_screenshot_width,alang_screenshot_height);
     }

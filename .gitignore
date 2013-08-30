@@ -8,6 +8,11 @@
 .DS_Store
 *.debug
 *.debug.c
+*.jpg
+.svn
+*.iPack
+*.xc*
+*.otf
 
 Runtime/auto_generate.cpp
 

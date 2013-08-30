@@ -11,9 +11,12 @@
 
 #include <stdbool.h>
 #include <stddef.h> // for NULL
+//#include "sqlite3.h"
 
 typedef void CStaticFunctionData;
 typedef void CExecutionData;
+
+//extern sqlite3 *ali__log__db;
 
 #define ALANG_LOG_CHAR(line,beg,end,arg) (alang_log_data(inst_func_db, line,beg,end,(arg)))
 #define ALANG_LOG_BOOL(line,beg,end,arg) (alang_log_bool(inst_func_db, line,beg,end,(arg)))

@@ -5,14 +5,18 @@
 //  Created by Alasdair Morrison on 24/07/2013.
 //  Copyright (c) 2013 Alasdair Morrison. All rights reserved.
 //
+
+
 #ifdef __cplusplus
+
+#ifndef TestAliClang_log_functions_h
+#define TestAliClang_log_functions_h
+
 #define _Bool bool
 #define size_type __size_type
 #include <vector>
 #include <map>
 
-#ifndef TestAliClang_log_functions_h
-#define TestAliClang_log_functions_h
 #import <iostream>
 #import <time.h>
 #include <sstream>
@@ -20,6 +24,7 @@
 #import <mach/mach.h>
 #include <execinfo.h>
 #include <signal.h>
+#include "sqlite3.h"
 
 #define private public
 //#define class struct
@@ -106,9 +111,14 @@ extern "C" {
 extern int ALI_GLOBAL_MAX_CHANGES;
     extern int ALI_GLOBAL_MIN_EX;
     extern int TOTAL_CHANGE_COUNT;
+    extern sqlite3 *ali__log__db;
+    void execute_query(const char* query);
 }
 
 namespace ali_clang_plugin_runtime {
+    
+    void create_table(std::string table_name, std::string table_name_suffix, std::string schema);
+    
     
     enum ChangeTypes {
         CHANGE_RHS, CHANGE_LHS, CHANGE_FUNCTIONCALL};
@@ -186,7 +196,7 @@ namespace ali_clang_plugin_runtime {
     //typedef std::map<int, std::vector<Change> > map_of_vector_of_change;
     typedef std::vector<Change> vector_of_change;
 
-    extern sqlite3 *ali__log__db; //global statebase (sqlite)
+    //extern sqlite3 *ali__log__db; //global statebase (sqlite)
 
 
     extern bool ALI_GLOBAL_DEBUG;

@@ -3559,7 +3559,7 @@ tg.TG_TimelinePlayer.prototype = {
 			// modal type: first check event, then timeline-wide option
 			modal_type = ev.modal_type || options.event_modal.type;
 						
-			var ev_img = (ev.image && ev.image.src) ? "<img src='" + ev.image.src + "'>" : "",
+			var ev_img = (ev.image && ev.image.src) ? "<img id = 'main_screenshot' src='" + ev.image.src + "'>" : "",
 			
 			links = this.createEventLinksMenu(ev.link),
 		  	
@@ -3676,7 +3676,7 @@ tg.TG_TimelinePlayer.prototype = {
       	  				$vid.find("iframe").css("height", $vid.width() * .66)
       	  				
       	  				
-      	  			} else if(cpp_view == true) {
+      	  			} else if(cpp_view == true && !ev.image) {
       	  				$cpp = $("<div id=\"pyOutputPane\"></div>").prependTo(".tg-full_modal-body");
       	  				$cpp.find("#pyOutputPane").css({"height": "100%", "overflow-y":"scroll"})
       	  				console.log(ev.link)
@@ -3689,7 +3689,9 @@ tg.TG_TimelinePlayer.prototype = {
       	  		
      				
      				if (ev.image) {
-     					var $img = $(".tg-full_modal-body img");
+     					
+     					var $img = $(ev_img).prependTo(".tg-full_modal-body");
+     					//var $img = $(".tg-full_modal-body img");
      					var img_max_ht = ph-110;
      					
      					if (ev.image.height > img_max_ht) {

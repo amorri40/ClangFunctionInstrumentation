@@ -48,6 +48,7 @@ div.ExecutionVisualizer table.visualizer {
 
 div.ExecutionVisualizer table.visualizer td.vizLayoutTd {
   vertical-align: top;
+  width:400px;
 }
 
 div.ExecutionVisualizer td#stack_td,
@@ -67,7 +68,7 @@ div.ExecutionVisualizer div#codeDisplayDiv {
 
 div.ExecutionVisualizer div#pyCodeOutputDiv {
   /*max-width: 550px;*/
-  max-height: 250px;
+  max-height: 350px;
   /*max-height: 620px;*/
   overflow: auto;
   /*margin-bottom: 4px;*/
@@ -396,7 +397,7 @@ div.ExecutionVisualizer .typeLabel {
 div.ExecutionVisualizer div#stack,
 div.ExecutionVisualizer div#globals_area {
   padding-left: 10px;
-  padding-right: 30px;
+  /*padding-right: 30px;*/
 
   /* no longer necessary ... */
   /*float: left;*/

@@ -24,6 +24,12 @@ extern "C" {
     const char* database_name=0;
     bool ALI_STARTED_THREAD=false;
     
+    void execute_query(const char* query) {
+        std::cout << "Query:" << query;
+        char * sErrMsg = 0;
+        sqlite3_exec(ali__log__db, query, NULL, NULL, &sErrMsg);
+    }
+    
     namespace ali_clang_plugin_runtime {
     extern ali_clang_plugin_runtime::AllExecutionData alang_all_ex_data;
     }
@@ -219,7 +225,7 @@ namespace ali_clang_plugin_runtime {
     
     
     bool ALI_GLOBAL_DEBUG = true;
-sqlite3 *ali__log__db;
+
     int ALI_GLOBAL_MAX_EX = 3;
     static bool created_database=false;
 
@@ -235,7 +241,7 @@ sqlite3 *ali__log__db;
             //exit(0);
         } else {
         created_database=true;
-            
+            create_table("alang_screenshots", "", " (Time INTEGER PRIMARY KEY, Path TEXT) ");
         }
     }
     
@@ -247,10 +253,7 @@ sqlite3 *ali__log__db;
         sqlite3_exec(ali__log__db, oss.str().c_str(), NULL, NULL, &sErrMsg);
     }
     
-    void execute_query(std::string query) {
-        char * sErrMsg = 0;
-        sqlite3_exec(ali__log__db, query.c_str(), NULL, NULL, &sErrMsg);
-    }
+    
     
     
     sqlite3_stmt * start_insert(std::string table_name, std::string table_name_suffix, std::string schema) {
@@ -360,7 +363,7 @@ sqlite3 *ali__log__db;
                         {
                             std::ostringstream oss;
                             oss << "SELECT rowid FROM " << func_name << "_changes_unique WHERE Special_id = " << unique_special_id.str();
-                            execute_query(oss.str());
+                            execute_query(oss.str().c_str());
                             map_of_sqlrows[unique_special_id.str()] = -1; insert_row_id = -1;
                         }
                     } else {

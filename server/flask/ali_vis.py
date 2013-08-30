@@ -2,6 +2,7 @@ import sqlite3 as lite
 import sys
 import json
 from datetime import datetime
+from flask import Flask,render_template,url_for,redirect,request
 
 def get_functions_for_file(fname, suffix, database_name='enigma_compiler.sqlite'):
     fname = fname.replace('/static/projects/CompilerSource/','').replace('./CompilerSource/','')
@@ -66,11 +67,22 @@ def get_timeline_data(fname,table_suffix, database_name='enigma_compiler.sqlite'
         for execution in unique_executions:
             last_time = execution[2] # this is used for all_data to focus on the last date
             this_exec = {"id": funcname+str(execution_id), "funcname":funcname, "exid":execution_id, "title":funcname, "description":funct[1].replace(fname,''), "link":path_to_file, "startdate": ms_to_string(execution[1]), "enddate": ms_to_string(execution[2]), "modal_type":"full","importance": 50,"high_threshold":60,"date_display":"year","icon":"flag_yellow.png"}
-            print this_exec
+            #print this_exec
             all_events.append(this_exec)
             execution_id+=1
+    #now append screenshots
+    cur.execute("SELECT * FROM \"alang_screenshots\"")
+    all_screenshots = cur.fetchall()
+    for screenshot in all_screenshots:
+        #print screenshot
+        screen_time = screenshot[0]
+        screenshot_path = url_for('static', filename='projects'+screenshot[1])
+        print screenshot_path
+        this_screen = {"id": "sshot"+str(screen_time), "type_of_point" : "screenshot", "title":"screenshot", "description":"screenshot", "link":"#", "startdate": ms_to_string(screen_time), "enddate": ms_to_string(screen_time), "image" : screenshot_path, "modal_type":"full","importance": 50,"high_threshold":60,"date_display":"year"}
+        all_events.append(this_screen)
 
-    all_data = [{"id":"js_history", "title":"Execution data for "+fname, "description":"<p>All the execution data for the functions in this file is displayed in this timeline</p>","focus_date":ms_to_string(last_time),"initial_zoom":"50", "image_lane_height":10, "events":all_events}]
+
+    all_data = [{"id":"js_history", "title":"Execution data for "+fname, "description":"<p>All the execution data for the functions in this file is displayed in this timeline</p>","focus_date":ms_to_string(last_time),"initial_zoom":"50", "image_lane_height":50, "events":all_events}]
     return all_data
 
 def get_trace_data(fname,table_suffix, ex_id, function_name, database_name='enigma_compiler.sqlite'):
