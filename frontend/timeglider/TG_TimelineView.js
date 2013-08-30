@@ -706,7 +706,7 @@ tg.TG_TimelinePlayer = function (widget, mediator) {
 			    		debug.log(ev.click_callback + " method cannot be found", e);
 			    	}
 			
-		  // no custom callback ÑÊjust regular old modal
+		  // no custom callback Ã‘ÃŠjust regular old modal
 			} else {
 			
 				var follow = true;
@@ -3680,7 +3680,6 @@ tg.TG_TimelinePlayer.prototype = {
       	  				$cpp = $("<div id=\"pyOutputPane\"></div>").prependTo(".tg-full_modal-body");
       	  				$cpp.find("#pyOutputPane").css({"height": "100%", "overflow-y":"scroll"})
       	  				console.log(ev.link)
-      	  				//global_url = ev.link;
       	  				$.get(global_url+ev.link, setCodeMirrorVal);
       	  				global_file_url=ev.link+"&funcname="+ev.funcname
       	  				rawInputLst = [];

@@ -76,6 +76,7 @@ var pyInputCodeMirror; // CodeMirror object that contains the input text
 
 function setCodeMirrorVal(dat) {
   pyInputCodeMirror.setValue(dat.rtrim() /* kill trailing spaces */);
+  //$("#codeInputPane").show();
   $('#urlOutput,#embedCodeOutput').val('');
 
   // also scroll to top to make the UI more usable on smaller monitors
@@ -544,7 +545,7 @@ $(document).ready(function() {
 
 
   // handle hash parameters passed in when loading the page
-  preseededCode = $.bbq.getState('code');
+  /*preseededCode = $.bbq.getState('code');
   if (preseededCode) {
     setCodeMirrorVal(preseededCode);
   }
@@ -552,7 +553,7 @@ $(document).ready(function() {
     // select a canned example on start-up:
     //$("#aliasExampleLink").trigger('click');
     //$("#CPPExampleLink").trigger('click');
-  }
+  }*/
 
   // parse query string options ...
   // ugh, ugly tristate due to the possibility of them being undefined

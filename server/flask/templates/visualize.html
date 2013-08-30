@@ -216,6 +216,23 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       color:red;
     
     }
+
+    body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+
+      @media (max-width: 980px) {
+        /* Enable use of floated navbar text */
+        .navbar-text.pull-right {
+          float: none;
+          padding-left: 5px;
+          padding-right: 5px;
+        }
+      }
     </style>
 
 <!-- END of TIMELINE includes -->
@@ -225,49 +242,69 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 <link rel="stylesheet" href="{{ url_for('static', filename='css/opt-frontend.css') }}"/>
 <!-- end of main visualisation scripts-->
 
+<!-- bootstrap -->
+<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet" media="screen">
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<!-- end of bootstrap -->
+
 </head>
 
 <body>
 
-<div id='p1'></div> <!-- timeline -->
-{% if content == 'folder' %}
-{{ contents|safe() }}
-{% else %}
-<div id="pyInputPane">
-Contents of the file:
-<br/>
-<p>
-<button id="executeBtn" class="bigBtn" type="button">Visualize Execution</button>
-</p>
+  <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#">Alang</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li class="active"><a href="/files/fname?fname=./DoomClassicDepot/code/">Doom iOS</a></li>
+              <li><a href="/files/fname?fname=./CompilerSource">EnigmaCompiler</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
 
-
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+              <li class="nav-header">Files in this Directory</li>
+              {% if content == 'folder' %}
+                {{ contents|safe() }}
+              {% endif %}
+              
+            </ul>
+          </div><!--/.well -->
+        </div><!--/span-->
+  <div class="span9">
+    <div class="alert alert-info">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <h4>General Information</h4>
+      All the data that has been logged for the functions in this file/folder is displayed in the timeline below based on when they were logged during execution. The data in the timeline only represents UNIQUE executions of a function, so if it has already been logged at a previous time it won't show up everytime its called. They grey bar behind the function name represents how long it took to execute. Click on a function and it will *hopefully* allow you to step through the function like a traditional debugger! Zoom out to see as much data as possible.
+    </div>
+    <div id='p1'></div> <!-- timeline -->
+    
+    <!--
+    <div id="pyInputPane">
+      Contents of the file:
+      <br/>
+      <p>
+      <button id="executeBtn" class="bigBtn" type="button">Visualize Execution</button>
+      </p>
+    </div>
+    -->
+    <div id="codeInputPane"></div> <!-- populate with a CodeMirror instance -->
+  </div>
 </div>
-
-
-<!--<div id="pyOutputPane">
-</div>-->
-{% endif %}
-<div id="codeInputPane"></div> <!-- populate with a CodeMirror instance -->
-
 <div id="footer">
 
-<p>
-  <button id="genUrlBtn" class="smallBtn" type="button">Generate URL</button> <input type="text" id="urlOutput" size="70"/>
-</p>
-
-<p>To share this visualization, click the 'Generate URL' button above
-and share that URL. To report a bug, paste the URL along with a brief
-error description in an email addressed to philip@pgbovine.net</p>
-
-<div id="embedLinkDiv">
-<p>
-  <button id="genEmbedBtn" class="smallBtn" type="button">Generate embed code</button> <input type="text" id="embedCodeOutput" size="70"/>
-</p>
-
-<p>To embed this visualization in your webpage, click the 'Generate
-embed code' button above and paste the resulting HTML code into your
-webpage. Adjust the height and width parameters as needed.</p>
-</div>
 
 <p style="margin-top: 8px;">
 AliCPPVisualiser is Based on the OnlinePythonTutor (https://github.com/pgbovine/OnlinePythonTutor) </br>
@@ -535,6 +572,7 @@ Changes and Backend is Copyright &copy; 2013 <a href="http://www.alasdairmorriso
 global_url = "{{ url_for('static', filename='projects/')}}";//("{{ url_for('static', filename='projects/'+fname) }}");
 global_file_url=""
 alang_database_name = "{{db_name}}";
+$("#codeInputPane").hide();
 //$("#CPPExampleLink").click(function() {
    // $.get("{{ url_for('static', filename='projects/'+fname) }}", setCodeMirrorVal);
 //    return false;
