@@ -15,8 +15,15 @@
 typedef void CStaticFunctionData;
 typedef void CExecutionData;
 
+#define ALANG_LOG_CHAR(line,beg,end,arg) (alang_log_data(inst_func_db, line,beg,end,(arg)))
+#define ALANG_LOG_BOOL(line,beg,end,arg) (alang_log_bool(inst_func_db, line,beg,end,(arg)))
+#define ALANG_LOG_INT(line,beg,end,arg) (alang_log_int(inst_func_db, line,beg,end,(arg)))
 
-//int alang_log_data(void* inst_func_db, int line_num, int start_loc, int end_loc, int val);
+char alang_log_char(void* inst_func_db, int line_num, int start_loc, int end_loc, char val);
+long long alang_log_int(void* inst_func_db, int line_num, int start_loc, int end_loc, long long val);
+bool alang_log_bool(void* inst_func_db, int line_num, int start_loc, int end_loc, bool val);
+//bool alang_log_data(void* inst_func_db, int line_num, int start_loc, int end_loc, bool val);
+//double alang_log_data(void* inst_func_db, int line_num, int start_loc, int end_loc, double val);
 long long alang_log_data(void* inst_func_db, int line_num, int start_loc, int end_loc, long long val);
 
 CStaticFunctionData* new_CStaticFunctionData(const char* the_func_name, int the_line_number, const char* the_file_name);

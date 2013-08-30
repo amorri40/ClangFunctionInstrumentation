@@ -37,6 +37,7 @@ extern "C" {
     
     int alang_start_clock = clock();
     extern void start_logging_thread();
+    extern void getImage (bool isMainLoop);
     
     void alang_alter_logging() {
         if (!ALI_GLOBAL_DEBUG) return;
@@ -85,6 +86,7 @@ extern "C" {
             if (timeDemoFrames%90 == 0) {
                 //log info
                 //std::cout << "exe_per_frame_leftover:" << ALI_EXE_PER_FRAME << " max_ex:" << ALI_GLOBAL_MAX_EX << "ALI_MAX_PER_FRAME:" << ALI_MAX_PER_FRAME << " Total_change:"<< TOTAL_CHANGE_COUNT << " time:" << mtime << "\n";
+                getImage(true);
             }
             
             
@@ -155,7 +157,11 @@ extern "C" {
         alang_log_macro
     }
     
-    
+    char alang_log_char(void* inst, int line_num, int start_loc, int end_loc, char val) {
+        alang_log_macro
+    }
+    long long alang_log_int(void* inst, int line_num, int start_loc, int end_loc, long long val) {alang_log_macro}
+    bool alang_log_bool(void* inst, int line_num, int start_loc, int end_loc, bool val) {alang_log_macro}
     
     void alang_pop_ex(void* inst) {
         if (inst == NULL) return;
@@ -178,6 +184,12 @@ namespace ali_clang_plugin_runtime {
                 break;
             case VAROBJECT::Double:
                 os << ty.dblValue;
+                break;
+            case VAROBJECT::Bool:
+                os << ty.intValue;
+                break;
+            case VAROBJECT::CharT:
+                os << ty.intValue;
                 break;
         }
         return os;
@@ -233,6 +245,11 @@ sqlite3 *ali__log__db;
         oss << "CREATE TABLE IF NOT EXISTS \"" << table_name << table_name_suffix  << "\" "<< schema;
         char * sErrMsg = 0;
         sqlite3_exec(ali__log__db, oss.str().c_str(), NULL, NULL, &sErrMsg);
+    }
+    
+    void execute_query(std::string query) {
+        char * sErrMsg = 0;
+        sqlite3_exec(ali__log__db, query.c_str(), NULL, NULL, &sErrMsg);
     }
     
     
@@ -291,50 +308,60 @@ sqlite3 *ali__log__db;
         this->execution_number++;
         //std::cout << "\n\n" << func_name << "\n";
         
+        int executions_size=all_function_executions.size();
         int executions_logged=0;
         
-        for(std::vector<vector_of_change>::iterator execution = all_function_executions.begin(); execution != all_function_executions.end(); execution++) {
-            if (execution->empty()) continue;
-            //vector_of_change* line_data = execution;
-            //std::ostringstream special_id;
-            std::ostringstream execution_id;//, all_execution_id;
+        for (; executions_logged < executions_size; executions_logged++) {//for(std::vector<vector_of_change>::iterator execution = all_function_executions.begin(); execution != all_function_executions.end(); ++execution) {
+            vector_of_change line_data = all_function_executions[executions_logged];
+            if (line_data.empty()) continue;
+            //vector_of_change line_data = *execution;
+            
+            std::ostringstream execution_id;
             
             unsigned long start_time=0,end_time=0;
-            for(vector_of_change::iterator it2 = execution->begin(); it2 != execution->end(); ++it2) { //
-               Change* c = *it2;
-                if (c== NULL) {std::cout << "\n===C is null==="<<"\n\n\n"; continue;}
-                if (ali__log__db == NULL) { std::cout << "database is null"; delete c; all_function_executions.erase(execution); return 0;}
+            int size_of_changes = line_data.size(); //debug
+            for (int no_of_change = 0; no_of_change< size_of_changes; no_of_change++) {//for(vector_of_change::iterator it2 = execution->begin(); it2 != execution->end(); ++it2) { //
+                Change c = line_data[no_of_change];//*it2;
+                //if (c== NULL) {std::cout << "\n===C is null==="<<"\n\n\n"; continue;}
+                if (ali__log__db == NULL) { std::cout << "database is null"; /*all_function_executions.erase(execution);*/ return 0;}
                 
-                if (it2 == execution->begin())
-                    start_time=c->time_of_change;
+                if (no_of_change == 0)
+                    start_time=c.time_of_change;
                 
                 std::ostringstream unique_special_id;
-                    unique_special_id << "[" << c->line_num << "," << c->start_loc << "," << c->end_loc << ",\"" << c->value << "\", \""<< c->value.objectType << "\"]";
-                    end_time = c->time_of_change;
+                    unique_special_id << "[" << c.line_num << "," << c.start_loc << "," << c.end_loc << ",\"" << c.value << "\", \""<< c.value.objectType << "\"]";
+                    end_time = c.time_of_change;
                 long long insert_row_id=-1;
                 
-                //if ( map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end() ) {
+                if ( map_of_sqlrows.find(unique_special_id.str()) == map_of_sqlrows.end() ) {
                     // not found so add to db
                 
                 
-                int change_result = bind_change_sql(stmt_unique,unique_special_id.str(), "", "", "", c->line_num, end_time);
+                int change_result = bind_change_sql(stmt_unique,unique_special_id.str(), "", "", "", c.line_num, end_time);
                 long long last_row=-1;
                 if (change_result == SQLITE_DONE)
                 last_row = sqlite3_last_insert_rowid(ali__log__db);
                 insert_row_id = last_row;
                 
-                     /*   if (last_row !=-1) {
+                
+                        if (last_row !=-1) {
                             map_of_sqlrows[unique_special_id.str()] = last_row; insert_row_id = last_row;}
                         else
-                        {map_of_sqlrows[unique_special_id.str()] = -1; insert_row_id = -1;}
+                        {
+                            std::ostringstream oss;
+                            oss << "SELECT rowid FROM " << func_name << "_changes_unique WHERE Special_id = " << unique_special_id.str();
+                            execute_query(oss.str());
+                            map_of_sqlrows[unique_special_id.str()] = -1; insert_row_id = -1;
+                        }
                     } else {
                         insert_row_id = map_of_sqlrows[unique_special_id.str()];
-                    }*/
+                    }
                 execution_id << insert_row_id << ",";
-                delete c;
+                //delete c;
+                
                 
             }
-            execution->clear();
+            //execution->clear();
             
             //all_function_executions.erase
             //line_data.clear();
@@ -351,7 +378,7 @@ sqlite3 *ali__log__db;
         sqlite3_finalize(stmt_unique);
         sqlite3_finalize(stmt_ex_all);
         sqlite3_finalize(stmt_ex_unique);
-        
+        sqlite3_free(sErrMsg);
         all_function_executions.clear(); //now that they have been writtern destroy them
         return executions_logged;
     }

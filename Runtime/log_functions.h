@@ -98,7 +98,7 @@
 #define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(ALI_GLOBAL_MAX_CHANGES); line_data.clear();}}
 //slower but effective for segfaults
 
-#define ali_clang_add_to_map(val) {line_data.push_back(new ali_clang_plugin_runtime::Change(ali_clang_plugin_runtime::CHANGE_RHS,line_num, start_loc,end_loc,(val),clock())); ali_clang_flush_db_on_each_change}
+#define ali_clang_add_to_map(val) {line_data.push_back(ali_clang_plugin_runtime::Change(ali_clang_plugin_runtime::CHANGE_RHS,line_num, start_loc,end_loc,(val),clock())); ali_clang_flush_db_on_each_change}
 
 //#include "auto_generate.h"
 
@@ -119,7 +119,7 @@ namespace ali_clang_plugin_runtime {
     
     struct VAROBJECT
     {
-        enum o_t { Int, Double, String } objectType;
+        enum o_t { Int, Double, String, Bool, CharT } objectType;
         
         union
         {
@@ -141,8 +141,16 @@ namespace ali_clang_plugin_runtime {
             objectType=Int;
         }
         VAROBJECT(double i) {
-            intValue=i;
+            dblValue=i;
             objectType=Double;
+        }
+        VAROBJECT(bool i) {
+            intValue=i;
+            objectType=Bool;
+        }
+        VAROBJECT(char i) {
+            intValue=i;
+            objectType=CharT;
         }
     };
     std::ostream & operator<< ( std::ostream & os , const VAROBJECT & tk);
@@ -176,7 +184,7 @@ namespace ali_clang_plugin_runtime {
 
     //typedef std::vector<std::vector<std::string> > vector_of_vector_of_string;
     //typedef std::map<int, std::vector<Change> > map_of_vector_of_change;
-    typedef std::vector<Change*> vector_of_change;
+    typedef std::vector<Change> vector_of_change;
 
     extern sqlite3 *ali__log__db; //global statebase (sqlite)
 

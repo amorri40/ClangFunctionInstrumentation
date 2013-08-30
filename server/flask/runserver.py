@@ -75,7 +75,9 @@ def printfiles(filename):
      for subdirname in dirnames:
         returnstring+="<br><a href='/files/fname?fname="+ os.path.join(fname, subdirname)+"'>"+subdirname+"</a>"
      for filename in filenames:
-        returnstring+="<br><a href='/files/fname?fname="+ os.path.join(fname, filename)+"'>"+filename+"</a>"
+        extension = os.path.splitext(filename)[1]
+        if extension == '.c' or extension == '.cpp':
+          returnstring+="<br><a href='/files/fname?fname="+ os.path.join(fname, filename)+"'>"+filename+"</a>"
 
      return render_template('visualize.html',extension='folder',content='folder',fname=fname,contents=returnstring,db_name=request.args.get('dbname', ''))#return '<html><body>'+returnstring+'</body></html>'
 

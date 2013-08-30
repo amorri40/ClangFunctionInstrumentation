@@ -201,10 +201,10 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
     
     if (pointer_type) return ""; //only handle pointers to classes atm
     
-    if (tp->isEnumeralType()) {
+    /*if (tp->isEnumeralType()) {
         //additional_file_content << "\n#define PrintEnumType_"<< tp->getTypeClassName() << " 0\n" ;
         return "EnumLog";
-    }
+    }*/
     
     if (tp->isUnionType()) {
         additional_file_content << "\n#define PrintUnionType_"<< tp->getTypeClassName() << " 0\n" ;
@@ -217,7 +217,13 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
     }
     
     if (tp->isIntegralOrEnumerationType()) {
-        return "IntegralOrEnumType";
+        if (qt->isFloatingType()) return "ALANG_LOG_DOUBLE";
+        else if (tp->isBooleanType()) return "ALANG_LOG_BOOL";
+        else if (tp->isCharType()) return "ALANG_LOG_CHAR";
+        else if (tp->isIntegerType()) return "ALANG_LOG_INT";
+        else return "ALANG_LOG_AS_INT";
+        
+        //return "IntegralOrEnumType";
     }
     
     if (tp->isAggregateType()) {
