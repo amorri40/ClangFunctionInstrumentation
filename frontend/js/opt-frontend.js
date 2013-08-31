@@ -131,7 +131,7 @@ function executeCodeFromScratch() {
              //options_json: JSON.stringify(options)
            },
             function(dataFromBackend) {
-              alert(dataFromBackend);
+              //alert(dataFromBackend);
               var trace = dataFromBackend.trace;
               dataFromBackend.code = pyInputCodeMirror.getValue();
 

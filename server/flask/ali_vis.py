@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Flask,render_template,url_for,redirect,request
 
 def get_functions_for_file(fname, suffix, database_name='enigma_compiler.sqlite'):
-    fname = fname.replace('/static/projects/CompilerSource/','').replace('./CompilerSource/','')
+    #fname = fname.replace('/static/projects/CompilerSource/','').replace('./CompilerSource/','')
     fname = fname.replace('./','',1)
     try:
         print fname
