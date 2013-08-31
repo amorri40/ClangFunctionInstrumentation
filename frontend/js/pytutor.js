@@ -1306,7 +1306,12 @@ ExecutionVisualizer.prototype.updateOutput = function(smoothTransition) {
     
       // Create and draw the visualization.
       visualization = new google.visualization.Table(document.getElementById('table_of_values'));
-      visualization.draw(data, null);
+      var options = {'showRowNumber': false};
+      options['page'] = 'enable';
+      options['pageSize'] = 10;
+      options['pagingSymbols'] = {prev: 'prev', next: 'next'};
+      options['pagingButtonsConfiguration'] = 'auto';
+      visualization.draw(data, options);
 
   // bnm  Render a question
   if (curEntry.question) {

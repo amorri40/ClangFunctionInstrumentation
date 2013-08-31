@@ -88,7 +88,9 @@ def get_timeline_data(fname,table_suffix, database_name='enigma_compiler.sqlite'
 def get_trace_data(fname,table_suffix, ex_id, function_name, database_name='enigma_compiler.sqlite'):
     print "fname:"+fname+" exid:"+str(ex_id)
     #first get the names of the tables
-    function_name_ex_all=get_functions_for_file(fname,function_name+'_executions_unique',database_name)[0][1]
+    all_functions_in_file = get_functions_for_file(fname,function_name+'_executions_unique',database_name)
+    print len(all_functions_in_file)
+    function_name_ex_all=all_functions_in_file[0][1]
     
     function_name_changes_unique=get_functions_for_file(fname,function_name+'_changes_unique',database_name)[0][1]
     con = None

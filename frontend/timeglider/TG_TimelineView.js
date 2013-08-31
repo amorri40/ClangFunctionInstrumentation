@@ -167,7 +167,7 @@ tg.TG_TimelinePlayer = function (widget, mediator) {
 		//+ "{{html image}}{{html description}}"
 		// + "<div id='insert'></div>"
 		+ "</div>"
-		+ "<div class='tg-full_modal-links'><ul>{{html links}}</ul></div>"
+		+ "<div class='tg-full_modal-links'><ul>"+"{{html links}}</ul></div>"
 		// end of modal
 		+ "</div>"),
 			
@@ -3526,13 +3526,13 @@ tg.TG_TimelinePlayer.prototype = {
 		
 		if (typeof(linkage) == "string") {
 			// single url string for link: use "link"
-			html = "<li><a href='" + linkage + "' target='_blank'>link</a></li>"
+			html = "<li><a href='/files/fname?fname=" + linkage + "' target='_blank'>link</a></li>"
 		} else if (typeof(linkage) == "object"){
 			// array of links with labels and urls
 			for (l=0; l<linkage.length; l++) {
 				lUrl = linkage[l].url;
 				lLab = linkage[l].label;
-				html += "<li><a href='" + lUrl + "' target='_blank'>" + lLab + "</a></li>"
+				html += "<li><a href='/files/fname?fname=" + lUrl + "' target='_blank'>" + lLab + "</a></li>"
 		  	}
 		}
 		return html;

@@ -69,6 +69,75 @@ inline void insert_before_after(Stmt *st, Rewriter* rewriter, std::string before
 
 std::ostringstream additional_file_content;
 
+std::string write_struct_code(bool c_file, bool pointer_type, bool lvalue, const Type* tp) {
+    RecordDecl* rd = tp->getAsStructureType()->getDecl();
+    if (rd->isAnonymousStructOrUnion()) return "";
+    
+    NamedDecl* nd = rd->getUnderlyingDecl();
+    
+    std::string getMember = ".";
+    std::string refchar = "&";
+    std::string log_prefix = "Norm";
+    if (pointer_type) {
+        getMember = "->"; refchar=" *"; log_prefix="Pointer";
+        if (lvalue) {log_prefix+="L"; }//refchar+="&";}
+    }
+    
+    if (!rd->field_empty()) {
+        std::ostringstream log_method_body, whole_log_data;
+        
+        log_method_body << "{";
+        if (pointer_type)
+            log_method_body << "if (val==NULL) return val;";
+        log_method_body <<" std::ostringstream v; v ";
+        if (pointer_type) log_method_body << "<< \"Pointer to\" ";
+        log_method_body << "<< \"{\"";
+        // loop through the fields
+        for (CXXRecordDecl::field_iterator it=rd->field_begin(); it!=rd->field_end(); it++) {
+            FieldDecl* fie = cast<FieldDecl>(*it);
+            
+            if (fie->getAccess() == AS_private || fie->getAccess() == AS_protected) continue;
+            if (fie->getAccess() == AS_public) {
+                if (fie->getType()->isIntegralOrEnumerationType())
+                    log_method_body << " << \"'"<<fie->getNameAsString()<<"':\" << val"<< getMember <<fie->getNameAsString()<<" << \", \"";
+            }
+        }
+        log_method_body << "<< \"}\"; inst_func_db.log_custom(line_num, start_loc, end_loc, typeid(val).name(),v.str()); return val;}\n";
+        
+        whole_log_data << "\n#ifndef ALANG_LOG_"<<log_prefix<< nd->getNameAsString() << "\n ";
+        
+        if (!pointer_type) {
+            
+            whole_log_data << "\n"<< nd->getNameAsString() <<"* alang_log_"<< log_prefix << nd->getNameAsString() << "(void* inst_func_db, int line_num, int start_loc, int end_loc, "<< nd->getNameAsString() <<"* val) "<< log_method_body.str();
+            
+            /*whole_log_data << "\ntemplate <class T> const T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, const T"<< refchar <<" val) "<< log_method_body.str();*/
+        }
+        
+        if (pointer_type) {
+            if (c_file) return ""; //temp
+            whole_log_data << "\ntemplate <class T> T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, T"<< refchar <<" val) "<< log_method_body.str();
+            
+            whole_log_data << "\ntemplate <class T> const T"<< refchar <<" log_builtin"<< log_prefix << nd->getNameAsString() << "(ali_clang_plugin_runtime::InstrumentFunctionDB& inst_func_db, int line_num, int start_loc, int end_loc, const T"<< refchar <<" val) "<< log_method_body.str();
+            
+        }
+        
+        
+        whole_log_data << "\n#define ALANG_LOG_"<<log_prefix<< nd->getNameAsString() << "(line,beg,end,arg) (alang_log_"<< log_prefix << nd->getNameAsString() << "(inst_func_db, line,beg,end,(arg)))\n";
+        
+        whole_log_data << "\n#endif\n";
+        
+        SourceLocation begining = clang::Lexer::GetBeginningOfToken(current_function->getOuterLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
+        
+        additional_file_content << whole_log_data.str();
+        
+        return "PrintClassType_"+log_prefix+nd->getNameAsString();
+        
+    }
+    
+    
+    
+    return "";
+}
 
 inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
     
@@ -92,19 +161,10 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
     
     if (tp->isVoidType()) return "Void";
     
-    if (tp->isDependentType()) {
-        //RecordDecl* rd = qt->getAsCXXRecordDecl();
-        additional_file_content << "\n#define PrintDependentType_"<< tp->getTypeClassName() << " 0\n" ;
-        return "";
+    
+    if (c_file && tp->isStructureType()) {
+        return write_struct_code(c_file, pointer_type, lvalue, tp);
     }
-    if (tp->isVectorType()) {
-        additional_file_content << "\n#define PrintVectorType_"<< tp->getTypeClassName() << " 0\n" ;
-        return "";
-    }
-    /*if (tp->isAtomicType()) {
-        additional_file_content << "\n#define PrintAtomicType_"<< tp->getTypeClassName() << " 0\n" ;
-        return "Atomic";
-    }*/
     if (tp->isClassType() || tp->isStructureType()) {
         if (c_file) return "";
         CXXRecordDecl* rd = tp->getAsCXXRecordDecl();
@@ -201,31 +261,47 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
     
     if (pointer_type) return ""; //only handle pointers to classes atm
     
-    /*if (tp->isEnumeralType()) {
-        //additional_file_content << "\n#define PrintEnumType_"<< tp->getTypeClassName() << " 0\n" ;
-        return "EnumLog";
-    }*/
-    
     if (tp->isUnionType()) {
         additional_file_content << "\n#define PrintUnionType_"<< tp->getTypeClassName() << " 0\n" ;
         return "";//return "EnumLog";
     }
     
-    if (tp->isPlaceholderType()) {
+    /*if (tp->isPlaceholderType()) {
         additional_file_content << "\n#define PrintPlaceholderType_"<< tp->getTypeClassName() << " 0\n" ;
         return "";
-    }
+    }*/
+    
+    tp = tp->getUnqualifiedDesugaredType();
     
     if (tp->isIntegralOrEnumerationType()) {
-        if (qt->isFloatingType()) return "ALANG_LOG_DOUBLE";
-        else if (tp->isBooleanType()) return "ALANG_LOG_BOOL";
-        else if (tp->isCharType()) return "ALANG_LOG_CHAR";
-        else if (tp->isIntegerType()) return "ALANG_LOG_INT";
-        else return "ALANG_LOG_AS_INT";
         
+        if (tp->isBooleanType()) return "ALANG_LOG_BOOL";
+        else if (tp->isCharType()) return "ALANG_LOG_CHAR";
+        else if (tp->isUnsignedIntegerOrEnumerationType()) return "ALANG_LOG_UNSIGNED";
+        else if (tp->isIntegerType()) return "ALANG_LOG_INT";
+        else return "ALANG_LOG_AS_UNKNOWN";
         //return "IntegralOrEnumType";
     }
+    if (qt->isFloatingType()) return "ALANG_LOG_DOUBLE";
     
+    
+    if (tp->isConstantArrayType()) {
+        //tp = tp->getArrayElementTypeNoTypeQual();
+        const ArrayType* at = tp->getAsArrayTypeUnsafe();
+        
+        if (false) {//if (at->getElementType()->isIntegralOrEnumerationType()) {
+        std::ostringstream oss;
+        oss << "("<< at->getElementType().getAsString() << "*)";
+            tp = at->getElementType().getTypePtr();
+            if (tp->isBooleanType()) oss << "ALANG_LOG_CONST_ARRAY_BOOL";
+            else if (tp->isCharType()) oss << "ALANG_LOG_CONST_ARRAY_CHAR";
+            else if (tp->isUnsignedIntegerOrEnumerationType()) oss << "ALANG_LOG_CONST_ARRAY_UNSIGNED";
+            else if (tp->isIntegerType()) oss << "ALANG_LOG_CONST_ARRAY_INT";
+            else oss << "ALANG_LOG_CONST_ARRAY_UNKNOWN";
+        
+        return oss.str();
+        } else return "";
+    }
     if (tp->isAggregateType()) {
         additional_file_content << "\n#define PrintAggregateType_"<< tp->getTypeClassName() << " 0\n" ;
         return "";
@@ -237,22 +313,20 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
         return "";
     }
     
+    
+    
     if (tp->isObjectType()) {
+        
         additional_file_content << "\n#define PrintObjectType_"<< tp->getTypeClassName() << " 0\n" ;
-        return "";
+        return "ALANG_LOG_OBJECT_TYPE";
     }
     
     if (tp->isFundamentalType()) {
         additional_file_content << "\n#define PrintFundamentalType_"<< tp->getTypeClassName() << " 0\n" ;
         return "Fundamental";
     }
-    
-    //
-    if (tp->isAtomicType() || tp->isEnumeralType()) {//|| tp->hasIntegerRepresentation()) {
-        return "";//return "BuiltIn";
-    }
     else {
-        //additional_file_content << "\n#define Print"<< qt->getTypeClassName() << " 0\n" ;
+        additional_file_content << "\n#define Print"<< qt->getTypeClassName() << " 0\n" ;
     }
     return "";
 }
@@ -260,12 +334,7 @@ inline std::string handle_type(QualType qt,Rewriter* rewriter, bool lvalue){
 inline std::string handle_type(Expr *st,Rewriter* rewriter){
     QualType qt = st->getType();
     
-    if (st->isLValue()) {
-        return handle_type(qt,rewriter,true);
-        //return "";
-    }
-    //if (st->isLValue() && qt.getTypePtr()->isPointerType()) return "";
-    return handle_type(qt,rewriter,false);
+    return handle_type(qt,rewriter,st->isLValue());
 }
 
 inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name, bool beforeEnd, bool checktype) {
@@ -284,11 +353,11 @@ inline void wrap_with_macro(Expr *st, Rewriter* rewriter, std::string macro_name
     }
     
     std::ostringstream macro_call;
-    macro_call << " " << macro_name << " ("<< line << ", ";
+    macro_call << " (" << macro_name << " ("<< line << ", ";
     macro_call << beg << ", " << e <<", ";
     macro_call << " (";
     
-    insert_before_after(st,rewriter,macro_call.str(),")) ", beforeEnd);
+    insert_before_after(st,rewriter,macro_call.str(),"))) ", beforeEnd);
 }
 
 
@@ -363,8 +432,10 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
             for(StmtIterator it = s->child_begin(); it != s->child_end(); ++it) {
                 modify_statements(rewriter,*it,f);
             }
-            wrap_with_macro(ifStatement->getCond(), rewriter, " /*If*/ BOOLEXP", false,false); //wrap around whole expressiom
-            return;
+            modify_statements(rewriter,ifStatement->getCond(),f);
+            
+            wrap_with_macro(ifStatement->getCond(), rewriter, " /*If*/ ALANG_LOG_BOOL", false,false); //wrap around whole expressiom
+            return; //prevent parser recursion limit
         }
         else if (isa<ParenExpr>(*statement_from_it)) {
             ParenExpr *paren = cast<ParenExpr>(statement_from_it);
@@ -489,6 +560,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
                 //modify_statements(rewriter,*it,f);
                 handle_call_argument(cast<Expr>(*it),rewriter);
             }
+            
             //ret->getRetValue()->getStmtClassName();
             //wrap_with_macro(cast<Expr>(*ret->child_begin()), rewriter, "RETURN_VAL", true);
             
@@ -503,6 +575,10 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
                     rewriter->InsertTextAfterToken(end, "}");
                 else
                     ret->dumpColor();
+            }
+            else {
+                //we can only log return value in c++
+            modify_statements(rewriter,ret->getRetValue(),f);
             }
             
             return;

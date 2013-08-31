@@ -16,7 +16,7 @@ extern "C" {
     sqlite3 *ali__log__db;
     int ALI_GLOBAL_MAX_EX = 1;
     int ALI_GLOBAL_MIN_EX = 1;
-    int ALI_GLOBAL_MAX_CHANGES = 20; //per function changes (useful for big loops)
+    int ALI_GLOBAL_MAX_CHANGES = 80; //per function changes (useful for big loops)
     int ALI_EXE_PER_FRAME = 50; //starting executions per sec
     int ALI_MAX_PER_FRAME = 50; //40 is good
     int WAIT_FOR_FRAMES = 0;
@@ -169,6 +169,10 @@ extern "C" {
     long long alang_log_int(void* inst, int line_num, int start_loc, int end_loc, long long val) {alang_log_macro}
     bool alang_log_bool(void* inst, int line_num, int start_loc, int end_loc, bool val) {alang_log_macro}
     
+    unsigned alang_log_unsigned(void* inst, int line_num, int start_loc, int end_loc, unsigned val) {alang_log_macro}
+    
+    double alang_log_double(void* inst, int line_num, int start_loc, int end_loc, double val) {alang_log_macro}
+    
     void alang_pop_ex(void* inst) {
         if (inst == NULL) return;
         InstrumentFunctionDB* inst_func_db = (InstrumentFunctionDB*)inst;
@@ -184,6 +188,9 @@ namespace ali_clang_plugin_runtime {
         switch (ty.objectType) {
             case VAROBJECT::Int:
                 os << ty.intValue;
+                break;
+            case VAROBJECT::UnsignedInt:
+                os << ty.unsignedValue;
                 break;
             case VAROBJECT::String:
                 os << ty.strValue;

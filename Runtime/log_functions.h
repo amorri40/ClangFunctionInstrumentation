@@ -98,7 +98,7 @@
 /*
  Main defines
  */
-#define ali_clang_add_to_map(type,val) {line_data.push_back(new ali_clang_plugin_runtime::Change(ali_clang_plugin_runtime::CHANGE_RHS,type,line_num, start_loc,end_loc,(val),clock())); ali_clang_flush_db_on_each_change}
+
 #define FLUSH_DB_FOR_EACH_CHANGE false
 #define ali_clang_flush_db_on_each_change {if (FLUSH_DB_FOR_EACH_CHANGE) {ali_function_db->all_function_executions.push_back(line_data); ali_function_db->flush_to_db(ALI_GLOBAL_MAX_CHANGES); line_data.clear();}}
 //slower but effective for segfaults
@@ -129,11 +129,12 @@ namespace ali_clang_plugin_runtime {
     
     struct VAROBJECT
     {
-        enum o_t { Int, Double, String, Bool, CharT } objectType;
+        enum o_t { Int, Double, String, Bool, CharT, UnsignedInt } objectType;
         
         union
         {
             long long intValue;
+            unsigned unsignedValue;
             double dblValue;
             const char *strValue;
         };
@@ -149,6 +150,10 @@ namespace ali_clang_plugin_runtime {
         VAROBJECT(long long i) {
             intValue=i;
             objectType=Int;
+        }
+        VAROBJECT(unsigned i) {
+            unsignedValue=i;
+            objectType=UnsignedInt;
         }
         VAROBJECT(double i) {
             dblValue=i;
