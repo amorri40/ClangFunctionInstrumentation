@@ -1600,6 +1600,8 @@ ExecutionVisualizer.prototype.updateOutput = function(smoothTransition) {
 
       pcod.stop(); // first stop all previously-queued animations
       pcod.animate({scrollTop: (ST + (LO - PO - (Math.round(H / 2))))}, 300);
+      //pcod.animate({scrollLeft: $($('div.ExecutionVisualizer .pycrazy-highlight-cur')[0].parentElement).offset().left}, 300);
+      //$('div.ExecutionVisualizer .pycrazy-highlight-cur')[0].parentElement.scrollIntoView( true );
     }
 
     if (myViz.params.highlightLines) {
@@ -1613,9 +1615,9 @@ ExecutionVisualizer.prototype.updateOutput = function(smoothTransition) {
 
 
     // smoothly scroll code display
-    if (!isOutputLineVisible(curEntry.line)) {
+    //if (!isOutputLineVisible(curEntry.line)) {
       scrollCodeOutputToLine(curEntry.line);
-    }
+    //}
 
   } // end of highlightCodeLine
 
