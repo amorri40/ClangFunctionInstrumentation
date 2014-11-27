@@ -12,15 +12,16 @@
 #include <sys/time.h>
 
 extern "C" {
-    bool ALI_GLOBAL_DEBUG = true;
+    bool ALI_GLOBAL_DEBUG = false;
     sqlite3 *ali__log__db;
-    int ALI_GLOBAL_MAX_EX = 1;
-    int ALI_GLOBAL_MIN_EX = 1;
-    int ALI_GLOBAL_MAX_CHANGES = 80; //per function changes (useful for big loops)
-    int ALI_EXE_PER_FRAME = 50; //starting executions per sec
-    int ALI_MAX_PER_FRAME = 50; //40 is good
+    int ALI_GLOBAL_MAX_EX = 1; //this gets increased as time goes on
+    int ALI_GLOBAL_MIN_EX = 1; //warning the change limit does not effect this!
+    int ALI_GLOBAL_MAX_CHANGES = 20000;//000; //per function changes (useful for big loops)
+    int ALI_EXE_PER_FRAME = 1; //starting executions per sec
+    int ALI_MAX_PER_FRAME = 1; //40 is good
     int WAIT_FOR_FRAMES = 0;
     int TOTAL_CHANGE_COUNT = 0;
+    int ALI_MAX_TOTAL_CHANGES = 5000000;
     const char* database_name=0;
     bool ALI_STARTED_THREAD=false;
     
@@ -42,9 +43,26 @@ extern "C" {
     }
     
     int alang_start_clock = clock();
+    
+//    #ifdef TARGET_OS_IPHONE
     extern void start_logging_thread();
     extern void getImage (bool isMainLoop);
+/*#else
+    void getImage (bool isMainLoop) {}
+    #include <dispatch/dispatch.h>
+//#include "dispatch/queue.h"
+    void start_logging_thread() {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+            while (true) {
+                //NSLog(@"Background task");
+                alang_log_one_func_to_db(10000);
+                getImage(false);
+            }
+        });
+    }
     
+    #endif
+    */
     void alang_alter_logging() {
         if (!ALI_GLOBAL_DEBUG) return;
         if (!ALI_STARTED_THREAD) {start_logging_thread();ALI_STARTED_THREAD=true;}
@@ -112,7 +130,7 @@ extern "C" {
                 //ALI_GLOBAL_MAX_EX--;
                 WAIT_FOR_FRAMES+=(mtime/33)+0.5;
             }*/
-            if (TOTAL_CHANGE_COUNT > 100000)  {
+            if (TOTAL_CHANGE_COUNT > ALI_MAX_TOTAL_CHANGES)  {
                 ALI_EXE_PER_FRAME =0;
                 ALI_MAX_PER_FRAME=1;
                 //sqlite3_close(ali__log__db);
@@ -233,7 +251,7 @@ namespace ali_clang_plugin_runtime {
     
     bool ALI_GLOBAL_DEBUG = true;
 
-    int ALI_GLOBAL_MAX_EX = 3;
+    //int ALI_GLOBAL_MAX_EX = 3;
     static bool created_database=false;
 
     void open_sqlite(std::string db_name) {
