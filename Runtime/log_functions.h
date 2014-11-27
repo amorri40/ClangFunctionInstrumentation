@@ -108,6 +108,16 @@
 //#include "auto_generate.h"
 
 extern "C" {
+    
+    extern int ALI_GLOBAL_MAX_EX;
+    extern int ALI_GLOBAL_MIN_EX;
+    extern int ALI_GLOBAL_MAX_CHANGES; //per function changes (useful for big loops)
+    extern int ALI_EXE_PER_FRAME; //starting executions per sec
+    extern int ALI_MAX_PER_FRAME; //40 is good
+    extern int WAIT_FOR_FRAMES;
+    extern int TOTAL_CHANGE_COUNT;
+    extern int ALI_MAX_TOTAL_CHANGES;
+    
 extern int ALI_GLOBAL_MAX_CHANGES;
     extern int ALI_GLOBAL_MIN_EX;
     extern int TOTAL_CHANGE_COUNT;
@@ -204,8 +214,8 @@ namespace ali_clang_plugin_runtime {
     //extern sqlite3 *ali__log__db; //global statebase (sqlite)
 
 
-    extern bool ALI_GLOBAL_DEBUG;
-    extern int ALI_GLOBAL_MAX_EX;
+    //extern bool ALI_GLOBAL_DEBUG;
+    //extern int ALI_GLOBAL_MAX_EX;
     
 
     unsigned long report_memory(void);

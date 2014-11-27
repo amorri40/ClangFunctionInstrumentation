@@ -73,6 +73,8 @@ std::string write_struct_code(bool c_file, bool pointer_type, bool lvalue, const
     RecordDecl* rd = tp->getAsStructureType()->getDecl();
     if (rd->isAnonymousStructOrUnion()) return "";
     
+    if (c_file) return ""; //remove later
+    
     NamedDecl* nd = rd->getUnderlyingDecl();
     
     std::string getMember = ".";
@@ -126,7 +128,7 @@ std::string write_struct_code(bool c_file, bool pointer_type, bool lvalue, const
         
         whole_log_data << "\n#endif\n";
         
-        SourceLocation begining = clang::Lexer::GetBeginningOfToken(current_function->getOuterLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
+        //SourceLocation begining = clang::Lexer::GetBeginningOfToken(current_function->getOuterLocStart(), rewriter->getSourceMgr(), rewriter->getLangOpts());
         
         additional_file_content << whole_log_data.str();
         
@@ -536,7 +538,7 @@ void modify_statements(Rewriter* rewriter, Stmt *s, FunctionDecl *f) {
                 
             }
             else
-            insert_before_after(dre,rewriter," (CALL( ",")) ",true);
+            insert_before_after(dre,rewriter," (ALANG_CALL( ",")) ",true);
             //if (dre->getDirectCallee()->getNameAsString() == "free") return;
             
             
@@ -692,13 +694,13 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f)
         //int length_of_function_name = get_length_of_token_at_location(start_of_function_name_token, this->rewriter);
         
         std::string proper_func_name = get_location_to_string(rewriter, &rewriter.getSourceMgr(), /*sr.getBegin()*/start_of_func_name, end_of_func_name);
-        llvm::errs() << proper_func_name << "\n";
+        //llvm::errs() << proper_func_name << "\n";
         
         SourceLocation END = s->getLocEnd().getLocWithOffset(1);
-        llvm::errs() << "END" << "\n";
+        //llvm::errs() << "END" << "\n";
         
         std::string whole_func = get_location_to_string(rewriter, &rewriter.getSourceMgr(), start_of_stmts, END);
-        llvm::errs() << whole_func << "\n";
+        //llvm::errs() << whole_func << "\n";
         
         /*
          Do all modifications after this

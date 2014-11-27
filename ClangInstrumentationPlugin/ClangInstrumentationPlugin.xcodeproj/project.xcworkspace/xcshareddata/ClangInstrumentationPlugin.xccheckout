@@ -2,35 +2,37 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
 	<string>73846593-B7FB-4BF2-AD00-E1C4D140D472</string>
 	<key>IDESourceControlProjectName</key>
 	<string>ClangInstrumentationPlugin</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>01801B6B-E180-4C64-AC14-F6FB6BDB6159</key>
+		<key>DCECE81AFEC8F7C3ADB41476CF5DF550BB377407</key>
 		<string>https://github.com/amorri40/ClangFunctionInstrumentation.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>ClangInstrumentationPlugin/ClangInstrumentationPlugin.xcodeproj/project.xcworkspace</string>
+	<string>ClangInstrumentationPlugin/ClangInstrumentationPlugin.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>01801B6B-E180-4C64-AC14-F6FB6BDB6159</key>
+		<key>DCECE81AFEC8F7C3ADB41476CF5DF550BB377407</key>
 		<string>../../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>https://github.com/amorri40/ClangFunctionInstrumentation.git</string>
 	<key>IDESourceControlProjectVersion</key>
-	<integer>110</integer>
+	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>01801B6B-E180-4C64-AC14-F6FB6BDB6159</string>
+	<string>DCECE81AFEC8F7C3ADB41476CF5DF550BB377407</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>01801B6B-E180-4C64-AC14-F6FB6BDB6159</string>
+			<string>DCECE81AFEC8F7C3ADB41476CF5DF550BB377407</string>
 			<key>IDESourceControlWCCName</key>
 			<string>ClangInstrumentationPlugin</string>
 		</dict>

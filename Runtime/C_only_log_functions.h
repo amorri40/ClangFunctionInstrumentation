@@ -91,7 +91,7 @@ extern int ALI_EXE_PER_FRAME;
 #define MEMBER_EXPR(arg) (arg)
 #define OPERATOR_RHS_ARG_NOTCANONICAL(line,beg,end,arg) (arg)
 #define OPERATOR_LHS_ARG(line,beg,end,arg) (arg)
-#define CALL(arg) (stdlogger,(arg),0)
+#define ALANG_CALL(arg) (stdlogger,(arg),0)
 //#define CALLR(line,beg,end,arg) (arg)
 #define CALLR(line,beg,end,arg) (arg)
 #define BOOLEXP(line,beg,end,arg) (arg)

@@ -273,7 +273,7 @@ int run_proper_clang(int argc, char **argv, bool link) {
             replaceAll(argument,".cpp",".cpp.debug");
             
         }
-        oss << argument << " ";
+        oss << "\"" << argument << "\" ";
     }
     
     if (!has_output_specified && source_file_name != "" && !link) {

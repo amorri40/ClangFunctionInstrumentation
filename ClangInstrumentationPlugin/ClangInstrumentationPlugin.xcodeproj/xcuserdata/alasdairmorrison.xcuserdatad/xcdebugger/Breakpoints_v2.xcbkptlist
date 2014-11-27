@@ -62,9 +62,7 @@
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "299"
-            endingLineNumber = "299"
-            landmarkName = "run_proper_clang(int argc, char **argv, bool link)"
-            landmarkType = "7">
+            endingLineNumber = "299">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
